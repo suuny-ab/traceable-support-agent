@@ -1,29 +1,94 @@
-# Independent review
+# 独立复核
 
-> Status: `cycle_3_passed`
+> 状态：`cycle_5_passed`
 
-Threat model: public anonymous callers, accidental publication of private material, product/evaluation dependency inversion, budget/privacy/failure-closed behavior and incorrect public claims. Review uses a fixed clean candidate and does not alter code.
+威胁模型：公开匿名调用方、私有材料意外发布、产品 / 评测依赖反转、预算 / 隐私 / 失败关闭行为，以及错误公开主张。复核使用固定且干净的候选版本，不修改代码。
 
-## Cycle 1
+## 第 1 轮
 
-The staged deployment-pipeline snapshot failed review on three approved-entry paths:
+已暂存的部署流水线快照在三个批准入口路径上未通过复核：
 
-1. a missing legacy rollback anchor was detected only after canonical activation, and rehearsal could be disabled;
-2. activation and rollback committed `previous`, `server.env` and `current` without compensation for a partial I/O failure;
-3. a free-form dispatch origin controlled both production CORS and public smoke.
+1. 旧版本回滚锚点缺失只会在唯一权威版本激活后被发现，而且演练可以被关闭；
+2. 激活和回滚依次提交 `previous`、`server.env` 和 `current`，但部分 I/O 失败没有补偿；
+3. 自由输入的 dispatch Origin 同时控制生产 CORS 和公网冒烟目标。
 
-The corrected candidate requires the anchor before activation, always performs the first `old → new → old → new` rehearsal, commits release metadata with tested compensation, and binds the current IP origin in a reviewed repository file. A new fixed-snapshot review is required before commit 4.
+修正后的候选要求在激活前准备回滚锚点，首次迁移强制执行 `old → new → old → new` 演练，使用经过测试的补偿机制提交发布元数据，并在经过复核的仓库文件中绑定当前 IP Origin。提交 4 前需要新的固定快照复核。
 
-## Cycle 2
+## 第 2 轮
 
-The three Cycle 1 findings were closed. Review then found that Caddy hashing and deployment-receipt persistence still occurred only after the final canonical activation. A restricted-user read failure or receipt I/O failure could therefore return a failed workflow while leaving canonical public without a receipt.
+第 1 轮的三个问题均已关闭。复核随后发现，Caddy 哈希和部署回执仍然只在最终唯一权威版本激活后持久化。受限用户读取失败或回执 I/O 失败时，工作流可能返回失败，但唯一权威版本已经公开且没有回执。
 
-The next correction reads and validates the Caddy hash before any activation. Receipt persistence is now a final gate whose failure explicitly rolls back to legacy and repeats public smoke. Cycle 3 must verify this path before commit 4.
+下一次修正在任何激活前读取并验证 Caddy 哈希。回执持久化成为最终检查门；失败时明确回滚到旧版本并重复公网冒烟。提交 4 前，第 3 轮必须验证该路径。
 
-## Cycle 3
+## 第 3 轮
 
-PASS. The fixed target, pre-activation anchor, pre-activation Caddy evidence, compensated release metadata and receipt-failure rollback are all reachable from the approved workflow and fail closed. Linux ran all 12 governance and failure-injection tests; the staged public scanner, Python AST, workflow YAML, Bash syntax, Compose config and whitespace checks passed. No Provider, GitHub or server write occurred during review.
+通过。固定目标、激活前锚点、激活前 Caddy 证据、带补偿的发布元数据和回执失败回滚，都能从批准工作流触达并保持失败关闭。Linux 运行全部 12 个治理与故障注入测试；已暂存公开扫描、Python AST、workflow YAML、Bash 语法、Compose 配置和空白检查均通过。复核期间 Provider、GitHub 和服务器写入均为 0。
 
-## Replay increment
+## 回放增量
 
-PASS. The approved entry was the `/app` preset selector and run button. The review covered misleading replay/live provenance, accidental live POST, unsupported evidence display, unsafe handoff controls, the two-mode UI and claim boundaries. Index and worktree were identical; the replay fields matched the public regression; `available + exact replayOnly` routed to replay while edited input retained the live route; evidence and approval controls were conditionally absent; and the release hash matched the new replay JSON. Web 15/15, lint, typecheck, public scanner and relevant governance tool tests passed. The conclusion remains limited to the replay UI and its public mechanical expectation; the live product does not yet enforce the same `GEN-DEV-IE-001` stop.
+通过。批准入口为 `/app` 预设选择器和运行按钮。复核覆盖回放 / 实时来源误标、意外 live POST、显示无支持证据、转人工时出现不安全批准控件、双模式 UI 和主张边界。index 与 worktree 完全一致；回放字段与公开回归一致；`available + exact replayOnly` 进入回放，编辑后的输入仍保留 live 路由；只有条件满足时才显示证据和批准控件；发布哈希与新的回放 JSON 一致。Web 15/15、lint、typecheck、公开扫描和相关治理工具测试均通过。结论只适用于回放 UI 及其公开机械预期；实时产品尚未执行同样的 `GEN-DEV-IE-001` 停止逻辑。
+
+## 本地候选收口
+
+仅本地候选通过。一个使用 `--no-local` 的全新克隆通过历史、API、Web、治理、依赖审计和容器检查；回放保持无模型、无密钥和 `replay_only`，`live` 镜像的八个检索案例在断网且 Provider 调用为 0 的条件下通过。第一次无上下文复核为 `9/10`，因为状态仍把已经创建的收口提交写成下一步；修正后最终读取为 `10/10`。公开远程仓库、正式路径、生产回滚演练和用户验收全部通过前，活动工作保持 `active`。
+
+## 第 4 轮：中文文档检查
+
+通过。独立复核读取固定暂存树 `2cf58704664233a92319eb3e9b47efef9e508c17`，检查了 39 份面向人的 Markdown 和 4 份冻结合成知识 Markdown。所有说明性标题、段落、表格和列表均以中文叙事为主；保留的英文仅为产品名、技术术语、命令、路径、接口、枚举、环境变量、案例 ID、版本、Git SHA 或哈希。相对链接与 index 范围公开扫描通过，四份知识 Markdown 的 Git blob 与中文化前候选完全一致。
+
+第二项独立复核确认以下事实均未漂移：产品仍是 `S1`、`replay_only` Beta；Stage 12、`product/0.1.0`、实时 Provider、公开 GitHub、正式路径切换、生产部署和用户验收均未完成；旧仓仍是当前权威仓库；`GEN-DEV-IE-001` 只证明已验证回放。扫描器改为同时要求 `provider_enabled=false`、`provider_calls=0` 和 `provider_cost_cny=0`，逐项移除任一字段都会触发 `migration_provider_zero_claim_missing`，没有因取消英文句子匹配而削弱检查门。
+
+## 第 5 轮：元开发权威定义
+
+通过。独立复核读取固定暂存树 `74333c0dfd1b162dd5b41e0d65e4f5017a402d83`。定义以主要
+改变对象而非文件类型区分产品开发与元开发，并明确规则、检查脚本、CI 门和开发工具可以
+属于元开发；五类范围同时受总判据与非范围约束，不会把普通功能、常规修复、目录整理或
+工作量误报为元开发。
+
+一次已经实质威胁产品结果、授权、费用、隐私、结论真实性或可恢复性的系统性失败可以提出
+元开发变化，但普通治理仍须说明产品影响、最小证伪、最小变化、投入、停止线和允许结论，
+完成后返回产品主线。真实产品验证还必须证明原摩擦减少且治理成本相称，不能仅以“产品仍
+能完成”判定规则有效。`AGENTS.md`只保存摘要并路由到唯一权威定义；`docs/work/active/`
+承载活动增量，`experiments/`只保存规范化实验材料，职责不冲突。
+
+index 范围公开扫描和 12 项治理工具测试通过，其中 3 项 Windows 符号链接场景按预期跳过。
+产品仍为 `S1`、`replay_only` Beta；Provider 调用与费用为 0；公开 GitHub、正式路径、
+生产部署和用户验收仍未完成，旧仓继续作为当前权威仓库。
+
+## 第 6 轮：公开预览收口
+
+通过。用户预览发现证据表把尚未执行的生产回滚演练写入既有证据，并指出 README 的手动
+开发命令、现网/候选差异和首次访问路径仍可更清楚。修订后的固定暂存树
+`63c39b87dc79663a1701c3d2b9fb48037147f7c0`接受两项独立只读复核。
+
+公开主张复核确认，候选现在只声明全新克隆重建和经过故障注入测试的回滚机制，并明确尚未
+创建公开镜像、执行生产回滚演练或切换公网版本。README 仍保持 `replay_only`、Stage 12
+未执行、`product/0.1.0`未发布和 Provider 关闭；当前 60 秒体验只使用现网已有的两个预设，
+第三个证据不足预设明确属于待部署候选。
+
+首次访问与开发入口复核确认，封面和全部相对链接存在，Stage 12 已解释，架构职责正确；
+两个终端、本地 SQLite、精确 Origin 和 Web API 地址与实现一致。固定树的 index 公开扫描
+通过；51 项相关 API 测试和 12 项治理工具测试通过，其中 3 项 Windows 符号链接测试按预期
+跳过。产品代码、公开合同、部署实现、Provider 状态和费用均未改变。
+
+本轮结论只允许进入“创建公开远程”检查点，不证明 GitHub、公开镜像、正式路径、生产部署、
+回滚演练或用户验收已经完成。
+
+## 第 7 轮：首次 GitHub CI 修复
+
+通过本地固定树复核。首次 GitHub Actions 运行 `29979801403` 中，API 与容器任务通过，
+治理任务因 `PROJECT.md` 两处 Markdown 行尾空格失败，Web 任务因 Next.js `16.2.6`
+的高危安全公告失败；发布任务按前置门禁跳过。
+
+固定暂存树 `822f6372bde137a211f12aa91e221c65d315b7e5` 接受两项独立只读复核。
+差异只移除上述空格、把 `next` 与 `eslint-config-next` 精确升级到 `16.2.11`，并同步公开
+GitHub 已建立的事实。锁文件条目数保持 `437 → 437`，没有新增或删除包，也没有产品算法、
+接口、Provider 或部署实现变化。
+
+从锁文件全新安装后，官方 npm 审计为 0 个已知漏洞；lint、typecheck、标准 Next.js
+生产构建和 15 个 Web 测试通过。固定树的全仓空白检查、index 公开扫描和 12 项治理工具
+测试通过，其中 3 项 Windows 符号链接测试按预期跳过。
+
+本地复核不替代远程硬门。修复版 GitHub CI、`main` 保护和 GitHub 来源全新克隆通过前，
+不得切换本机正式路径或部署新版本。Provider 调用与费用仍为 0，公网仍保持
+`replay_only`。

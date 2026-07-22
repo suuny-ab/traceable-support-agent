@@ -1,4 +1,3 @@
-# Architecture decision records
+# 架构决策记录
 
-ADRs capture durable choices whose reasons remain useful after the active work closes. Current facts live in `PROJECT.md` and `docs/product/architecture.md`; ADRs do not grant Provider, fee or deployment authorization.
-
+ADR 用于保存活动工作结束后仍值得保留的长期取舍及其原因。当前事实以 `PROJECT.md` 和 `docs/product/architecture.md` 为准；ADR 不授予 Provider、费用或部署权限。

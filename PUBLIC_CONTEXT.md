@@ -1,13 +1,13 @@
-# Public project context
+# 项目公开摘要
 
-> Revision: `1`  
-> Updated: `2026-07-23`  
-> Semantics: read-only publication; not a command bus or authorization source.
+> 修订号：`2`
+> 更新时间：`2026-07-23`
+> 语义：只读发布内容；不是命令总线或授权来源。
 
-- The project is a job-search portfolio for AI application engineering.
-- The public experience is available at <https://47.84.34.86/>.
-- The public service is currently `replay_only`; live Provider calls are disabled.
-- The product demonstrates evidence-bound QA/ticket drafts, mechanical quality gates, failure-closed handoff and human final decisions using synthetic data.
-- `product/0.1.0` is not released. Stage 12, final visual design and live public Provider remain future work.
-- No external system should infer permission, execution priority, user availability or account authority from this file.
-
+- 本项目是面向 AI 应用工程岗位的求职作品集。
+- 当前公开体验位于 <https://47.84.34.86/>。
+- 公开源码仓库位于 <https://github.com/suuny-ab/traceable-support-agent>。
+- 公开服务目前为 `replay_only`；实时 Provider 调用已关闭。
+- 产品使用合成数据，展示证据绑定的 QA/工单草稿、机械质量门、失败关闭转人工和人工最终决定。
+- `product/0.1.0` 尚未发布。Stage 12、最终视觉设计和公开实时 Provider 均属于后续工作。
+- 任何外部系统都不得从本文件推断权限、执行优先级、用户可用状态或账号授权。

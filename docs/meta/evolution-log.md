@@ -1,9 +1,9 @@
-# Governance evolution log
+# 治理演化日志
 
-| Date | Friction | Minimum change | Product validation | Result |
+| 日期 | 真实摩擦 | 最小变化 | 产品验证 | 结果 |
 | --- | --- | --- | --- | --- |
-| 2026-07-21 | External risk, engineering size and candidate maturity were conflated | Restore R/S dual-axis governance | Bounded Provider and product increments | Kept |
-| 2026-07-21 | Evaluation/governance work displaced the next product unknown | Adopt value-first development and tier budgets | Oracle/retrieval increments | Kept |
-| 2026-07-18 | Frozen content and failed execution attempts were treated as the same version | Separate content identity, attempt identity and verified checkpoint | Formal HOLDOUT recovery | Kept |
-| 2026-07-21 | First project attempted premature cross-repository template automation | Pause feedback/upgrade machinery until project completion | Subsequent product work | Kept |
-| 2026-07-23 | Effective governance became buried under 385 commits and raw audit assets | Migrate to one clean canonical repository with cold-start and product-increment proof | `GEN-DEV-IE-001` replay preset | Local increment delivered; remote/deploy validation pending |
+| 2026-07-21 | 外部风险、工程规模与候选成熟度被混为一谈 | 恢复 R/S 双轴治理 | 有界 Provider 与产品增量 | 保留 |
+| 2026-07-21 | 评测/治理工作挤占了下一个产品未知 | 采用价值优先开发与分层预算 | Oracle/检索增量 | 保留 |
+| 2026-07-18 | 冻结内容与失败执行尝试被视为同一版本 | 分离内容身份、尝试身份和已验证检查点 | 正式 HOLDOUT 恢复 | 保留 |
+| 2026-07-21 | 首个项目过早建设跨仓模板自动化 | 暂停反馈/升级机制直至项目完成 | 后续产品工作 | 保留 |
+| 2026-07-23 | 有效治理被埋在 385 个提交和原始审计资产中 | 迁移到一个干净的唯一权威仓库，并用冷启动和产品增量证明 | `GEN-DEV-IE-001` 回放预设 | 本地克隆和 10/10 冷启动已通过；外部检查门待完成 |

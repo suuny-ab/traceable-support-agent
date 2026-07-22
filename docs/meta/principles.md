@@ -1,11 +1,10 @@
-# Meta-development principles
+# 元开发原则
 
-1. Product value is the reason for governance, not its by-product.
-2. Current truth must be reconstructable from a small documented startup path.
-3. Candidate quality and execution integrity are separate failure classes.
-4. Public claims require code, test or runtime evidence and explicit limits.
-5. One writer per worktree; independent review reads a fixed candidate.
-6. External risk, engineering complexity and product maturity are separate axes.
-7. Private evidence protects conclusion integrity; it is not a default development dataset.
-8. A rule remains only after a product increment demonstrates that it prevents real friction without disproportionate cost.
-
+1. 产品价值是治理存在的原因，不是治理的副产品。
+2. 必须能通过一条简短、成文的启动路径重建当前事实。
+3. 候选质量与执行完整性是两类不同的失败。
+4. 公开主张必须绑定代码、测试或运行证据，并明确限制。
+5. 每个工作树只允许一个写入者；独立复核读取固定候选。
+6. 外部风险、工程复杂度和产品成熟度是三条独立轴线。
+7. 私有证据用于保护结论完整性，不是默认开发数据集。
+8. 只有产品增量证明一条规则能以合理成本阻止真实摩擦后，才保留该规则。

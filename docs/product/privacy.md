@@ -1,10 +1,9 @@
-# Privacy
+# 隐私边界
 
-- Use only synthetic, non-personal data.
-- Do not enter real names, phone numbers, addresses, order numbers, company secrets or production data.
-- Free input is limited to 500 Chinese characters and may be rejected by preflight.
-- Raw request content is retained for at most 30 days in server SQLite and is not backed up.
-- The site has no account, user history or user-delete feature; aggregate metrics may be retained without raw content.
-- Provider credentials are server-only. Current public replay mode does not call the Provider.
-- Decisions are demonstration records and never trigger an external business action.
-
+- 仅使用合成、非个人数据。
+- 不得输入真实姓名、电话号码、地址、订单号、公司机密或生产数据。
+- 自由输入最多 500 个中文字符，并可能被前置检查拒绝。
+- 原始请求内容在服务器 SQLite 中最多保留 30 天，且不做备份。
+- 网站不提供账号、用户历史或用户删除功能；可以在不保留原文的前提下长期保存聚合指标。
+- Provider 凭据只存在于服务端。当前公开回放模式不会调用 Provider。
+- 人工决定仅为演示记录，绝不会触发外部业务动作。

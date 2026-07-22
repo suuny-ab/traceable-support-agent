@@ -1,19 +1,19 @@
-# Case: pausing premature template automation
+# 案例：暂停过早的模板自动化
 
-> Evidence level: `legacy-summary`. The source originals are intentionally not public and this summary is not independently reproducible after legacy deletion.
+> 证据级别：`legacy-summary`。来源原件有意不公开；旧仓删除后，本摘要不能独立复现。
 
-## Friction
+## 真实摩擦
 
-The first project began building cross-repository feedback, discovery and upgrade machinery before enough projects existed to test whether its rules were general.
+首个项目在还没有足够项目验证规则是否通用时，就开始建设跨仓反馈、发现和升级机制。
 
-## Hypothesis and change
+## 原因假设与变化
 
-Premature generalization was consuming product attention. Template feedback and upgrades were suspended; raw learning stays project-local until completion.
+过早抽象正在消耗产品注意力。因此暂停模板反馈与升级；原始学习在项目完成前只留在项目内部。
 
-## Validation
+## 产品验证
 
-Subsequent product increments no longer had startup template checks or upgrade work inserted into the mainline.
+后续产品增量的启动流程不再被插入模板检查或升级工作。
 
-## Result
+## 结果
 
-Keep the suspension. Extract a template once at project completion, and expect a second project to revise it.
+保留暂停状态。项目完成时统一提炼一次模板，并预期由第二个项目继续修订。

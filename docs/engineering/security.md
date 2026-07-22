@@ -1,29 +1,28 @@
-# Security and privacy engineering
+# 安全与隐私工程
 
-## Threat model
+## 威胁模型
 
-Public anonymous callers are untrusted. The service defends against accidental or hostile oversized input, Origin abuse, predictable identifiers, queue/budget exhaustion, sensitive/out-of-scope input, cross-run binding mistakes, HTML injection, raw-content logging and false success states.
+公开匿名调用方均不可信。服务防护以下风险：意外或恶意的超大输入、Origin 滥用、可预测标识符、队列/预算耗尽、敏感或越界输入、跨运行绑定错误、HTML 注入、原始内容日志和虚假成功状态。
 
-The service does not claim to defend against an administrator with arbitrary server or repository write access. Host, GitHub and cloud-account security remain platform responsibilities.
+服务不宣称能够防御拥有任意服务器或仓库写权限的管理员。主机、GitHub 和云账号安全仍由对应平台负责。
 
-## Controls
+## 控制措施
 
-- HTTPS through Caddy; exact Origin allowlist and no wildcard CORS.
-- Maximum 16 KiB HTTP body and maximum 500 Chinese characters of user content.
-- Cryptographically random run IDs; no user history/list endpoint.
-- Maximum 2 running and 4 queued jobs.
-- Per-browser soft limit and atomic global daily/monthly budget reservation.
-- Sensitive, safety and scope preflight before any Provider construction.
-- Zero automatic Provider retry; key never appears in request parameters, logs, SQLite or error responses.
-- No raw request or Provider response logging.
-- HTML output is escaped/rendered as text; stable public error codes omit tracebacks and local paths.
-- Approval records a human decision only and performs no external business action.
+- 通过 Caddy 提供 HTTPS；使用精确 Origin 白名单，不允许通配 CORS。
+- HTTP 请求体最大 16 KiB，用户内容最多 500 个中文字符。
+- 使用密码学随机运行 ID；不提供用户历史或列表端点。
+- 最多同时运行 2 个任务、排队 4 个任务。
+- 每浏览器软限制，以及全局日/月预算原子预留。
+- 构造任何 Provider 之前完成敏感、安全和范围前置检查。
+- Provider 自动重试为 0；密钥绝不出现在请求参数、日志、SQLite 或错误响应中。
+- 不记录原始请求或 Provider 响应日志。
+- HTML 输出经过转义或按文本渲染；稳定公开错误码不包含 traceback 或本机路径。
+- 批准操作只记录人工决定，不执行任何外部业务动作。
 
-## Live readiness
+## 实时模式就绪条件
 
-Live mode requires all of: explicit environment switch, assembled live runner, installed and verified dependencies/model, credential presence, passing budget/privacy gates and health readiness. A credential alone never changes health to live.
+实时模式必须同时满足：显式环境开关、已组装 `live` runner、依赖/模型安装且验证通过、凭据存在、预算/隐私门通过以及健康状态就绪。仅有凭据绝不会把健康状态切换为 `live`。
 
-## Repository safety
+## 仓库安全
 
-CI rejects credentials, local home paths, archives, databases, large files and private evaluation material. Actions are pinned to full commit SHAs. Production secrets exist only in GitHub Environment secrets and server environment files with restricted permissions.
-
+CI 拒绝凭据、本机用户目录路径、归档、数据库、大文件和私有评测材料。Actions 固定到完整提交 SHA。生产密钥只存在于 GitHub Environment secrets 和权限受限的服务器环境文件。

@@ -1,19 +1,19 @@
-# Case: value-first development reset
+# 案例：价值优先开发复位
 
-> Evidence level: `legacy-summary`. The source originals are intentionally not public and this summary is not independently reproducible after legacy deletion.
+> 证据级别：`legacy-summary`。来源原件有意不公开；旧仓删除后，本摘要不能独立复现。
 
-## Friction
+## 真实摩擦
 
-The repository accumulated evaluation, custody and governance machinery faster than the next product question was being answered.
+仓库中评测、保管和治理机制的增长速度，曾经快于下一个产品问题被回答的速度。
 
-## Hypothesis and change
+## 原因假设与变化
 
-Each increment must first name a user-visible result or critical unknown, run the cheapest falsification and impose test/review budgets.
+每个增量都必须先指出一项用户可见结果或关键未知，运行最便宜的证伪检查，并限制测试/复核预算。
 
-## Validation
+## 产品验证
 
-Oracle and retrieval work began using small public slices before more expensive candidate or HOLDOUT mechanisms. Failed directions stopped without becoming permanent mainline tests.
+Oracle 与检索工作先使用小型公开切片，再考虑更昂贵的候选或 HOLDOUT 机制。失败方向及时停止，没有长期占用主线测试。
 
-## Result
+## 结果
 
-Keep. Governance and evaluation infrastructure must justify why it cannot be reused or deferred.
+保留。治理和评测基础设施必须解释为何不能复用或延后。

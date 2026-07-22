@@ -1,14 +1,14 @@
-# Execution plan
+# 执行计划
 
-1. Freeze clean legacy commits and create verified temporary private bundles.
-2. Build a sibling allowlist-only candidate and commit the governance baseline.
-3. Extract the API/product package, selected regressions and synthetic assets.
-4. Migrate direction-B Web to standard Next standalone output.
-5. Add public-safety checks, CI, replay/live Docker targets and digest deployment.
-6. Add the insufficient-evidence replay preset and complete local, cold-start and fresh-clone gates.
-7. Preview the public tree, create/push the GitHub repository and verify CI.
-8. Swap the canonical local path, deploy and rehearse rollback.
-9. Record result/review; after user acceptance delete legacy and temporary rollback material.
+1. 冻结干净的旧仓提交，并创建经过校验的临时私有 bundle。
+2. 仅按白名单在同级目录构建候选仓，并提交治理基线。
+3. 抽取 API/产品包、精选回归案例和合成资产。
+4. 把方向 B Web 迁移为标准 Next `standalone` 输出。
+5. 增加公开安全检查、CI、回放/`live` Docker target 和按镜像摘要部署。
+6. 增加证据不足回放预设，完成本地、冷启动和全新克隆检查。
+7. 把面向人的 Markdown 文档统一为中文，固定元开发权威定义，并重新完成公开扫描与冷启动检查。
+8. 预览公开文件树，创建 / 推送 GitHub 仓库并验证 CI。
+9. 切换本地正式路径，部署并演练回滚。
+10. 记录结果 / 复核；用户验收后删除旧仓和临时回滚材料。
 
-Stop immediately before remote, path swap, deployment or deletion if the preceding gate is not green.
-
+如果前一检查点没有通过，必须停在远程写入、路径切换、部署或删除之前。

@@ -1,70 +1,69 @@
-# Development flow
+# 开发流程
 
-> Protocol: `value-first-development/2.0`  
-> Effective: `2026-07-23`
+> 协议：`value-first-development/2.0`
+> 生效日期：`2026-07-23`
 
-## Value contract
+## 价值合同
 
-Before implementation, record:
+实施前必须记录：
 
-1. What the user will newly see, or which critical unknown will be removed.
-2. The cheapest check likely to falsify the approach.
-3. Existing repository, dependency, open-source or vendor capabilities to reuse.
-4. Maximum investment and stop condition.
-5. Exactly what a passing result is allowed to claim.
+1. 用户将新增看到什么，或将消除哪个关键未知。
+2. 最便宜且最可能证伪该方向的检查是什么。
+3. 可以复用哪些仓库现有能力、依赖、开源方案或厂商能力。
+4. 最大投入和停止条件是什么。
+5. 检查通过后究竟允许得出什么结论。
 
-If the work cannot answer the first or fifth item, it does not enter implementation. Governance, test and documentation volume are not substitutes for product progress.
+如果一项工作无法回答第 1 项或第 5 项，就不得进入实现。治理、测试或文档数量不能代替产品进展。
 
-## Reuse review
+## 复用审查
 
-Review in this order:
+依次检查：
 
-1. Existing verified repository behavior or fixture.
-2. An already adopted dependency.
-3. A maintained, license-compatible open-source library.
-4. An official vendor SDK/API.
-5. A thin project-specific adapter.
-6. New general infrastructure only when the previous options fail a concrete semantic, license, security, compatibility, cost or maintenance requirement.
+1. 仓库中已经验证的行为或 fixture。
+2. 已采用的依赖。
+3. 仍在维护且许可证兼容的开源库。
+4. 厂商官方 SDK/API。
+5. 项目专用的薄适配层。
+6. 只有当前述选项确实不满足语义、许可证、安全、兼容性、成本或维护要求时，才建设新的通用基础设施。
 
-## Work size
+## 工作规模
 
-- Light: one local reversible boundary, no public contract, persistence, security or external risk.
-- Standard: user-visible behavior across multiple files or one bounded interface.
-- Full: architecture, API contract, persistence, security, privacy, public release, destructive migration or Provider mechanism.
+- 轻量：一个局部、可逆边界，不涉及公共合同、持久化、安全或外部风险。
+- 标准：跨多个文件的用户可见行为，或一个有界接口。
+- 完整：架构、API 合同、持久化、安全、隐私、公开发布、破坏性迁移或 Provider 机制。
 
-Only one increment is active. Standard/full work uses a normalized work folder; intermediate fixes remain inside the increment instead of producing repeated governance cycles.
+同一时刻只有一个活动增量。标准/完整工作使用规范化工作目录；中间修复保留在同一增量内，不重复制造治理循环。
 
-## External risk and maturity
+## 外部风险与成熟度
 
-Risk:
+风险：
 
-- `R0`: no network, fee or external write.
-- `R1`: synthetic/public data, fixed Provider, bounded calls/cost, no business write.
-- `R2`: sensitive data, account/public state, external write, irreversible operation or unbounded cost.
+- `R0`：无网络、费用或外部写入。
+- `R1`：仅合成/公开数据，固定 Provider，调用和费用可封顶，无业务写入。
+- `R2`：涉及敏感数据、账号/公开状态、外部写入、不可逆操作或无法封顶的费用。
 
-Maturity:
+成熟度：
 
-- `S0 exploration`: cheapest public/synthetic experiment; no private HOLDOUT or formal custody system.
-- `S1 development`: representative public and pressure slices; no unexplained structural failure.
-- `S2 candidate`: clean fixed commit, integration tests and independent review.
-- `S3 formal`: fixed candidate, new formal input, authorization, budget and strict conclusion contract.
+- `S0 exploration`：最便宜的公开/合成实验；不使用私有 HOLDOUT，也不建立正式保管系统。
+- `S1 development`：覆盖代表性公开切片和压力切片；没有未解释的结构失败。
+- `S2 candidate`：干净的固定提交、集成测试和独立复核。
+- `S3 formal`：固定候选、新的正式输入、授权、预算和严格结论合同。
 
-Stage labels do not authorize network or fees. Candidate-quality failure completes valid evidence collection; authorization, transport, budget, identity or package-integrity failure stops execution.
+阶段标签不授予网络或费用权限。候选质量失败时仍应完成有效证据收集；授权、传输、预算、身份或包完整性失败时必须停止执行。
 
-## Validation card
+## 验证说明卡
 
-Any validation that can change model quality, product readiness, candidate maturity or release claims must predeclare the question, non-goals, sample, code/prompt/model identity, repeats, scoring, hard/quality gates, leakage controls, maximum calls/cost, stop conditions and allowed conclusion.
+任何可能改变模型质量、产品就绪度、候选成熟度或发布主张的验证，都必须预先声明：问题、非目标、样本、代码/prompt/模型身份、重复次数、评分方式、硬门与质量门、泄漏控制、最大调用/费用、停止条件和允许结论。
 
-Standing authorization applies only when every condition in `AGENTS.md` is satisfied. Stage 12 is outside standing authorization and requires its own card and explicit approval.
+只有完全满足 `AGENTS.md` 中的全部条件时，常设授权才适用。Stage 12 不属于常设授权范围，必须使用独立说明卡并取得明确批准。
 
-## Stop rules
+## 停止规则
 
-- Run the cheapest falsification first.
-- Two loops without improving a user path, declared metric or critical unknown stop the direction.
-- If governance/evaluation infrastructure becomes larger than the product change, prove why it is required now or defer it.
-- Revealed HOLDOUT and failed candidates may be regression inputs only; they cannot grant a new formal conclusion.
+- 先运行最便宜的证伪检查。
+- 连续两个循环仍未改善用户路径、已声明指标或关键未知时，停止该方向。
+- 如果治理/评测基础设施开始大于产品改动，必须证明它此刻确有必要，否则延后。
+- 已揭示 HOLDOUT 和失败候选只能作为回归输入；不能据此形成新的正式结论。
 
-## Completion
+## 完成条件
 
-An increment is complete only when user-observable behavior or a critical unknown changed, relevant checks passed, required review closed, current facts are consistent, limitations are explicit and a bounded commit exists. Deployment and user acceptance are separate states.
-
+只有当用户可观察行为或关键未知确实发生变化、相关检查通过、必要复核关闭、当前事实一致、限制明确且形成有界提交时，一个增量才算工程完成。部署和用户验收是另外两个独立状态。

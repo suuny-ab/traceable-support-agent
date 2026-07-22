@@ -1,7 +1,9 @@
 # 项目事实
 
-> 项目 ID：`AIJOB-20260711-01`  
-> 状态：`public_beta_replay_only`  
+> 项目 ID：`AIJOB-20260711-01`
+>
+> 状态：`public_beta_replay_only`
+>
 > 最后核实：`2026-07-23`
 
 本文件只保存稳定产品事实。开发进度见 `docs/status.md`，路线见 `ROADMAP.md`，历史过程见 `docs/work/completed/`。
@@ -27,7 +29,8 @@
 - 公共控制面支持随机 run ID、精确 CORS、16 KiB 请求体限制、2 个运行中/4 个排队、浏览器软限、日/月硬预算和 30 天原文清理。
 - 本地 QA 与工单主链已接入真实 LLM 两阶段生成、来源校验、SQLite 决定和失败转人工，并通过固定合成场景体验验收。
 - 当前公网 Provider 固定关闭；预设场景使用明确标记的已验证回放，健康状态为 `replay_only`。
-- Canonical 候选 Web 提供两个 QA 和一个工单回放预设；`GEN-DEV-IE-001` 会在无批准来源时于 Provider 调用前停止并明确转人工。该新增预设尚未部署到当前公网版本。
+- 唯一权威仓库候选 Web 提供两个 QA 和一个工单回放预设；`GEN-DEV-IE-001` 会在无批准来源时于 Provider 调用前停止并明确转人工。该新增预设尚未部署到当前公网版本。
+- 公开源码仓库位于 <https://github.com/suuny-ab/traceable-support-agent>；公开仓库不等于产品成熟度晋级。
 
 ## 当前版本语义
 

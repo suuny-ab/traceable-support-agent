@@ -1,4 +1,3 @@
-# Meta experiments
+# 元开发实验
 
-Future bounded governance experiments may be recorded here only when they have a prior question, stop line and product validation. Store normalized inputs/results, never raw agent transcripts, credentials, Provider output or wire logs.
-
+未来只有在事先定义问题、停止线和产品验证的情况下，才能在此记录有界治理实验。只保存规范化输入与结果，绝不保存 Agent 原始对话、凭据、Provider 输出或 wire log。

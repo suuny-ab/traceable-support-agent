@@ -1,14 +1,14 @@
-# Operations
+# 运维说明
 
-## Current deployment
+## 当前部署
 
-- Public endpoint: <https://47.84.34.86/>.
-- Host: single Alibaba Cloud Singapore Ubuntu instance.
-- Caddy owns ports 80/443; Web/API bind only to `127.0.0.1:3000/8000`.
-- Current public mode is `replay_only`; no DeepSeek credential is configured.
-- The existing release remains the rollback anchor until the canonical digest deployment and a later production deployment both succeed.
+- 公开地址：<https://47.84.34.86/>。
+- 主机：一台阿里云新加坡 Ubuntu 实例。
+- Caddy 占用 80/443 端口；Web/API 仅绑定 `127.0.0.1:3000/8000`。
+- 当前公开模式为 `replay_only`；未配置 DeepSeek 凭据。
+- 在唯一权威仓库的镜像摘要部署及其后一次生产部署都成功之前，现有版本继续作为回滚锚点。
 
-## Target delivery chain
+## 目标交付链路
 
 ```text
 GitHub main → CI → GHCR linux/amd64 images → release manifest
@@ -16,29 +16,29 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
                                       ↘ failure: restore previous
 ```
 
-Images:
+镜像：
 
 - `ghcr.io/suuny-ab/traceable-support-agent-web`
 - `ghcr.io/suuny-ab/traceable-support-agent-api-replay`
 
-Production Compose pins immutable digests, never moving tags. The server stores each release under `/opt/traceable-support/releases/<git_sha>/` with its manifest and keeps `current`/`previous` symlinks.
+生产 Compose 固定不可变的镜像摘要，绝不使用会移动的 tag。服务器将每个版本及其清单保存在 `/opt/traceable-support/releases/<git_sha>/`，并维护 `current`/`previous` 符号链接。
 
-The first canonical release is a recoverable in-place switch, not a zero-downtime claim: the single host keeps Caddy on ports 80/443, while the loopback Web/API pair restarts briefly. Before that switch, the migration captures the currently running legacy image IDs into private server-local tags so the old release remains executable even if its original build context disappears. The canonical API uses its own named data volume; deployment never runs `down -v`, image pruning or legacy-volume cleanup.
+首个唯一权威仓库版本采用可恢复的原地切换，不宣称零停机：单台主机上的 Caddy 始终占用 80/443 端口，回环 Web/API 对会短暂重启。切换前，迁移会把正在运行的旧镜像 ID 固定为服务器本地私有 tag；即使原始构建上下文消失，旧版本仍可执行。唯一权威 API 使用独立命名数据卷；部署绝不运行 `down -v`、镜像清理或旧数据卷清理。
 
-## Deployment contract
+## 部署合同
 
-1. CI and public-safety scan are green.
-2. Build and publish both images for the same Git SHA.
-3. Generate `release-manifest.json` with image digests, API contract hash, knowledge/prompt/replay hashes and `provider_enabled=false`.
-4. Pull both immutable images, verify their digests and create the non-root canonical data volume with a one-shot ownership initializer.
-5. Start the candidate on temporary loopback ports and check four routes, health, exact CORS and Provider-disabled behavior.
-6. Atomically update `current`, restart the loopback production pair and repeat public smoke through Caddy.
-7. On any failure, restore the prior symlinks and root environment file, then reactivate `previous` and report the failed gate.
+1. CI 与公开安全扫描全部通过。
+2. 基于同一个 Git SHA 构建并发布两个镜像。
+3. 生成 `release-manifest.json`，绑定镜像摘要、API 合同哈希、知识/prompt/回放哈希和 `provider_enabled=false`。
+4. 拉取两个不可变镜像并验证摘要，再通过一次性属主初始化器创建非 root 的唯一权威数据卷。
+5. 在临时回环端口启动候选，检查四个路由、健康状态、精确 CORS 和 Provider 关闭行为。
+6. 原子更新 `current`，重启回环生产容器对，再通过 Caddy 重复公开冒烟检查。
+7. 任一环节失败时，恢复原符号链接和 root 环境文件，重新激活 `previous`，并报告失败检查门。
 
-The public origin and first-migration rehearsal flag are review-bound in `deploy/production-target.json`, not accepted as free-form dispatch inputs. The first production migration runs a controlled `old → new → old → new` rehearsal. If no verified legacy rollback anchor exists, it fails before canonical activation instead of pretending rollback was tested. The three release metadata paths use a compensating transaction; an ordinary write failure restores their prior state before the old containers are reactivated. Caddy receipt evidence is read before activation, and final receipt persistence is a gate whose failure rolls back to the verified legacy release. The legacy release is retained through the next successful production deployment.
+公开源站与首次迁移演练标志经过复核后固定在 `deploy/production-target.json`，不接受自由输入的调度参数。首次生产迁移执行受控的 `old → new → old → new` 演练。如果不存在经过验证的旧版回滚锚点，就会在激活唯一权威版本前失败，而不是假装已经测试回滚。三个发布元数据路径使用补偿事务；普通写入失败会先恢复原状态，再重新激活旧容器。激活前读取 Caddy 回执证据；最终回执持久化本身也是检查门，失败时回滚至经过验证的旧版本。旧版本会一直保留到下一次成功的生产部署之后。
 
-Deployment uses a restricted server user and a GitHub production environment. Server host/user/private key are Actions secrets; the server anonymously pulls public GHCR images.
+部署使用受限服务器用户与 GitHub production environment。服务器主机、用户和私钥作为 Actions secrets 保存；服务器匿名拉取公开 GHCR 镜像。
 
-## Data retention
+## 数据保留
 
-Raw request content is retained for at most 30 days. Cleanup removes SQLite rows and checkpoints/truncates WAL; raw content is not backed up. Long-term observability retains only aggregate counts and stable error classes.
+原始请求内容最多保留 30 天。清理会删除 SQLite 行，并对 WAL 执行 checkpoint/truncate；原始内容不做备份。长期可观察性只保留聚合计数和稳定错误类别。

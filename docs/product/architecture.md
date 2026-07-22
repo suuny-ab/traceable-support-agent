@@ -1,8 +1,8 @@
-# Product architecture
+# 产品架构
 
-## Context
+## 背景
 
-The product turns synthetic support questions or tickets into evidence-bound, human-reviewable results. Offline evaluation measures retrieval/generation quality; runtime mechanical gates cover observable evidence, safety, authorization, schema and technical failures without pretending to prove complete recall for arbitrary questions.
+本产品把合成客服问题或工单转化为有证据约束、可供人工审核的结果。离线评测衡量检索与生成质量；运行时机械门检查可观察的证据、安全、权限、结构和技术故障，但不假装能够证明任意问题的完整召回。
 
 ```text
 Next.js Web
@@ -18,20 +18,19 @@ ProductRunner
     └─ Validation: source, obligation, schema and handoff gates
 ```
 
-## Modules
+## 模块
 
-- `traceable_support.api`: HTTP, CORS, request limits, run lifecycle, persistence and public projection.
-- `traceable_support.product`: QA/ticket orchestration and classification.
-- `traceable_support.retrieval`: synthetic corpus, hybrid retrieval and model manifest.
-- `traceable_support.generation`: checklist, QA/ticket contracts and mechanical gates.
-- `traceable_support.provider`: transport contract, DeepSeek adapter, usage and atomic budget.
-- `evals`: public regression and future evaluation adapters; depends on product, never the reverse.
+- `traceable_support.api`：负责 HTTP、CORS、请求限制、运行生命周期、持久化和公开结果投影。
+- `traceable_support.product`：负责 QA/工单编排与分类。
+- `traceable_support.retrieval`：负责合成语料、混合检索和模型清单。
+- `traceable_support.generation`：负责义务清单、QA/工单合同和机械门。
+- `traceable_support.provider`：负责传输合同、DeepSeek 适配、用量与原子预算。
+- `evals`：承载公开回归和未来评测适配器；它依赖产品层，产品层不得反向依赖它。
 
-## Public states
+## 公开状态
 
-Runs move through `queued → retrieving → planning → generating → validating → completed|handoff`. Provider-disabled valid input returns `503 live_experience_unavailable` while the Web offers a separately labelled replay. Preflight handoff may complete deterministically without Provider.
+一次运行依次经过 `queued → retrieving → planning → generating → validating → completed|handoff`。Provider 关闭时，合法输入返回 `503 live_experience_unavailable`，Web 则提供明确标注的独立回放。前置检查触发转人工时，可以不调用 Provider 并确定性完成。
 
-## Deployment
+## 部署
 
-Web and replay API are separate non-root images. Caddy terminates HTTPS and proxies same-origin requests. SQLite is the single-node persistence layer; the project does not claim multi-node consistency or production HA.
-
+Web 与回放 API 使用两个独立的非 root 镜像。Caddy 终止 HTTPS 并代理同源请求。SQLite 是单节点持久化层；本项目不宣称多节点一致性或生产级高可用。

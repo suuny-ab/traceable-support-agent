@@ -1,17 +1,16 @@
-# ADR-0003: clean-baseline canonical public monorepo
+# ADR-0003：从干净基线建立公开唯一权威单仓
 
-> Status: accepted  
-> Date: `2026-07-23`
+> 状态：已采纳
+> 日期：`2026-07-23`
 
-## Context
+## 背景
 
-Product/API code and the direction-B Web lived in separate local repositories. The main repository's 385-commit history contained raw audit artifacts, debug archives and environment-specific material unsuitable for confident publication. Maintaining separate public and private code would create synchronization risk.
+产品/API 代码与方向 B Web 原本位于两个本地仓库。主仓库的 385 个提交中包含原始审计产物、调试归档和环境相关材料，不适合自信地公开。长期维护公开与私有两套代码还会带来同步风险。
 
-## Decision
+## 决定
 
-Create one public monorepo from an allowlist-only clean baseline. Preserve active product behavior, current governance semantics, selected synthetic regressions and normalized meta cases; do not rewrite or publish legacy history. Keep new formal plaintext and Provider raw output outside Git.
+从严格白名单重建干净基线，形成唯一公开单仓。保留当前产品行为、有效治理语义、精选合成回归和规范化元开发案例；不改写也不公开旧历史。新的正式未见集明文与 Provider 原始输出不得进入 Git。
 
-## Consequences
+## 后果
 
-The canonical repository is the sole future write source after cold-start, fresh-clone, remote and deployment acceptance. Legacy working trees and temporary bundles are deleted after user acceptance. Historical raw audit detail is intentionally unavailable from the canonical repository.
-
+只有在冷启动、全新克隆、远程仓库和部署验收通过后，唯一权威仓库才成为未来唯一写入源。用户验收后才删除旧工作树和临时 bundle。唯一权威仓库有意不提供历史原始审计细节。

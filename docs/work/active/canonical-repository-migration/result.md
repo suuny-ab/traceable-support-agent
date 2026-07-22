@@ -1,24 +1,35 @@
-# Result
+# 结果记录
 
-> Status: `in_progress`
+> 状态：`in_progress`
 
-## Interim verified receipts
+## 阶段性验证回执
 
-- Clean governance baseline: `57792e9`.
-- API/product extraction: 70 API, persistence, Provider-contract and offline-product tests passed locally.
-- The eight approved cases produce byte-identical old/new ordered Top-10 and Top-5 retrieval fixtures.
-- Knowledge unit inventory, three prompt byte hashes and Provider manifest match the frozen baseline.
-- Public control plane imports without third-party packages; a key alone cannot enable live mode.
-- Direction-B Web passes lint, typecheck, standard Next.js production build and 12 tests; all four routes return 200 from standalone output.
-- No Sites/vinext/Wrangler/Worker source, nested Git metadata or frontend build output is tracked.
-- Web and API base images, all GitHub Actions and the full Python live dependency closure are immutable-hash pinned; official npm audit reports zero known vulnerabilities.
-- Replay Web/API images run non-root without a model or credential; the local Compose check passed four routes, exact CORS, replay failure-close, SQLite volume ownership and API restart recovery.
-- The live image contains the byte-verified fixed BGE model and, with network disabled, reproduces all eight approved retrieval cases with `provider_calls=0`; `pip check` reports no broken requirements.
-- The release manifest binds the Git SHA, two image digests, API contract, knowledge/retrieval/replay/prompt/Compose/dependency hashes and explicitly records `provider_enabled=false`.
-- The production path retains host Caddy/IP HTTPS, captures the legacy image IDs before first migration, uses a separate canonical volume and supports the controlled `old → new → old → new` rehearsal. No production switch has been attempted yet.
-- The deployment candidate passed Cycle 3 independent review after closing pre-activation anchor, fixed-origin, metadata half-commit and final-receipt failure paths.
-- The real governance-validation increment adds a third replay preset: `GEN-DEV-IE-001` stops at retrieval when no approved source supports a Wi-Fi compatibility claim and shows a typed handoff. Its fixed mechanical expectation declares `provider_call_count=0`; this increment itself also made zero Provider calls. The Web now passes 15 tests; the current public server remains unchanged.
-- A production Web image ran as the non-root `node` user with a read-only root filesystem. Real-browser desktop and mobile-breakpoint checks confirmed the replay-only route, `STOP/WAIT/WAIT/WAIT` trace, absent evidence and approval controls, no horizontal overflow and no console warnings or errors.
-- Calls made while implementing and verifying this increment: `0`; Provider cost: `0 CNY`.
+- 干净治理基线：`57792e9`。
+- API/产品抽取：本地 70 个 API、持久化、Provider 合同和离线产品测试通过。
+- 八个批准案例的新旧有序 Top-10 / Top-5 检索 fixture 字节完全一致。
+- 知识单元清单、三个 prompt 字节哈希和 Provider 清单与冻结基线一致。
+- 公共控制面无需第三方包即可导入；仅有密钥不能启用实时模式。
+- 方向 B Web 通过 lint、typecheck、标准 Next.js 生产构建和当时的 12 个测试；standalone 输出的四个路由均返回 `200`。
+- 仓库未跟踪 Sites / vinext / Wrangler / Worker 源码、嵌套 Git 元数据或前端构建产物。
+- Web/API 基础镜像、全部 GitHub Actions 和完整 Python `live` 依赖闭包均固定到不可变哈希；官方 npm audit 报告 0 个已知漏洞。
+- 回放 Web/API 镜像无需模型或凭据即可由非 root 用户运行；本地 Compose 检查通过四路由、精确 CORS、回放失败关闭、SQLite 卷所有权和 API 重启恢复。
+- live 镜像包含经过字节校验的固定 BGE 模型，并在断网条件下以 `provider_calls=0` 复现全部八个批准检索案例；`pip check` 未发现破损依赖。
+- 发布清单绑定 Git SHA、两个镜像摘要、API 合同、知识/检索/回放/prompt/Compose/依赖哈希，并明确记录 `provider_enabled=false`。
+- 生产路径保留宿主机 Caddy/IP HTTPS，在首次迁移前捕获旧版本镜像 ID，使用独立的唯一权威数据卷，并支持受控的“旧 → 新 → 旧 → 新”演练。尚未尝试生产切换。
+- 部署候选在关闭激活前回滚锚点、固定 Origin、元数据半提交和最终回执失败路径后，通过第 3 轮独立复核。
+- 真实治理验证增量新增第三个回放预设：没有批准来源支持 Wi-Fi 兼容性主张时，`GEN-DEV-IE-001` 在检索阶段停止并给出类型明确的转人工结果。固定机械预期声明 `provider_call_count=0`；本增量实际 Provider 调用同样为 0。Web 现有 15 个测试通过；当前公网服务器保持不变。
+- 生产 Web 镜像以非 root `node` 用户和只读根文件系统运行。真实浏览器的桌面 / 手机断点检查确认：只走回放、轨迹为 `STOP/WAIT/WAIT/WAIT`、无来源与批准控件、无横向溢出、控制台无警告或错误。
+- 本地候选按计划收口为六个提交主题。这只关闭候选构建；全新克隆、冷启动、公开远程仓库、正式路径、生产和用户验收仍是独立检查门。
+- 一个使用 `--no-local` 的全新克隆通过六主题历史扫描、带字节校验模型的 70 个 API 测试、15 个 Web 测试、lint、typecheck、治理工具和 0 漏洞 npm audit。全新 Web、回放和离线 `live` 镜像构建成功；回放服务保持 `replay_only`，四个 Web 路由均返回 `200`，断网 `live` 检索以 `provider_calls=0` 通过八个公开案例。
+- 第一次无上下文冷启动得分 `9/10`，发现状态文件仍把已经存在的第六提交写成未来步骤。修正后，最终候选得分 `10/10`。这证明仓库可恢复，不代表用户验收或已经公开发布。
+- 公开前文档中文化覆盖 34 份原主要英文文档，并统一校对 3 份中英混合入口文档；总计 39 份面向人的 Markdown 均以中文叙事为主，4 份参与知识哈希的合成 Markdown 保持字节不变。固定暂存树 `2cf58704664233a92319eb3e9b47efef9e508c17` 通过两项独立只读复核；修订后的六提交候选又通过全新克隆扫描和最终中文冷启动 `10/10`。
+- 用户复核后要求强化“元开发是什么”。`docs/meta/README.md`现作为唯一权威定义，按主要改变对象区分产品开发与元开发，明确五类范围、非范围、进入/退出边界、真实产品验证和保留/修订/撤回后的事实同步；`AGENTS.md`只保留摘要与路由。固定暂存树 `74333c0dfd1b162dd5b41e0d65e4f5017a402d83` 通过独立语义复核；修订后的六提交候选又通过全新克隆扫描、元开发定义复述和产品/元开发分类验证。
+- 公开前预览确认四个在线页面和健康接口均返回 `200`，健康状态仍为 `replay_only`。仓库保持 141 个跟踪文件和六个提交主题，历史与工作树公开扫描通过。
+- 预览发现公开证据表把尚未执行的生产回滚演练写入既有证据，已改为仅声明全新克隆重建和经过故障注入测试的回滚机制，并明确公开镜像、生产演练和公网切换均未完成。
+- README 现在展示现有预览图、在线入口、适用于当前公网基线的 60 秒体验路线、工程亮点、准确架构和可点击导航；手动开发拆分为两个终端，并补齐本地 SQLite、精确 Origin 和 API 地址。环境参数读取、51 项相关 API 测试、index 公开扫描和 12 项治理工具测试通过，其中 3 项 Windows 符号链接测试按预期跳过。
+- 固定暂存树 `63c39b87dc79663a1701c3d2b9fb48037147f7c0` 通过两项独立公开前复核：现网与候选第三预设没有混淆，Stage 12、Provider、GitHub、公开镜像、生产部署和回滚演练均未被写成已完成；README 入口、相对链接和手动开发参数与实现一致。
+- 用户确认后创建公开仓库 <https://github.com/suuny-ab/traceable-support-agent>，并推送六个既定主题提交。首次 GitHub Actions 运行 `29979801403` 中 API 与容器任务通过，治理与 Web 任务失败，镜像发布按门禁跳过。
+- 首次 CI 的两个根因均已缩到批准范围：治理任务发现 `PROJECT.md` 两处 Markdown 行尾空格；Web 安全审计发现 Next.js `16.2.6` 存在高危公告，官方修复版本为 `16.2.11`。本轮只移除空格、升级 Next.js 与配套 ESLint 配置补丁版本，并同步已公开的仓库事实；不改变产品算法、接口、Provider 或部署。
+- 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
-Remote publication, canonical-path switch, production deployment and user acceptance remain pending. The legacy repository and current public deployment are unchanged.
+公开源码仓库已经建立；修复版 CI、分支保护和 GitHub 来源全新克隆仍属于本检查点。正式路径切换、生产部署和用户验收尚未完成。旧仓库和当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。

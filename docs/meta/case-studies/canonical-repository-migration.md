@@ -1,26 +1,26 @@
-# Case: canonical repository migration
+# 案例：唯一权威仓库迁移
 
-> Status: `in_progress`
+> 状态：`in_progress`
 
-## Friction
+## 真实摩擦
 
-The product, portfolio and governance were split between two Git repositories. The main repository contained 385 commits and large raw audit/history areas; current status and stable facts were difficult to recover despite an effective development workflow.
+产品、作品集与治理分散在两个 Git 仓库中。主仓库包含 385 个提交和大块原始审计/历史区域；虽然开发流程有效，但当前状态和稳定事实仍难以恢复。
 
-## Hypothesis and minimum change
+## 原因假设与最小变化
 
-Keep one clean public monorepo and the proven governance semantics, but migrate only active product code, synthetic knowledge, selected regressions, current decisions and normalized meta cases. Exclude raw audit/history material.
+保留一个干净的公开单仓和已经证明有效的治理语义，但只迁移活动产品代码、合成知识、精选回归、当前决定和规范化元开发案例；排除原始审计/历史材料。
 
-## Validation increment
+## 验证增量
 
-After cold-start and equivalence checks, add `GEN-DEV-IE-001` as an “insufficient evidence → human handoff” replay preset through the new work protocol.
+通过新工作协议，把 `GEN-DEV-IE-001` 增加为第三个“证据不足 → 转人工”回放预设，再用全新克隆与冷启动检查验证新仓库仍可恢复开发上下文。
 
-## Migration provenance
+## 迁移来源
 
-- Legacy main baseline: `ab2c4b8a374937a8727e414991799dba490db30b`.
-- Legacy Web baseline: `b1bcc94c5cf122a6c6dcff5d007eb6194d47dcc7`.
-- Legacy repositories and raw history are intentionally not public and will be deleted after canonical, remote, deployment and user acceptance.
-- This record contains no local path and does not point to a permanent archive.
+- 旧主仓基线：`ab2c4b8a374937a8727e414991799dba490db30b`。
+- 旧 Web 基线：`b1bcc94c5cf122a6c6dcff5d007eb6194d47dcc7`。
+- 旧仓库与原始历史有意不公开；只有唯一权威仓库、远程仓库、部署和用户验收都通过后才会删除。
+- 本记录不包含本机路径，也不指向永久归档。
 
-## Observed effect
+## 实际效果
 
-The governed repository supported a user-visible third replay preset without reopening legacy audit areas or changing the API/Provider boundary. The asset is mechanically bound to the public `GEN-DEV-IE-001` expectation and passed 15 Web tests plus the public scanner. Fresh-clone, deployment and user acceptance remain pending before the governance change can be retained as fully proven.
+新治理仓库支持了用户可见的第三个回放预设，未重新打开旧审计区域，也未改变 API/Provider 边界。该资产与公开 `GEN-DEV-IE-001` 预期机械绑定，并通过 15 项 Web 测试、真实浏览器交互和公开扫描。随后，全新克隆通过完整 API/Web/容器检查门；无上下文 Agent 首次发现一处过期状态描述并获得 `9/10`，修正后的快照达到 `10/10`。在远程仓库、部署和用户验收完成前，本次治理变化仍不能记为已经完全证明并永久保留。

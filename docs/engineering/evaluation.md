@@ -1,8 +1,8 @@
-# Evaluation boundary
+# 评测边界
 
-## Public regression set
+## 公开回归集
 
-The canonical repository carries only eight sanitized regression cases:
+唯一权威仓库只保留以下八个经过脱敏的回归案例：
 
 - `GEN-DEV-QA-003`
 - `GEN-DEV-QA-006`
@@ -13,17 +13,16 @@ The canonical repository carries only eight sanitized regression cases:
 - `GEN-DEV-MH-003`
 - `BRD-QA-005`
 
-They cover multi-source QA, stop-condition QA, an approvable ticket, product-model boundary, insufficient evidence, safety handoff, false completion and source-visible-obligation binding. Only synthetic inputs, required fixtures and mechanical expectations are public.
+它们覆盖多来源 QA、停止条件 QA、可审批工单、产品型号边界、证据不足、安全转人工、虚假完成态和“来源—客户可见义务”绑定。公开内容仅包括合成输入、必要 fixture 和机械预期。
 
-## Public vs private
+## 公开与私有边界
 
-Public Git may contain development/regression cases, contracts, runner code, commitments and aggregate reports. It never contains new unseen Stage 12 plaintext, Provider raw output, authorization envelopes, credentials or account observations.
+公开 Git 可以包含开发/回归案例、合同、runner 代码、约束和聚合报告。它绝不包含新的 Stage 12 未见集明文、Provider 原始输出、授权信封、凭据或账号观察。
 
-Private formal input lives outside the repository. Revealed or consumed HOLDOUT is regression-only and cannot be tuned on or used to claim a new formal result.
+私有正式输入保存在仓库外。已经揭示或消费的 HOLDOUT 只能用于回归，既不能用于调优，也不能支持新的正式结果主张。
 
 ## Stage 12
 
-Stage 12 is not part of the governance migration. It will bind the same candidate version used by the website, a new unseen set, maximum calls, exact worst-case cost, scoring, repeats, hard stops and publication authority before any Provider execution.
+Stage 12 不属于本次仓库治理迁移。在任何 Provider 执行之前，它必须绑定网站所用的同一候选版本、全新未见集、最大调用数、精确最坏费用、评分方式、重复次数、硬停条件和发布权限。
 
-`product/0.1.0` remains blocked until all safety/privacy/cost/failure-closed gates and the declared business-quality gate pass.
-
+在安全、隐私、费用、失败关闭硬门及已声明业务质量门全部通过之前，`product/0.1.0` 继续保持未发布。

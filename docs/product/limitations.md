@@ -1,11 +1,10 @@
-# Limitations
+# 已知限制
 
-- Synthetic knowledge and synthetic tickets only.
-- Public service is Beta and currently `replay_only`.
-- No Stage 12 result and no `product/0.1.0` release.
-- No automatic sending, ticket closure, refund, replacement or other business action.
-- No login, multi-tenancy, user history or production customer integration.
-- Single-node SQLite deployment; no production HA or SLA claim.
-- Retrieval and generation are bounded to the small CZ-R1/CZ-R2 corpus; no open-domain claim.
-- A passing mechanical gate does not prove perfect language quality or complete real-world recall; human review remains required.
-
+- 仅使用合成知识和合成工单。
+- 公开服务仍为 Beta，当前状态为 `replay_only`。
+- 没有 Stage 12 结果，也没有发布 `product/0.1.0`。
+- 不会自动发送、关闭工单、退款、换新或执行其他业务动作。
+- 不提供登录、多租户、用户历史或生产客户系统集成。
+- 使用单节点 SQLite 部署；不宣称生产级高可用或 SLA。
+- 检索与生成仅覆盖小规模 CZ-R1/CZ-R2 语料；不宣称支持开放域。
+- 机械门通过不代表语言质量完美或真实世界召回完整；仍然需要人工审核。

@@ -1,14 +1,14 @@
-# Public claim evidence map
+# 公开主张证据表
 
-| Claim | Evidence | Honest limit |
+| 公开主张 | 证据 | 诚实边界 |
 | --- | --- | --- |
-| Four-page portfolio is publicly reachable | HTTPS smoke for `/`, `/design`, `/app`, `/privacy` | Does not prove final visual design |
-| Public service fails closed with Provider disabled | API integration and container health tests | Does not prove live Provider quality |
-| Runs are bounded by queue, budget and retention controls | API unit/integration tests and SQLite restart tests | Single-node only |
-| QA and ticket product paths support two-stage generation | Offline live-target product fixtures and prior fixed synthetic runs | Stage 12 not run |
-| Executable facts bind to sources and visible obligations | Selected public regressions and mechanical validators | Human semantic review still required |
-| Human approval does not execute external actions | Decision API contract and absence of action adapters | Demonstration workflow only |
-| Insufficient evidence can be shown as a typed pre-Provider handoff | `GEN-DEV-IE-001` replay asset, public expectation binding and Web tests | Verified replay only; inherited live chain does not yet enforce the same handoff |
-| Public Beta can be rebuilt and rolled back | CI images, release manifest and controlled deployment rehearsal | No production HA/SLA |
+| 四页作品集可以公开访问 | `/`、`/design`、`/app`、`/privacy` 的 HTTPS 冒烟检查 | 不证明最终视觉设计已经完成 |
+| Provider 关闭时，公开服务会失败关闭 | API 集成测试和容器健康检查 | 不证明实时 Provider 的质量 |
+| 运行受队列、预算和保留期控制 | API 单元/集成测试和 SQLite 重启测试 | 仅限单节点 |
+| QA 与工单产品路径支持两阶段生成 | 离线 `live` target 产品 fixture 与既有固定合成运行 | 尚未执行 Stage 12 |
+| 可执行事实绑定来源和客户可见义务 | 精选公开回归与机械校验器 | 仍需要人工语义审核 |
+| 人工批准不会执行外部动作 | 决定 API 合同，且不存在业务动作适配器 | 仅为演示 Workflow |
+| 证据不足可在调用 Provider 前形成类型明确的转人工结果 | `GEN-DEV-IE-001` 回放资产、公开机械预期绑定和 Web 测试 | 仅为已验证回放；继承的实时主链尚未实施相同转人工 |
+| 候选版本可以从全新克隆重建，并具备失败关闭的回滚机制 | 全新克隆与容器检查、发布清单测试和发布状态故障注入测试 | 尚未创建公开镜像或执行生产回滚演练；不证明当前公网版本已经切换 |
 
-No claim may be added to the homepage, resume or README without a code, test or runtime evidence row. Unknown or unrun claims remain `未验证`.
+主页、简历或 README 中的每项新增主张，都必须在本表中绑定代码、测试或运行证据。未知或未执行的主张继续标记为 `未验证`。

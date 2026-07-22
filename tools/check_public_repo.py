@@ -361,7 +361,12 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
         for phrase in ("replay_only", "product/0.1.0", "not_released"):
             if phrase not in claims:
                 errors.append(f"required_public_claim_missing:{phrase}")
-        if "provider | disabled" not in status.lower() or "zero calls" not in status.lower():
+        machine_claims = (
+            "provider_enabled=false",
+            "provider_calls=0",
+            "provider_cost_cny=0",
+        )
+        if any(phrase not in status.lower() for phrase in machine_claims):
             errors.append("migration_provider_zero_claim_missing")
     except (UnicodeDecodeError, ValueError) as exc:
         errors.append(str(exc))

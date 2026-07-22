@@ -1,17 +1,16 @@
-# ADR-0002: bounded Top-10 generation context
+# ADR-0002：有上限的 Top-10 生成上下文
 
-> Status: accepted as a development boundary  
-> Date: `2026-07-21`
+> 状态：已采纳为开发边界
+> 日期：`2026-07-21`
 
-## Context
+## 背景
 
-Several selection heuristics dropped required facts even when the model-filtered hybrid Top-10 candidate pool contained them. Runtime compression was becoming a second unproven recall system.
+即使经过型号过滤的混合检索 Top-10 候选池已经包含必要事实，多种选择启发式仍会将这些事实丢弃。运行时压缩正在变成第二套未经证明的召回系统。
 
-## Decision
+## 决定
 
-Allow the model-filtered hybrid Top-10 source context to enter evidence-constrained generation during development, with source selection and customer-visible fact binding validated afterward. Evaluation labels and required facts never enter the request.
+开发期间允许经过型号过滤的混合检索 Top-10 来源上下文进入证据约束生成，随后再校验来源选择与客户可见事实绑定。评测标签和必要事实绝不进入请求。
 
-## Consequences
+## 后果
 
-This removes an unproven selector from the development path but increases context and generation risk. The direction earns only evaluation eligibility; it is not a product-quality claim and cannot use revealed cases for iterative tuning.
-
+这会从开发路径中移除未经证明的选择器，但也增加上下文和生成风险。该方向只获得进入评测的资格；它不是产品质量主张，也不能使用已揭示案例反复调优。

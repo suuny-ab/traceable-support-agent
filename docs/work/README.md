@@ -1,13 +1,12 @@
-# Work records
+# 工作记录
 
-Standard and full increments live in `active/<slug>/` with four small files:
+标准和完整增量存放在 `active/<slug>/`，每个增量包含四个短文件：
 
-- `spec.md`: user-visible outcome, scope, risk/maturity and acceptance;
-- `plan.md`: ordered implementation and stop conditions;
-- `result.md`: observed delivery and verification, never intended claims;
-- `review.md`: independent fixed-snapshot findings and closure.
+- `spec.md`：用户可见结果、范围、风险 / 成熟度和验收条件；
+- `plan.md`：有顺序的实施步骤与停止条件；
+- `result.md`：实际交付和验证结果，不记录仅仅预期的主张；
+- `review.md`：独立固定快照复核及其收口结论。
 
-There is exactly one user-facing active increment. Once its code, verification, review and fact updates are closed, move the entire directory to `completed/`; completed work cannot authorize new changes. Lightweight work needs only a concise result in the affected current document and a bounded commit.
+同一时间只能有一个面向用户或元开发的活动增量。代码、验证、复核和事实更新全部关闭后，才把整个目录移入 `completed/`；已完成工作不能授权新的改动。轻量工作只需在受影响的当前文档中留下简洁结果，并形成一个边界清楚的提交。
 
-Git records technical closure. GitHub publication, production deployment, user acceptance and destructive cleanup remain separate checkpoints and cannot be inferred from a tracked file.
-
+Git 只记录技术收口。GitHub 公开发布、生产部署、用户验收和破坏性清理仍是独立检查点，不能从任何被跟踪文件中推断已经获准。

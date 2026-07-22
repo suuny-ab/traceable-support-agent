@@ -1,19 +1,19 @@
-# Case: R/S dual-axis recovery
+# 案例：恢复 R/S 双轴治理
 
-> Evidence level: `legacy-summary`. The source originals are intentionally not public and this summary is not independently reproducible after legacy deletion.
+> 证据级别：`legacy-summary`。来源原件有意不公开；旧仓删除后，本摘要不能独立复现。
 
-## Friction
+## 真实摩擦
 
-Early governance treated every Provider-related task as the same engineering size and maturity, creating heavy process during small diagnostics while still leaving authorization semantics unclear.
+早期治理把所有 Provider 相关任务视为相同的工程规模与成熟度，导致小型诊断也背负沉重流程，同时授权语义仍不清楚。
 
-## Hypothesis and change
+## 原因假设与变化
 
-Engineering complexity, external risk and maturity answer different questions. The project separated local/standard/full work from `R0/R1/R2` and `S0/S1/S2/S3`.
+工程复杂度、外部风险和成熟度回答的是不同问题。项目把轻量/标准/完整工程路径，与 `R0/R1/R2`、`S0/S1/S2/S3` 分开记录。
 
-## Validation
+## 产品验证
 
-Later bounded Provider diagnostics used the reviewed transport and fixed budgets without rebuilding the whole governance mechanism, while candidate/formal gates remained strict.
+后续有界 Provider 诊断可以复用已经复核的 transport 和固定预算，不必重建整套治理机制；候选与正式检查门仍保持严格。
 
-## Result
+## 结果
 
-Keep. The axes reduce exploration overhead without weakening fees, privacy, authorization or conclusion truth. Do not use labels to bypass a gate.
+保留。双轴减少探索开销，但不削弱费用、隐私、授权或结论真实性。不得利用标签绕过任何检查门。

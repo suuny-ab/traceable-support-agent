@@ -1,19 +1,19 @@
-# Quality strategy
+# 质量策略
 
-## Tiers
+## 分层
 
-| Tier | Purpose | Target | Default entry |
+| 层级 | 用途 | 目标耗时 | 默认入口 |
 | --- | --- | ---: | --- |
-| Fast | governance, public boundary and stable API smoke | `<=10s` | public scanner, tool tests and no-model API subset |
-| Candidate | full API/product tests with the pinned local model | `<=60s` | `python -m pytest api/tests` with explicit model root |
-| Product | Web build, replay/live-offline images and Compose smoke | `<=90s` | Web tests plus replay compose and offline live-target checks |
-| Audit | public release, history boundary or formal candidate | on demand | secret/path/large-file scan, fresh clone and deployment checks |
+| Fast | 治理、公开边界与稳定 API 冒烟 | `<=10s` | 公开扫描、工具测试和无模型 API 子集 |
+| Candidate | 使用固定本地模型的完整 API/产品测试 | `<=60s` | 显式指定模型根目录后运行 `python -m pytest api/tests` |
+| Product | Web 构建、回放/离线 live 镜像和 Compose 冒烟 | `<=90s` | Web 测试、回放 Compose 和离线 `live` target 检查 |
+| Audit | 公开发布、历史边界或正式候选 | 按需 | 密钥/路径/大文件扫描、全新克隆和部署检查 |
 
-HOLDOUT, paid calibration and legacy audit never enter Fast/Product by default.
+HOLDOUT、付费校准和旧审计默认均不进入 Fast/Product。
 
-## Local entries
+## 本地入口
 
-PowerShell Fast checks from the repository root:
+从仓库根目录执行 PowerShell Fast 检查：
 
 ```powershell
 python tools/check_public_repo.py --scope worktree
@@ -22,7 +22,7 @@ $env:PYTHONPATH = "api/src"
 python -m pytest api/tests/test_package_boundaries.py api/tests/test_public_api.py api/tests/test_provider_usage.py
 ```
 
-Candidate API checks require the byte-verified BGE model. The downloader is used in a clean environment; an existing verified model root can be supplied locally without copying it into the repository:
+Candidate API 检查需要经过字节验证的 BGE 模型。下载器应在干净环境中使用；也可以在本机指定已有且验证通过的模型根目录，但不得把模型复制进仓库：
 
 ```powershell
 python deploy/download_embedding_model.py --manifest api/src/traceable_support/retrieval/bge-small-zh-v1.5-fastembed.json --root .local-model
@@ -31,9 +31,9 @@ $env:TRACEABLE_MODEL_ROOT = "$PWD/.local-model/artifacts/models/fastembed/fast-b
 python -m pytest api/tests
 ```
 
-`.local-model/` is ignored and must never be committed. CI installs the fully pinned test/live dependency locks, downloads the same model from its allowlisted source, verifies every file size/hash, and then runs this Candidate entry. The live image is tested with networking disabled and performs no Provider call.
+`.local-model/` 已被忽略，绝不能提交。CI 安装完全锁定的测试/`live` 依赖，从白名单来源下载同一模型，校验每个文件的大小和哈希，再运行 Candidate 入口。`live` 镜像在禁用网络的条件下测试，不产生 Provider 调用。
 
-Web checks:
+Web 检查：
 
 ```powershell
 Set-Location web
@@ -44,39 +44,39 @@ npm run typecheck
 npm test
 ```
 
-## Required checks
+## 必需检查
 
-### Governance and public safety
+### 治理与公开安全
 
-- exactly one active work item and valid status link;
-- no nested Git repositories outside the root;
-- no Windows home paths, secrets, credentials, raw Provider content, archives, databases or private HOLDOUT;
-- no tracked file larger than 5 MiB; initial exception list is empty;
-- public claims agree with `provider_enabled=false`, `replay_only` and `product/0.1.0 not released`;
-- production package cannot import `evals`, `tools` or completed work.
+- 恰好只有一个活动工作项，且状态链接有效；
+- 除仓库根目录外不存在嵌套 Git 仓库；
+- 不存在 Windows 用户目录路径、密钥、凭据、Provider 原始内容、归档、数据库或私有 HOLDOUT；
+- 已跟踪文件均不超过 5 MiB，初始例外清单为空；
+- 公开主张与 `provider_enabled=false`、`replay_only`、`product/0.1.0 not released` 一致；
+- 生产包不得导入 `evals`、`tools` 或已完成工作项。
 
 ### API
 
-- four public endpoints and stable error codes;
-- sensitive, out-of-scope and safety preflight before Provider assembly;
-- random run IDs, exact CORS, 16 KiB body limit, queue/concurrency limits and atomic budget reservation;
-- SQLite decision persistence, 30-day cleanup, WAL cleanup and restart recovery;
-- replay mode starts without model, live dependency or credential;
-- live target uses offline transport only in CI.
+- 四个公开端点和稳定错误码；
+- 在组装 Provider 之前完成敏感、越界和安全前置检查；
+- 随机运行 ID、精确 CORS、16 KiB 请求体限制、队列/并发限制和原子预算预留；
+- SQLite 决定持久化、30 天清理、WAL 清理和重启恢复；
+- 回放模式不安装模型、`live` 依赖或凭据也能启动；
+- CI 中的 `live` target 只使用离线 transport。
 
 ### Web
 
-- lint, TypeScript, unit/protocol tests and standard Next production build;
-- `/`, `/design`, `/app`, `/privacy` render;
-- loading/input lock, replay fallback, source/obligation display and keyboard/mobile behavior remain valid.
+- lint、TypeScript、单元/协议测试和标准 Next 生产构建；
+- `/`、`/design`、`/app`、`/privacy` 均能渲染；
+- 加载/输入锁定、回放降级、来源/义务展示以及键盘/手机行为保持有效。
 
-### Containers and deployment
+### 容器与部署
 
-- images run as non-root users and expose only loopback-bound application ports through Compose;
-- health checks report `replay_only` in this increment;
-- release manifest binds Git SHA, image digests and contract/content hashes;
-- failed health switch returns to the previous release.
+- 镜像以内置非 root 用户运行，并通过 Compose 只暴露绑定回环地址的应用端口；
+- 本增量健康检查报告 `replay_only`；
+- 发布清单绑定 Git SHA、镜像摘要以及合同/内容哈希；
+- 健康切换失败时恢复上一版本。
 
-## Evidence semantics
+## 证据语义
 
-Passing unit tests prove only their declared contracts. Replay proves a verified historical product result, not a new Provider run. Offline live-target tests prove assembly and failure boundaries, not language quality. User acceptance is recorded only after the user actually tries the result.
+单元测试通过只证明其明确声明的合同。回放证明经过验证的历史产品结果，不是新的 Provider 调用。离线 `live` target 测试证明装配和失败边界，不证明语言质量。只有用户实际体验结果后，才能记录用户验收。

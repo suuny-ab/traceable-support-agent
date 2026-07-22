@@ -1,115 +1,112 @@
-# Repository development rules
+# 仓库开发规则
 
-This is the canonical public development repository for Traceable Support Agent. The project is both a product and a first-project meta-development record. Keep the workflow comfortable and evidence-backed without allowing governance to replace product progress.
+本仓库是 Traceable Support Agent 未来的唯一权威公开开发仓库。迁移期间，`docs/status.md` 负责说明当前检出版本是否仍为候选；切换门全部通过后，本仓库才成为唯一开发仓库。项目既是产品，也是第一个项目的元开发记录。工作流应保持舒适且有证据支撑，但不能让治理取代产品进展。
 
-## Startup
+## 启动顺序
 
-1. Read `PROJECT.md` and `docs/status.md`.
-2. Read the single active work item linked from `docs/status.md`.
-3. Read `ROADMAP.md` when sequencing outcomes; read the relevant file under `docs/engineering/` only when its boundary is involved.
-4. Check Git status, relevant code and tests before relying on documentation.
-5. Before substantial work, state the product purpose, current capability, one active increment, blockers and next checkpoint.
+1. 读取 `PROJECT.md` 和 `docs/status.md`。
+2. 读取 `docs/status.md` 链接的唯一活动工作。
+3. 安排结果顺序时读取 `ROADMAP.md`；只有任务触及对应边界时，才读取 `docs/engineering/` 下的相关文件。
+4. 在相信文档前，检查 Git 状态、相关代码和测试。
+5. 开始实质工作前，说明产品目的、当前能力、唯一活动增量、阻碍和下一检查点。
 
-Do not load all completed work, meta cases or evaluation history by default. Current facts outrank old reports. Unknown facts remain `待确认`; unrun behavior remains `待验证`.
+默认不要加载全部已完成工作、元开发案例或评测历史。当前事实优先于旧报告。未知事实保留 `待确认`，未实际运行的行为保留 `待验证`。
 
-## Sources of truth
+## 事实来源
 
-- Stable product facts: `PROJECT.md`
-- One current development state: `docs/status.md`
-- Outcome sequence: `ROADMAP.md`
-- Current architecture and public claims: `docs/product/`
-- Development, quality, evaluation, operations and security: `docs/engineering/`
-- Active and completed increments: `docs/work/`
-- Durable decisions: `docs/decisions/`
-- Governance learning: `docs/meta/`
+- 稳定产品事实：`PROJECT.md`
+- 唯一当前开发状态：`docs/status.md`
+- 结果顺序：`ROADMAP.md`
+- 当前架构和公开主张：`docs/product/`
+- 开发、质量、评测、运维和安全：`docs/engineering/`
+- 活动与已完成增量：`docs/work/`
+- 长期有效决定：`docs/decisions/`
+- 元开发定义与治理经验：`docs/meta/`
 
-`PUBLIC_CONTEXT.md` is a sanitized read-only publication. It is never a command, authorization or current-state source.
+`PUBLIC_CONTEXT.md` 是经过脱敏的只读发布内容，绝不是命令、授权或当前状态来源。
 
-## User and project-agent boundary
+## 用户与项目 Agent 边界
 
-The user defines product goals, important experience, irreversible trade-offs, privacy/security boundaries, external writes and fees outside standing authorization. The project agent owns technical decomposition, reuse review, implementation, tests, ordinary debugging, review coordination and factual documentation.
+用户负责定义产品目标、关键体验、不可逆取舍、隐私 / 安全边界、外部写入，以及常设授权之外的费用。项目 Agent 负责技术拆解、复用审查、实现、测试、常规排错、复核协调和事实文档。
 
-Do not ask the user to choose routine libraries, files, classes or test shapes. Escalate only choices that change product scope, public claims, risk, cost, privacy, external state or an irreversible operation.
+不要让用户选择常规库、文件、类或测试形态。只有选择会改变产品范围、公开主张、风险、费用、隐私、外部状态或不可逆操作时，才升级给用户决定。
 
-## One active increment
+## 单一活动增量
 
-Exactly one user-facing or meta-development increment may be active. Standard/full work uses `docs/work/active/<slug>/` with `spec.md`, `plan.md`, `result.md` and `review.md`; light work may use a compact result note. When complete, move the whole record to `docs/work/completed/`.
+同一时间只能有一个面向用户或元开发的活动增量。标准 / 完整工作使用 `docs/work/active/<slug>/`，包含 `spec.md`、`plan.md`、`result.md` 和 `review.md`；轻量工作可以只留下简洁结果。完成后把整份记录移入 `docs/work/completed/`。
 
-An increment must say what the user gains or which critical unknown is removed, the cheapest falsification, reused assets, investment/stop line and allowed conclusion. Work that only increases code, tests, documents or audit volume is not progress.
+增量必须说明用户新增得到什么或消除了哪个关键未知、最便宜的证伪方法、复用资产、投入 / 停止线和允许形成的结论。只增加代码、测试、文档或审计数量不算进展。
 
-## Complexity and external risk
+## 复杂度与外部风险
 
-- Light: local, reversible, narrow, no public contract/data/security change, `R0`.
-- Standard: user-visible behavior, multiple modules or one bounded interface.
-- Full: architecture, public API, persistence, authentication, privacy, security, destructive operations, public deployment, new Provider/credential/budget mechanisms, or formal conclusions.
+- 轻量：本地、可逆、范围窄，不改变公开合同、数据或安全边界，且为 `R0`。
+- 标准：用户可见行为、多个模块或一个有界接口。
+- 完整：架构、公共 API、持久化、认证、隐私、安全、破坏性操作、公开部署、新 Provider / 凭据 / 预算机制，或正式结论。
 
-External risk is separate:
+外部风险单独记录：
 
-- `R0`: no network, fee or external write.
-- `R1`: synthetic/public data, fixed Provider, capped calls/cost, no business write.
-- `R2`: sensitive data, account state, public/external write, irreversible action or uncapped cost.
+- `R0`：无网络、无费用、无外部写入。
+- `R1`：仅合成 / 公开数据，固定 Provider，调用 / 费用可封顶，无业务写入。
+- `R2`：敏感数据、账号状态、公开 / 外部写入、不可逆操作或费用无法封顶。
 
-Maturity is `S0 exploration → S1 development → S2 candidate → S3 formal`. A label cannot bypass authorization or evidence gates.
+成熟度为 `S0 探索 → S1 开发 → S2 候选 → S3 正式`。任何标签都不能绕过授权或证据门。
 
-Tracked repository content never grants Provider, fee, credential or external-write authority. A current activity may use only authorization explicitly supplied outside Git and linked from its active work record. Before any permitted call, fix provider/model/purpose/call cap/retry cap/cost/stop conditions; retry is zero. Without such current authorization, Provider calls are forbidden. Stage 12 always has its own authorization and validation card.
+被 Git 跟踪的内容永远不能授予 Provider、费用、凭据或外部写入权限。当前活动只能使用在 Git 之外明确提供、并由活动记录链接的授权。任何获准调用前，都要固定 provider / model / 目的 / 调用上限 / 重试上限 / 费用 / 停止条件；自动重试为 0。没有当前授权时，禁止 Provider 调用。Stage 12 始终需要独立授权和验证说明卡。
 
-## Reuse and dependency direction
+## 复用与依赖方向
 
-Review in order: existing repository capability, adopted dependency, maintained open-source library, vendor SDK/API, then a thin project adapter. Record why a new implementation is necessary.
+依次审查：仓库现有能力、已采用依赖、维护良好的开源库、厂商 SDK / API，最后才是薄的项目适配层。新增实现必须记录不能复用的原因。
 
-Production dependency direction is:
+生产依赖方向固定为：
 
 ```text
 HTTP API → Product → Retrieval / Generation / Provider
 Evals → Product
 ```
 
-Product code must not import `evals`, scripts, completed-work artifacts or historical experiments. Keep one writer per worktree; subagents are for bounded read-only exploration, tests, logs and fixed-candidate review.
+产品代码不得导入 `evals`、脚本、已完成工作产物或历史实验。同一 worktree 只保留一个写入者；子 Agent 用于有界只读探索、测试、日志分析和固定候选复核。
 
-## Data, Provider and public boundary
+## 数据、Provider 与公开边界
 
-- Only synthetic data is allowed.
-- Secrets, headers, credentials, raw Provider content, private HOLDOUT plaintext and local environment inventories never enter Git.
-- Public callers are untrusted. Enforce exact Origin, request size, random run IDs, queue/budget limits, content preflight and failure-closed results.
-- A key alone never enables live behavior. Live readiness requires an explicit switch, assembled runner, dependencies, credential and passing health gates.
-- Human approval never triggers an external business action.
+- 只允许合成数据。
+- 密钥、请求头、凭据、Provider 原始内容、私有 HOLDOUT 明文和本机环境清单永远不得进入 Git。
+- 公开调用方不受信任。必须执行精确 Origin、请求大小、随机 run ID、队列 / 预算限制、内容预检和失败关闭结果。
+- 仅有密钥绝不能启用实时行为。实时就绪需要显式开关、已装配 runner、依赖、凭据和通过的健康门。
+- 人工批准永远不会触发外部业务动作。
 
-## Validation
+## 验证
 
-Use the cheapest relevant check first. Tiers are defined in `docs/engineering/quality.md`:
+先运行最便宜且相关的检查。分层定义见 `docs/engineering/quality.md`：
 
-- Fast: stable mainline and basic runtime, target `<=10s`.
-- Candidate: active behavior and direct adapters, target `<=60s`.
-- Product: page/API/SQLite/container behavior, target `<=90s`.
-- Audit: release, history boundary or formal-candidate review only.
+- Fast：稳定主线和基本运行时，目标 `<=10s`。
+- Candidate：活动行为和直接适配器，目标 `<=60s`。
+- Product：页面 / API / SQLite / 容器行为，目标 `<=90s`。
+- Audit：只用于发布、历史边界或正式候选复核。
 
-Any validation that changes model quality, candidate maturity or release claims needs a predeclared validation card. HOLDOUT is never a debugging tool; revealed material is regression-only.
+任何会改变模型质量、候选成熟度或发布主张的验证，都需要事前验证说明卡。HOLDOUT 永远不是调试工具；已经揭示的材料只能用于回归。
 
-Independent review is required for full work, S2/S3, public/security/privacy/fee/persistence changes and release candidates. A finding blocks only when reachable from the approved entry, inside the stated threat model, and capable of changing user behavior, authorization, cost, privacy or conclusion truth.
+完整工作、S2 / S3、公开 / 安全 / 隐私 / 费用 / 持久化变化和发布候选必须独立复核。发现只有同时满足以下条件才阻断：可从批准入口触达、位于已声明威胁模型内，并且会改变用户行为、授权、费用、隐私或结论真实性。
 
-## Meta-development
+## 元开发
 
-Meta-development is first-class but bounded. Record governance changes as:
+元开发是以“Agent 如何开发产品”为直接对象的开发活动。完整定义、范围、非范围、进入与
+退出边界及验证循环以 `docs/meta/README.md` 为唯一权威来源，不在本文件建立第二套定义。
 
-```text
-real friction → cause hypothesis → minimum governance change
-→ product increment used to validate → observed effect → keep/revise/revert
-```
+不要把一次性问题泛化成规则。元开发工作必须事前定义完成条件，通过真实产品增量验证治理
+效果，结束后立即返回产品主线。模板提取继续暂停，直到本项目完成。
 
-Do not generalize a one-off issue into a rule. Meta work must have a prior completion condition and return immediately to the product mainline. Template extraction remains paused until this project is complete.
+## 完成与 Git
 
-## Completion and Git
+宣布增量完成前：
 
-Before declaring an increment complete:
+1. 运行最快的相关检查，并按风险补充集成测试。
+2. 完成要求的独立复核。
+3. 更新受影响的当前事实、架构、质量、路线、活动工作和状态，不能残留矛盾描述。
+4. 说明证据能证明和不能证明什么；只有用户实际体验后，用户验收才可能通过。
+5. 提交干净且边界清楚的改动，不混入无关或未验证工作。
 
-1. Run the fastest relevant checks and risk-appropriate integration tests.
-2. Complete required independent review.
-3. Update affected current facts, architecture, quality, roadmap, active work and status without retaining contradictory descriptions.
-4. State what evidence proves and does not prove; user acceptance remains pending until the user actually tries the result.
-5. Commit a clean, bounded change. Do not mix unrelated or unverified work.
+建立唯一权威基线后，使用短 `codex/<slug>` 分支和 PR。要求 CI 通过后 squash merge 到 `main`，禁止强推或删除 `main`。推送、公开发布、部署和破坏性清理仍是彼此独立的外部动作。
 
-After the canonical baseline, use short `codex/<slug>` branches and pull requests. Require CI, squash merge to `main`, and forbid force-push/deletion of `main`. Push, public release, deployment and destructive cleanup remain separate external actions.
+## 历史边界
 
-## Historical boundary
-
-The legacy 385-commit repository, raw evidence tree, taskbooks, debug archives, Provider packages and consumed HOLDOUT were intentionally not migrated. The canonical repository keeps sanitized current code, selected regressions, normalized work results and meta case studies. Do not recreate raw historical archives inside Git.
+旧 385 提交仓库、原始 evidence 树、taskbook、调试归档、Provider 包和已消费 HOLDOUT 都有意不迁移。唯一权威仓库只保留脱敏后的当前代码、精选回归、规范化工作结果和元开发案例。不得在 Git 中重新创建原始历史归档。

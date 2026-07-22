@@ -1,23 +1,22 @@
-# ADR-0001: controlled RAG product architecture
+# ADR-0001：受控 RAG 产品架构
 
-> Status: accepted  
-> Date: `2026-07-20`
+> 状态：已采纳
+> 日期：`2026-07-20`
 
-## Context
+## 背景
 
-Open support questions cannot prove complete runtime recall because the denominator is known only in labelled evaluation. Requiring runtime “complete evidence” would either fail valid work or leak evaluation authority into the product; removing runtime gates would allow unsupported or unsafe drafts.
+开放式客服问题无法在运行时证明完整召回，因为只有带标注的评测才知道分母。要求运行时具备“完整证据”，要么会让合法任务失败，要么会把评测权限泄漏进产品；取消运行时检查门，又会放行无证据或不安全的草稿。
 
-## Decision
+## 决定
 
-Use offline retrieval/generation evaluation plus minimal runtime hard gates and human review:
+采用离线检索/生成评测，加上最小运行时硬门和人工审核：
 
-- versioned synthetic knowledge and replaceable retrieval;
-- bounded source context and source-bound LLM drafts;
-- runtime handoff for no evidence, explicit safety/permission/model conflict, schema/source failure or technical error;
-- no claim of complete arbitrary-query recall or zero hallucination;
-- human final decision and no automatic external action.
+- 使用有版本的合成知识和可替换检索；
+- 只向生成环节提供有上限的来源上下文，并要求 LLM 草稿绑定来源；
+- 无证据、明确安全/权限/型号冲突、结构/来源失败或技术故障时，在运行时转人工；
+- 不宣称任意问题都能完整召回，也不宣称零幻觉；
+- 最终由人工决定，不自动执行外部动作。
 
-## Consequences
+## 后果
 
-Retrieval, generation and reviewer efficiency are measured separately. Runtime results remain auditable but human review is required. Changing to real customer data, automatic actions or open-domain knowledge requires a new decision.
-
+检索质量、生成质量和审核效率分别衡量。运行时结果可以审计，但仍需人工审核。若改为使用真实客户数据、自动执行动作或支持开放域知识，必须另作新决策。

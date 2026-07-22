@@ -1,26 +1,25 @@
-# Design decisions
+# 设计说明
 
-## Why a controlled Workflow
+## 为什么采用受控 Workflow
 
-The product problem is not simply generating fluent text. Customer-support drafts can omit a stop condition, mix product models, invent a completed action or lose the link between an executable claim and its source. The design therefore keeps LLM generation inside a deterministic control plane.
+本产品解决的并不只是“生成流畅文本”。客服草稿可能遗漏停止条件、混淆产品型号、虚构已完成动作，或让可执行主张失去来源。设计因此把 LLM 生成限制在确定性的控制面之内。
 
-## Core flow
+## 核心流程
 
-1. Filter by known product model and retrieve a bounded evidence set.
-2. Ask the model to enumerate obligations and explicitly account for context.
-3. Generate a customer-visible answer or ticket draft against that checklist.
-4. Mechanically validate schemas, source bindings, obligation coverage and forbidden completion claims.
-5. Return a reviewable candidate or a typed handoff; a human decides.
+1. 按已知产品型号过滤并检索有上限的证据集。
+2. 要求模型枚举义务，并明确说明如何处理上下文。
+3. 依据义务清单生成客户可见回答或工单草稿。
+4. 机械校验结构、来源绑定、义务覆盖和禁止出现的完成态主张。
+5. 返回可审核候选或类型明确的转人工结果；最终由人工决定。
 
-## Important trade-offs
+## 关键取舍
 
-- Retrieval quality is proved offline; runtime does not claim to know the recall denominator.
-- A handoff is preferable to an unsupported executable statement.
-- Structured metadata cannot substitute for facts missing from customer-visible text.
-- The model has no tools, database access, retry authority or business-action permission.
-- Budget and privacy checks happen before transport construction.
+- 检索质量由离线评测证明；运行时不宣称知道召回率的完整分母。
+- 与其输出无证据支持的可执行陈述，不如转人工。
+- 结构化元数据不能替代客户可见正文中缺失的事实。
+- 模型没有工具、数据库访问、重试权限或业务动作权限。
+- 预算与隐私检查发生在构造传输层之前。
 
-## Replay semantics
+## 回放语义
 
-Replay data is a labelled, verified product result used to keep the portfolio usable when live experience is disabled or unavailable. It is not presented as a new model call and cannot generate a release-quality claim.
-
+回放数据是经过标注和验证的产品结果，用于在实时体验关闭或不可用时保持作品集可用。它不会被展示为一次新的模型调用，也不能据此形成发布级质量主张。

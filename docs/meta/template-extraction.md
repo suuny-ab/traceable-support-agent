@@ -1,13 +1,12 @@
-# Future template extraction
+# 未来模板提炼
 
-Template feedback discovery, automatic upgrade and cross-repository synchronization remain suspended until this project is complete.
+在本项目完成之前，模板反馈发现、自动升级和跨仓同步继续保持暂停。
 
-At project completion, extract only rules that:
+项目完成时，只提炼满足以下条件的规则：
 
-1. prevented or corrected a real failure in this project;
-2. have a concrete product increment showing the effect;
-3. remain useful without this repository's product-specific history;
-4. can be revised again after a second project tests them.
+1. 在本项目中阻止或修正过一次真实失败；
+2. 有一个具体产品增量能够展示其效果；
+3. 离开本仓库的产品专用历史后仍然有用；
+4. 可以在第二个项目验证后继续修订。
 
-No template work may become the active increment while the job-search product has an unblocked next user-visible result.
-
+只要求职产品还有未受阻的下一项用户可见结果，任何模板工作都不得成为活动增量。

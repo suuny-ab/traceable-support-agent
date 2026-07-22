@@ -1,19 +1,19 @@
-# Case: HOLDOUT identity and recovery
+# 案例：HOLDOUT 身份与恢复
 
-> Evidence level: `legacy-summary`. No HOLDOUT content, raw log or custody package is published; this summary is not independently reproducible after legacy deletion.
+> 证据级别：`legacy-summary`。不公开 HOLDOUT 内容、原始日志或保管包；旧仓删除后，本摘要不能独立复现。
 
-## Friction
+## 真实摩擦
 
-Mechanism retries were described as new dataset versions, and long formal work risked either repeating verified work or losing custody semantics after interruption.
+机制重试曾被描述成新的数据集版本；长时间正式工作中断后，还可能重复已经验证的工作，或丢失保管语义。
 
-## Hypothesis and change
+## 原因假设与变化
 
-Freeze semantic content separately from execution attempts. Record `content_identity`, `content_version`, `attempt_id`, `last_verified_checkpoint`, resume preconditions, restart scope and hard-stop classes.
+把语义内容与执行尝试分别冻结。记录 `content_identity`、`content_version`、`attempt_id`、`last_verified_checkpoint`、恢复前提、重启范围和硬停类别。
 
-## Validation
+## 产品验证
 
-The formal HOLDOUT flow could distinguish a fixed suite from recovery attempts and resume only when bytes, hashes, bindings and prior logs remained unchanged.
+正式 HOLDOUT 流程能够区分固定测试套件与恢复尝试，并且只有字节、哈希、绑定和既有日志均未变化时才恢复执行。
 
-## Result
+## 结果
 
-Keep for formal work only. Sealing/custody does not prove candidate quality; a revealed HOLDOUT is regression-only.
+只为正式工作保留。密封/保管不证明候选质量；已经揭示的 HOLDOUT 只能用于回归。
