@@ -1,0 +1,253 @@
+"""Candidate-neutral BM25 and local BGE retrievers."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Protocol
+
+import numpy as np
+from rank_bm25 import BM25Okapi
+
+from .corpus import tokenize
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+DEFAULT_MODEL_MANIFEST = Path(__file__).with_name(
+    "bge-small-zh-v1.5-fastembed.json"
+)
+
+
+@dataclass(frozen=True)
+class RetrievalRequest:
+    query: str
+    top_k: int = 10
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.query, str) or not self.query.strip():
+            raise ValueError("retrieval_query_invalid")
+        if not isinstance(self.top_k, int) or isinstance(self.top_k, bool) or self.top_k < 1:
+            raise ValueError("retrieval_top_k_invalid")
+
+
+@dataclass(frozen=True)
+class RetrievalHit:
+    chunk_id: str
+    rank: int
+    score: float
+
+
+class CandidateRetriever(Protocol):
+    retriever_id: str
+
+    def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]: ...
+
+
+def _validate_hits(hits: list[RetrievalHit], request: RetrievalRequest) -> list[RetrievalHit]:
+    if len(hits) > request.top_k:
+        raise ValueError("retrieval_hit_limit_exceeded")
+    if [hit.rank for hit in hits] != list(range(1, len(hits) + 1)):
+        raise ValueError("retrieval_hit_rank_invalid")
+    chunk_ids = [hit.chunk_id for hit in hits]
+    if len(chunk_ids) != len(set(chunk_ids)):
+        raise ValueError("retrieval_hit_duplicate_chunk")
+    return hits
+
+
+def load_local_model_manifest(path: Path = DEFAULT_MODEL_MANIFEST) -> dict[str, Any]:
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if set(manifest) != {
+        "schema_version",
+        "model_name",
+        "retriever_id",
+        "library",
+        "dimension",
+        "provider",
+        "model_root",
+        "source",
+        "license",
+        "files",
+    }:
+        raise ValueError("embedding_model_manifest_invalid")
+    if (
+        manifest["schema_version"] != "local-embedding-model-v1"
+        or manifest["model_name"] != "BAAI/bge-small-zh-v1.5"
+        or manifest["retriever_id"] != "fastembed_bge_small_zh_v1.5"
+        or manifest["library"] != "fastembed==0.8.0"
+        or manifest["dimension"] != 512
+        or manifest["provider"] != "CPUExecutionProvider"
+        or manifest["license"] != "MIT"
+    ):
+        raise ValueError("embedding_model_contract_invalid")
+    return manifest
+
+
+def validate_local_model_files(
+    manifest: dict[str, Any], model_root: Path | None = None
+) -> Path:
+    configured_root = os.environ.get("TRACEABLE_MODEL_ROOT")
+    root = (
+        model_root
+        or (Path(configured_root) if configured_root else None)
+        or REPOSITORY_ROOT / manifest["model_root"]
+    )
+    expected_paths = {item["path"] for item in manifest["files"]}
+    actual_paths = {
+        path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()
+    } if root.is_dir() else set()
+    if actual_paths != expected_paths:
+        raise ValueError("embedding_model_file_inventory_invalid")
+    for item in manifest["files"]:
+        path = root / item["path"]
+        if path.stat().st_size != item["size"]:
+            raise ValueError("embedding_model_file_size_invalid")
+        if hashlib.sha256(path.read_bytes()).hexdigest() != item["sha256"]:
+            raise ValueError("embedding_model_file_hash_invalid")
+    return root
+
+
+def _normalize(vector: np.ndarray) -> np.ndarray:
+    value = np.asarray(vector, dtype=np.float32)
+    norm = float(np.linalg.norm(value))
+    if norm <= 0:
+        raise ValueError("embedding_vector_zero_norm")
+    return value / norm
+
+
+class BM25Retriever:
+    """rank-bm25's BM25Okapi over the frozen chunk text inventory."""
+
+    retriever_id = "okapi_bm25_k1_1.5_b_0.75"
+
+    def __init__(self, *, k1: float = 1.5, b: float = 0.75) -> None:
+        if k1 <= 0 or not 0 <= b <= 1:
+            raise ValueError("bm25_parameter_invalid")
+        self.k1 = float(k1)
+        self.b = float(b)
+
+    def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]:
+        chunks = index["chunks"]
+        if not chunks:
+            return []
+        query_terms = list(tokenize(request.query).elements())
+        if not query_terms:
+            return []
+        tokenized_corpus = [list(tokenize(chunk["text"]).elements()) for chunk in chunks]
+        bm25 = BM25Okapi(tokenized_corpus, k1=self.k1, b=self.b)
+        raw_scores = bm25.get_scores(query_terms)
+        scores = {
+            chunk["chunk_id"]: float(raw_scores[position])
+            for position, chunk in enumerate(chunks)
+        }
+        ordered = sorted(scores, key=lambda chunk_id: (-scores[chunk_id], chunk_id))[: request.top_k]
+        return _validate_hits(
+            [
+                RetrievalHit(chunk_id=chunk_id, rank=rank, score=round(scores[chunk_id], 6))
+                for rank, chunk_id in enumerate(ordered, start=1)
+            ],
+            request,
+        )
+
+
+class DenseBgeRetriever:
+    """Local FastEmbed BGE candidate with strict offline model custody."""
+
+    retriever_id = "fastembed_bge_small_zh_v1.5"
+
+    def __init__(self, *, manifest_path: Path = DEFAULT_MODEL_MANIFEST) -> None:
+        self.manifest = load_local_model_manifest(manifest_path)
+        self.model_root = validate_local_model_files(self.manifest)
+        self._model: Any | None = None
+        self._index_fingerprint: str | None = None
+        self._chunk_ids: list[str] = []
+        self._passage_vectors: np.ndarray | None = None
+
+    def _ensure_index(self, index: dict[str, Any]) -> None:
+        fingerprint = index["manifest"]["build_fingerprint"]
+        if self._index_fingerprint == fingerprint:
+            return
+        from fastembed import TextEmbedding
+
+        if self._model is None:
+            self._model = TextEmbedding(
+                model_name=self.manifest["model_name"],
+                specific_model_path=str(self.model_root),
+                providers=[self.manifest["provider"]],
+                local_files_only=True,
+            )
+        self._chunk_ids = [chunk["chunk_id"] for chunk in index["chunks"]]
+        vectors = [
+            _normalize(vector)
+            for vector in self._model.passage_embed([chunk["text"] for chunk in index["chunks"]])
+        ]
+        self._passage_vectors = np.stack(vectors)
+        if self._passage_vectors.shape != (len(self._chunk_ids), self.manifest["dimension"]):
+            raise ValueError("embedding_passage_dimension_invalid")
+        self._index_fingerprint = fingerprint
+
+    def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]:
+        self._ensure_index(index)
+        if self._model is None or self._passage_vectors is None:
+            raise ValueError("embedding_model_not_initialized")
+        query_vector = _normalize(next(iter(self._model.query_embed(request.query))))
+        if query_vector.shape != (self.manifest["dimension"],):
+            raise ValueError("embedding_query_dimension_invalid")
+        raw_scores = self._passage_vectors @ query_vector
+        scores = {
+            chunk_id: float(raw_scores[position])
+            for position, chunk_id in enumerate(self._chunk_ids)
+        }
+        ordered = sorted(scores, key=lambda chunk_id: (-scores[chunk_id], chunk_id))[: request.top_k]
+        return _validate_hits(
+            [
+                RetrievalHit(chunk_id=chunk_id, rank=rank, score=round(scores[chunk_id], 8))
+                for rank, chunk_id in enumerate(ordered, start=1)
+            ],
+            request,
+        )
+
+
+class ReciprocalRankFusionRetriever:
+    """RRF over frozen BM25 and dense rankings; no score calibration."""
+
+    retriever_id = "rrf_bm25_bge_k60_depth20"
+
+    def __init__(
+        self,
+        *,
+        lexical: CandidateRetriever | None = None,
+        dense: CandidateRetriever | None = None,
+        rrf_k: int = 60,
+        candidate_depth: int = 20,
+    ) -> None:
+        if rrf_k < 1 or candidate_depth < 1:
+            raise ValueError("rrf_parameter_invalid")
+        self.lexical = lexical or BM25Retriever()
+        self.dense = dense or DenseBgeRetriever()
+        self.rrf_k = rrf_k
+        self.candidate_depth = candidate_depth
+
+    def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]:
+        depth = min(max(request.top_k, self.candidate_depth), len(index["chunks"]))
+        component_request = RetrievalRequest(query=request.query, top_k=depth)
+        rankings = (
+            self.lexical.search(component_request, index),
+            self.dense.search(component_request, index),
+        )
+        scores: dict[str, float] = {}
+        for ranking in rankings:
+            for hit in ranking:
+                scores[hit.chunk_id] = scores.get(hit.chunk_id, 0.0) + 1.0 / (
+                    self.rrf_k + hit.rank
+                )
+        ordered = sorted(scores, key=lambda chunk_id: (-scores[chunk_id], chunk_id))[: request.top_k]
+        return _validate_hits(
+            [
+                RetrievalHit(chunk_id=chunk_id, rank=rank, score=round(scores[chunk_id], 8))
+                for rank, chunk_id in enumerate(ordered, start=1)
+            ],
+            request,
+        )

@@ -11,10 +11,10 @@
 | Complexity | Full; architecture, repository identity, public source and deployment pipeline change |
 | Risk / maturity | Local work `R0`; GitHub/deployment checkpoints `R2`; product remains `S1 public Beta` |
 | Active work | `docs/work/active/canonical-repository-migration/` |
-| Current action | Build and validate the sibling clean-baseline candidate; legacy repo and live deployment remain unchanged |
+| Current action | API/product extraction and eight-case migration-equivalence gate are green; migrate direction-B Web to standard Next.js |
 | Blockers | None for local candidate; public remote, canonical path swap and production deployment require their later gates |
 | Provider | Disabled; zero calls and zero Provider cost in this increment |
-| Next checkpoint | Governance baseline, API/Web migration, CI and local candidate tests pass |
+| Next checkpoint | Standard Next.js build, four routes and standalone container pass without Sites/vinext assets |
 
 ## Current product truth
 
@@ -29,4 +29,3 @@
 - Outcome route: `ROADMAP.md`
 - Active specification and plan: `docs/work/active/canonical-repository-migration/`
 - Engineering rules: `docs/engineering/`
-

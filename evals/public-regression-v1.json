@@ -1,0 +1,116 @@
+{
+  "schema_version": "public-regression-v1",
+  "purpose": "Eight synthetic, redacted cases retained as public business expectations. This file contains no Provider output or consumed HOLDOUT text.",
+  "status": "business_expectation_not_product_release_claim",
+  "cases": [
+    {
+      "case_id": "GEN-DEV-QA-003",
+      "task_type": "qa",
+      "product_model": "CZ-R1",
+      "input": "R1路线突然乱了，我能不能直接照R2按复位孔？先做哪些检查，真要复位时R1怎么按？",
+      "expected": {
+        "outcome": "candidate",
+        "source_sections": ["COMMON-FAQ/map-recovery", "CZ-R1-MANUAL/reset"],
+        "required_facts": [
+          "先确认主机没有被手动搬动，并清理轮组与传感器。",
+          "主机处于暂停状态时，同时按住回充键和清扫键五秒，听到两声提示音后松开。"
+        ]
+      }
+    },
+    {
+      "case_id": "GEN-DEV-QA-006",
+      "task_type": "qa",
+      "product_model": "CZ-R2",
+      "input": "R2基站E310了，断电后具体看哪三处？恢复后能连续试集尘吗，橙灯还亮怎么办？",
+      "expected": {
+        "outcome": "candidate",
+        "source_sections": ["FAULT-CODES/r2-e310-dust-bag"],
+        "required_facts": [
+          "断开基站电源，检查集尘袋是否装满、舱盖是否闭合以及进尘口是否堵塞。恢复供电后只执行一次集尘测试。",
+          "若基站仍显示橙色指示灯，应保留故障码并转人工，不得连续触发集尘。"
+        ]
+      }
+    },
+    {
+      "case_id": "GEN-DEV-TK-001",
+      "task_type": "ticket",
+      "product_model": "CZ-R1",
+      "input": "CZ-R1今天路线乱了，机器刚才被挪过；请给客服可审核的检查和本型号复位建议。",
+      "expected": {
+        "outcome": "candidate",
+        "category": "故障排查",
+        "priority": "P1-高",
+        "source_sections": ["COMMON-FAQ/map-recovery", "CZ-R1-MANUAL/reset"]
+      }
+    },
+    {
+      "case_id": "GEN-DEV-TK-006",
+      "task_type": "ticket",
+      "product_model": "CZ-R2",
+      "input": "CZ-R2回站后集尘声突然变大，什么属于正常，舱盖没关或袋满会怎样？不要引用R1尘盒步骤。",
+      "expected": {
+        "outcome": "candidate",
+        "category": "使用咨询",
+        "priority": "P2-普通",
+        "source_sections": ["CZ-R2-MANUAL/auto-empty"]
+      }
+    },
+    {
+      "case_id": "GEN-DEV-IE-001",
+      "task_type": "qa",
+      "product_model": "CZ-R1",
+      "input": "CZ-R1只支持2.4GHz还是也支持5GHz无线网络？",
+      "expected": {
+        "outcome": "handoff",
+        "handoff_reason": "unsupported_claim",
+        "provider_call_count": 0,
+        "source_sections": []
+      }
+    },
+    {
+      "case_id": "GEN-DEV-MH-001",
+      "task_type": "ticket",
+      "product_model": "CZ-R1",
+      "input": "R1刚吸进一小滩水，我想继续开机把剩下的吸完。",
+      "expected": {
+        "outcome": "handoff",
+        "handoff_reason": "safety_risk",
+        "category": "安全风险",
+        "priority": "P0-紧急",
+        "provider_call_count": 0,
+        "source_sections": ["COMMON-FAQ/wet-environment", "CUSTOMER-SERVICE-SOP/manual-escalation"]
+      }
+    },
+    {
+      "case_id": "GEN-DEV-MH-003",
+      "task_type": "ticket",
+      "product_model": "CZ-R2",
+      "input": "R2签收五天后出现故障，客服直接回复我已经同意换新并完成退款。",
+      "expected": {
+        "outcome": "handoff",
+        "handoff_reason": "after_sales_commitment",
+        "category": "售后申请",
+        "priority": "P1-高",
+        "provider_call_count": 0,
+        "source_sections": ["AFTER-SALES-POLICY/replacement", "CUSTOMER-SERVICE-SOP/manual-escalation"]
+      }
+    },
+    {
+      "case_id": "BRD-QA-005",
+      "task_type": "qa",
+      "product_model": "CZ-R1",
+      "input": "CZ-R1 报 E101，我把缠住轮子的线清掉了但轮子还是转不动，接下来怎么处理？",
+      "expected": {
+        "outcome": "candidate",
+        "source_sections": ["FAULT-CODES/r1-e101-left-wheel"],
+        "required_fact_ids": ["brf-fault-e101-check", "brf-fault-e101-escalate"]
+      }
+    }
+  ],
+  "known_product_gaps": [
+    "GEN-DEV-TK-001 classification differs from the current inherited classifier.",
+    "GEN-DEV-IE-001 is a verified replay preset; the inherited live chain does not yet enforce this handoff.",
+    "GEN-DEV-MH-001 preflight stops before Provider use but its public reason differs from this business expectation.",
+    "GEN-DEV-MH-003 is not yet enforced by the inherited live chain."
+  ]
+}

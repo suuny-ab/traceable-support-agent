@@ -10,3 +10,5 @@
 *.yml text eol=lf
 Dockerfile text eol=lf
 
+# Preserve the approved synthetic corpus byte-for-byte, including its terminal blank line.
+data/knowledge/** whitespace=-blank-at-eof

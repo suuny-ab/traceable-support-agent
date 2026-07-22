@@ -1,0 +1,41 @@
+{
+  "schema_version": "migration-equivalence-v1",
+  "purpose": "Freeze the inherited runtime behavior needed to prove that the canonical extraction did not change product semantics.",
+  "source_baselines": {
+    "legacy_main": "ab2c4b8a374937a8727e414991799dba490db30b",
+    "legacy_web": "b1bcc94c5cf122a6c6dcff5d007eb6194d47dcc7"
+  },
+  "knowledge": {
+    "file_inventory_sha256": "41948be4be64f6e1aeb49db7a5be30c5b5570b8dbbf7ee6c1bfa74bddf0f3303",
+    "unit_inventory_sha256": "714538ce5b649f3acf566ac53f93dc9201f6a80d13430c7e3e293436d7e55161"
+  },
+  "retrieval": {
+    "model_manifest_canonical_sha256": "9948fafa6de34688b02e54b025223c94b373e6b8fb5c01d5cb6068e68c1b1c6f",
+    "case_fixture": "evals/fixtures/migration-retrieval-equivalence-v1.json",
+    "case_fixture_sha256": "81c9a483f541a452c49d4d6f5bbae26582b95c27b829d5f35c81f4afdd335ef7",
+    "old_new_byte_equal": true,
+    "float_score_contract": "Scores are compared with 1e-6 tolerance; ordering, IDs and text hashes are exact."
+  },
+  "prompts": {
+    "checklist_sha256": "c7adeb30109c4b95b66dca02bf75224aef091b9cf2401ef64baa4c13e38943f9",
+    "qa_step2_sha256": "dbb60b1970fed602b28560979205778200fa8f1bc2456263469739527a85ada2",
+    "ticket_step2_sha256": "1c1ec10b1cb8ff2e9b1b6f0c52ee909b08eb6f969bd2ed28db48e193d149dc59"
+  },
+  "provider": {
+    "manifest_sha256": "c45786f67ac6e5957a622c5a42cc7e3ca8b2412cf6279cf3c55b3396dc4773bf",
+    "maximum_calls_per_product_run": 2,
+    "automatic_retry_count": 0,
+    "migration_provider_calls": 0,
+    "migration_cost_cny": 0
+  },
+  "public_api": {
+    "contract": "api/contracts/public-api-v1.json",
+    "required_invariants": [
+      "preflight blocks before Provider execution",
+      "budget reservation is atomic before queue submission",
+      "restart never retries an uncertain call",
+      "unvalidated output is projected as handoff",
+      "human decision records no external business action"
+    ]
+  }
+}

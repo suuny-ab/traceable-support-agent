@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "corpus_version": "synthetic-kb-2026.07.12-v1",
+    "document_id": "CUSTOMER-SERVICE-SOP",
+    "title": "澄舟客服处理 SOP",
+    "brand": "澄舟实验品牌（虚构）",
+    "source_file": "data/knowledge/synthetic-kb-v1/customer-service-sop.json",
+    "source_format": "paged_json",
+    "document_version": "1.0.0",
+    "applicable_models": ["CZ-R1", "CZ-R2"],
+    "document_type": "customer_service_sop",
+    "effective_date": "2026-07-12",
+    "language": "zh-CN",
+    "synthetic": true,
+    "contains_personal_data": false,
+    "synthetic_notice": "虚构合成资料；非真实品牌、客户或生产系统。"
+  },
+  "pages": [
+    {
+      "page_number": 1,
+      "page_id": "sop-intake",
+      "sections": [
+        {
+          "section_id": "notice",
+          "heading": "资料声明",
+          "paragraphs": ["本 SOP 为虚构合成流程，不对应真实客服组织、真实客户、真实工单或生产系统，不记录个人信息。"]
+        },
+        {
+          "section_id": "intake-fields",
+          "heading": "受理与最小字段",
+          "paragraphs": ["仅记录合成工单 ID、产品型号、问题描述和已完成的排查步骤。不得请求或写入姓名、电话、地址、账号等个人信息。", "型号缺失时先要求补充 CZ-R1 或 CZ-R2；无法确定型号时标记待人工，不得混用两个型号的操作步骤。"]
+        }
+      ]
+    },
+    {
+      "page_number": 2,
+      "page_id": "sop-evidence",
+      "sections": [
+        {
+          "section_id": "evidence-check",
+          "heading": "证据核对",
+          "paragraphs": ["处理前检查采用资料的文件名、版本、适用型号和生效日期。结论涉及故障、安全或售后规则时，必须能回到明确章节或逻辑页。", "出现来源冲突、资料不足或页码无法解析时停止生成确定性结论并转人工。"]
+        }
+      ]
+    },
+    {
+      "page_number": 3,
+      "page_id": "sop-escalation",
+      "sections": [
+        {
+          "section_id": "manual-escalation",
+          "heading": "升级与结案边界",
+          "paragraphs": ["涉及进液、冒烟、异常发热、反复硬件故障或退换承诺时必须转人工。自动生成内容只能作为草稿，不能标记已发送、已退款或已解决。", "只有人工确认处理结果并补齐必要的合成记录后，工单才可进入结案检查；M2 本身不实现工单或人工确认功能。"]
+        }
+      ]
+    }
+  ]
+}
+

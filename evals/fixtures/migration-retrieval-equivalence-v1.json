@@ -1,0 +1,661 @@
+{
+  "records": [
+    {
+      "case_id": "GEN-DEV-QA-003",
+      "top10": [
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 1,
+          "section_id": "reset",
+          "text_sha256": "cc219820918bc57225f822cd9ed8619fb4df223cf50230e8e3eb2fb4ef99523f",
+          "unit_id": "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 2,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 3,
+          "section_id": "replacement",
+          "text_sha256": "145f7f696bfa1b6f83b60538b255eb40ba41e36f74ea38964c9488ffc874e4ed",
+          "unit_id": "section_fa91f4203e9aec5348661ff90e7a7dc13321ea9d92d935aa198439f47a94b9a2"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 4,
+          "section_id": "e101-wheel-blocked",
+          "text_sha256": "eab82ddf2067c513e9fc76ef634337f6f12527d8404fc55a51fcb114df28a0d5",
+          "unit_id": "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 5,
+          "section_id": "cleaning-modes",
+          "text_sha256": "6ecdefa232b09785a254066994f522314c2725f27ece4443ef29f4fc24774575",
+          "unit_id": "section_f99c2a81c4fd9088a21e36c7ff1e8528f41c716bccd9f2fc75c6194079980cb1"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 6,
+          "section_id": "repair",
+          "text_sha256": "410ff2840c47caf07ef76d2dac77f13cfbfb94b51f1ef3a99183b82e5ad53b48",
+          "unit_id": "section_bc385f934b76209b2de0a022221b6c09122cab216d507582e2905518cc0d12a6"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 7,
+          "section_id": "manual-escalation",
+          "text_sha256": "54a074a1b942b75f01badad0efb612a7da164114e160154872cb8f72e06741c7",
+          "unit_id": "section_3602466715618721612a2e59bd5cf2f3b70eaaf808a0eada0c555c6a791e9076"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 8,
+          "section_id": "exclusions",
+          "text_sha256": "30a8e4e2867fbb8cd94c5b740e888f96caef6bb3352d62ad94465f0f36b9e58e",
+          "unit_id": "section_d6658d67cebfd6ff8df28ffd31c9b2911192a291fce27c71ef8fe6d371a286cd"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 9,
+          "section_id": "r1-e210-dock",
+          "text_sha256": "b62098cfa9671780bb51f2feedecd1d4a37bcc1fb7b18f788f3ff85eaa751eff",
+          "unit_id": "section_d24ee92e309a5b7b9dfcfca2dc552d290c7fa66353af0981bf97df1efde5313a"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 10,
+          "section_id": "priority",
+          "text_sha256": "ac8a5142c13118f692cb7c023328aa8acee96b3d4048fdb92cbeb8d1c7fb1244",
+          "unit_id": "section_8805e752a64b11c7f496a7eefa58e158731dbc095757580e148af085f06fbcfb"
+        }
+      ],
+      "top5": [
+        "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909",
+        "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604",
+        "section_fa91f4203e9aec5348661ff90e7a7dc13321ea9d92d935aa198439f47a94b9a2",
+        "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b",
+        "section_f99c2a81c4fd9088a21e36c7ff1e8528f41c716bccd9f2fc75c6194079980cb1"
+      ]
+    },
+    {
+      "case_id": "GEN-DEV-QA-006",
+      "top10": [
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 1,
+          "section_id": "r2-e310-dust-bag",
+          "text_sha256": "864729cdd5506912d802e2dda344d586c619e87265793321c4c33137faf4021d",
+          "unit_id": "section_0a956ee2cb2d64846ab8a7aaebdae13b730ff4b024e4660abfa728704344a25f"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 2,
+          "section_id": "reset",
+          "text_sha256": "50fec0387208fa50e446dcaa824b831fde22e4235cb62b693fe693e8488e7f6f",
+          "unit_id": "section_36f499400f134b32ad1e43c82abfe99e99655cd9b5ea7456cfb083e5e9238ab8"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 3,
+          "section_id": "auto-empty",
+          "text_sha256": "893aa5e900b95cadc031f16bb85c0915e9e5abd1b56ae2023df15407f5b0a9f3",
+          "unit_id": "section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 4,
+          "section_id": "station-setup",
+          "text_sha256": "de2431b3f69f91e80382601b0f90a67b6cf0011108f6f220b28301e128fe06c7",
+          "unit_id": "section_2428a4c1ebd42e911ce3c664e85d7d62bb26e01767daaddf2d620b59b2cee2bb"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 5,
+          "section_id": "model-difference",
+          "text_sha256": "28ddcdcb51806ca7117a20f4862adeaccee597dc504004c62984b401c6fa8a27",
+          "unit_id": "section_87c3d7a07e97c86faa28ef6e2c414545a73df2936d07220899bf8ea0b885d5db"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 6,
+          "section_id": "warranty",
+          "text_sha256": "9a7d19dc146e553f9d9f7ccb8724b705c6e876115c1cf41fe6e835890bdd1b18",
+          "unit_id": "section_b5e48bee3b9cf6931a6f6c5a6ba757d92cadfc584d043f8c6229c0514d9f6d35"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 7,
+          "section_id": "maintenance",
+          "text_sha256": "17b69b895916fe7f96730fa3bdcb9fcf3b0905cf5e8105ba5dde432185eb8478",
+          "unit_id": "section_d4e52cd66d6a4d73b0f2bb181881a64a72f950cf587a964ca91b92fbb55115c0"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 8,
+          "section_id": "charging",
+          "text_sha256": "6df455b0f758ec72cb16ef8b358c9d0a625e3aee980fd4ae6766a08f64e19626",
+          "unit_id": "section_8a2b2257adea580fa384b24eefa8db5d51ef5af65690c1565ea89f973f3c7493"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 9,
+          "section_id": "exclusions",
+          "text_sha256": "30a8e4e2867fbb8cd94c5b740e888f96caef6bb3352d62ad94465f0f36b9e58e",
+          "unit_id": "section_d6658d67cebfd6ff8df28ffd31c9b2911192a291fce27c71ef8fe6d371a286cd"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 10,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        }
+      ],
+      "top5": [
+        "section_0a956ee2cb2d64846ab8a7aaebdae13b730ff4b024e4660abfa728704344a25f",
+        "section_36f499400f134b32ad1e43c82abfe99e99655cd9b5ea7456cfb083e5e9238ab8",
+        "section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8",
+        "section_2428a4c1ebd42e911ce3c664e85d7d62bb26e01767daaddf2d620b59b2cee2bb",
+        "section_87c3d7a07e97c86faa28ef6e2c414545a73df2936d07220899bf8ea0b885d5db"
+      ]
+    },
+    {
+      "case_id": "GEN-DEV-TK-001",
+      "top10": [
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 1,
+          "section_id": "e101-wheel-blocked",
+          "text_sha256": "eab82ddf2067c513e9fc76ef634337f6f12527d8404fc55a51fcb114df28a0d5",
+          "unit_id": "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 2,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 3,
+          "section_id": "repair",
+          "text_sha256": "410ff2840c47caf07ef76d2dac77f13cfbfb94b51f1ef3a99183b82e5ad53b48",
+          "unit_id": "section_bc385f934b76209b2de0a022221b6c09122cab216d507582e2905518cc0d12a6"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 4,
+          "section_id": "intake-fields",
+          "text_sha256": "00e3264c337b242c83362953561778472986fb2f202f83891a51b52afb1976f4",
+          "unit_id": "section_8b172344ca81a3060380597e8bdd409116d3dff066dd79b454d748b70abd5845"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 5,
+          "section_id": "reset",
+          "text_sha256": "cc219820918bc57225f822cd9ed8619fb4df223cf50230e8e3eb2fb4ef99523f",
+          "unit_id": "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 6,
+          "section_id": "priority",
+          "text_sha256": "ac8a5142c13118f692cb7c023328aa8acee96b3d4048fdb92cbeb8d1c7fb1244",
+          "unit_id": "section_8805e752a64b11c7f496a7eefa58e158731dbc095757580e148af085f06fbcfb"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 7,
+          "section_id": "r1-e210-dock",
+          "text_sha256": "b62098cfa9671780bb51f2feedecd1d4a37bcc1fb7b18f788f3ff85eaa751eff",
+          "unit_id": "section_d24ee92e309a5b7b9dfcfca2dc552d290c7fa66353af0981bf97df1efde5313a"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 8,
+          "section_id": "replacement",
+          "text_sha256": "145f7f696bfa1b6f83b60538b255eb40ba41e36f74ea38964c9488ffc874e4ed",
+          "unit_id": "section_fa91f4203e9aec5348661ff90e7a7dc13321ea9d92d935aa198439f47a94b9a2"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 9,
+          "section_id": "evidence-check",
+          "text_sha256": "30d135ac7a5ae914316efe3314d4b445e03992909a7b92fc11dadab3917dcd2a",
+          "unit_id": "section_fbe984e7a294e280127dc9e9913853fe2ca3ae9dafa0517a34122fe7d68d20d0"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 10,
+          "section_id": "warranty",
+          "text_sha256": "9a7d19dc146e553f9d9f7ccb8724b705c6e876115c1cf41fe6e835890bdd1b18",
+          "unit_id": "section_b5e48bee3b9cf6931a6f6c5a6ba757d92cadfc584d043f8c6229c0514d9f6d35"
+        }
+      ],
+      "top5": [
+        "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b",
+        "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604",
+        "section_bc385f934b76209b2de0a022221b6c09122cab216d507582e2905518cc0d12a6",
+        "section_8b172344ca81a3060380597e8bdd409116d3dff066dd79b454d748b70abd5845",
+        "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+      ]
+    },
+    {
+      "case_id": "GEN-DEV-TK-006",
+      "top10": [
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 1,
+          "section_id": "auto-empty",
+          "text_sha256": "893aa5e900b95cadc031f16bb85c0915e9e5abd1b56ae2023df15407f5b0a9f3",
+          "unit_id": "section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 2,
+          "section_id": "r2-e310-dust-bag",
+          "text_sha256": "864729cdd5506912d802e2dda344d586c619e87265793321c4c33137faf4021d",
+          "unit_id": "section_0a956ee2cb2d64846ab8a7aaebdae13b730ff4b024e4660abfa728704344a25f"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 3,
+          "section_id": "reset",
+          "text_sha256": "50fec0387208fa50e446dcaa824b831fde22e4235cb62b693fe693e8488e7f6f",
+          "unit_id": "section_36f499400f134b32ad1e43c82abfe99e99655cd9b5ea7456cfb083e5e9238ab8"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 4,
+          "section_id": "warranty",
+          "text_sha256": "9a7d19dc146e553f9d9f7ccb8724b705c6e876115c1cf41fe6e835890bdd1b18",
+          "unit_id": "section_b5e48bee3b9cf6931a6f6c5a6ba757d92cadfc584d043f8c6229c0514d9f6d35"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 5,
+          "section_id": "station-setup",
+          "text_sha256": "de2431b3f69f91e80382601b0f90a67b6cf0011108f6f220b28301e128fe06c7",
+          "unit_id": "section_2428a4c1ebd42e911ce3c664e85d7d62bb26e01767daaddf2d620b59b2cee2bb"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 6,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 7,
+          "section_id": "exclusions",
+          "text_sha256": "30a8e4e2867fbb8cd94c5b740e888f96caef6bb3352d62ad94465f0f36b9e58e",
+          "unit_id": "section_d6658d67cebfd6ff8df28ffd31c9b2911192a291fce27c71ef8fe6d371a286cd"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 8,
+          "section_id": "e101-wheel-blocked",
+          "text_sha256": "eab82ddf2067c513e9fc76ef634337f6f12527d8404fc55a51fcb114df28a0d5",
+          "unit_id": "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 9,
+          "section_id": "model-difference",
+          "text_sha256": "28ddcdcb51806ca7117a20f4862adeaccee597dc504004c62984b401c6fa8a27",
+          "unit_id": "section_87c3d7a07e97c86faa28ef6e2c414545a73df2936d07220899bf8ea0b885d5db"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 10,
+          "section_id": "repair",
+          "text_sha256": "410ff2840c47caf07ef76d2dac77f13cfbfb94b51f1ef3a99183b82e5ad53b48",
+          "unit_id": "section_bc385f934b76209b2de0a022221b6c09122cab216d507582e2905518cc0d12a6"
+        }
+      ],
+      "top5": [
+        "section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8",
+        "section_0a956ee2cb2d64846ab8a7aaebdae13b730ff4b024e4660abfa728704344a25f",
+        "section_36f499400f134b32ad1e43c82abfe99e99655cd9b5ea7456cfb083e5e9238ab8",
+        "section_b5e48bee3b9cf6931a6f6c5a6ba757d92cadfc584d043f8c6229c0514d9f6d35",
+        "section_2428a4c1ebd42e911ce3c664e85d7d62bb26e01767daaddf2d620b59b2cee2bb"
+      ]
+    },
+    {
+      "case_id": "GEN-DEV-IE-001",
+      "top10": [
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 1,
+          "section_id": "model-difference",
+          "text_sha256": "28ddcdcb51806ca7117a20f4862adeaccee597dc504004c62984b401c6fa8a27",
+          "unit_id": "section_87c3d7a07e97c86faa28ef6e2c414545a73df2936d07220899bf8ea0b885d5db"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 2,
+          "section_id": "setup",
+          "text_sha256": "e6c380b8bd6acc4b12388c66b8c308a0a64fbaf85a9812e92c3226d7ecbdcbc5",
+          "unit_id": "section_8cec9e909a36602fbbef8236e49cfdfd719249f516386f319669107d11f11301"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 3,
+          "section_id": "e101-wheel-blocked",
+          "text_sha256": "eab82ddf2067c513e9fc76ef634337f6f12527d8404fc55a51fcb114df28a0d5",
+          "unit_id": "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 4,
+          "section_id": "warranty",
+          "text_sha256": "9a7d19dc146e553f9d9f7ccb8724b705c6e876115c1cf41fe6e835890bdd1b18",
+          "unit_id": "section_b5e48bee3b9cf6931a6f6c5a6ba757d92cadfc584d043f8c6229c0514d9f6d35"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 5,
+          "section_id": "r1-e210-dock",
+          "text_sha256": "b62098cfa9671780bb51f2feedecd1d4a37bcc1fb7b18f788f3ff85eaa751eff",
+          "unit_id": "section_d24ee92e309a5b7b9dfcfca2dc552d290c7fa66353af0981bf97df1efde5313a"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 6,
+          "section_id": "dust-bin",
+          "text_sha256": "6a360fa47fbee2cc3b0e823726da22f0924e89d0f1e357127739a9c16e38a6e3",
+          "unit_id": "section_4ec2de45f934520caa7310d5fad9cde7548222b1153146932f713c253ca478a6"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 7,
+          "section_id": "maintenance",
+          "text_sha256": "11af3dd33211417b6218fdcd16f9c3cba5ec5febe9b4801e8eeaf0df2ea33b36",
+          "unit_id": "section_77597c79807ddfe31f0cd9984528bdead8c9eb5215e2c3218370383d2ad9cd8c"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 8,
+          "section_id": "wet-environment",
+          "text_sha256": "38fd9c8b05d61f1c5189578cf0d80d4c99ed7adda809267e9ea69f9e0bbcda9d",
+          "unit_id": "section_53dacf82450113ea4367b6fe8c32ce68ce60c3448bd81a7f3eb454caeae9952d"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 9,
+          "section_id": "e102-cliff-sensor",
+          "text_sha256": "4ca6028466a569f2d4585c8de62d146795fe687a5c00dbc45b1b3470e47e440e",
+          "unit_id": "section_226693b6ffa0b0676d0aa70a6e0d8eef7b2b65770c690d22ea967f4121e374a2"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 10,
+          "section_id": "before-cleaning",
+          "text_sha256": "8996acfbb8101e200dc13acee4ce8ada5caeeadd5e18ffcd3382187b520566d7",
+          "unit_id": "section_5023068115e6f8731693ff4ce0d8ce6cee23d842c3050eae60a87ed3500ecac0"
+        }
+      ],
+      "top5": [
+        "section_87c3d7a07e97c86faa28ef6e2c414545a73df2936d07220899bf8ea0b885d5db",
+        "section_8cec9e909a36602fbbef8236e49cfdfd719249f516386f319669107d11f11301",
+        "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b",
+        "section_b5e48bee3b9cf6931a6f6c5a6ba757d92cadfc584d043f8c6229c0514d9f6d35",
+        "section_d24ee92e309a5b7b9dfcfca2dc552d290c7fa66353af0981bf97df1efde5313a"
+      ]
+    },
+    {
+      "case_id": "GEN-DEV-MH-001",
+      "top10": [
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 1,
+          "section_id": "wet-environment",
+          "text_sha256": "38fd9c8b05d61f1c5189578cf0d80d4c99ed7adda809267e9ea69f9e0bbcda9d",
+          "unit_id": "section_53dacf82450113ea4367b6fe8c32ce68ce60c3448bd81a7f3eb454caeae9952d"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 2,
+          "section_id": "charging",
+          "text_sha256": "6df455b0f758ec72cb16ef8b358c9d0a625e3aee980fd4ae6766a08f64e19626",
+          "unit_id": "section_8a2b2257adea580fa384b24eefa8db5d51ef5af65690c1565ea89f973f3c7493"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 3,
+          "section_id": "exclusions",
+          "text_sha256": "30a8e4e2867fbb8cd94c5b740e888f96caef6bb3352d62ad94465f0f36b9e58e",
+          "unit_id": "section_d6658d67cebfd6ff8df28ffd31c9b2911192a291fce27c71ef8fe6d371a286cd"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 4,
+          "section_id": "cleaning-modes",
+          "text_sha256": "6ecdefa232b09785a254066994f522314c2725f27ece4443ef29f4fc24774575",
+          "unit_id": "section_f99c2a81c4fd9088a21e36c7ff1e8528f41c716bccd9f2fc75c6194079980cb1"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 5,
+          "section_id": "e102-cliff-sensor",
+          "text_sha256": "4ca6028466a569f2d4585c8de62d146795fe687a5c00dbc45b1b3470e47e440e",
+          "unit_id": "section_226693b6ffa0b0676d0aa70a6e0d8eef7b2b65770c690d22ea967f4121e374a2"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 6,
+          "section_id": "setup",
+          "text_sha256": "e6c380b8bd6acc4b12388c66b8c308a0a64fbaf85a9812e92c3226d7ecbdcbc5",
+          "unit_id": "section_8cec9e909a36602fbbef8236e49cfdfd719249f516386f319669107d11f11301"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 7,
+          "section_id": "dust-bin",
+          "text_sha256": "6a360fa47fbee2cc3b0e823726da22f0924e89d0f1e357127739a9c16e38a6e3",
+          "unit_id": "section_4ec2de45f934520caa7310d5fad9cde7548222b1153146932f713c253ca478a6"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 8,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 9,
+          "section_id": "reset",
+          "text_sha256": "cc219820918bc57225f822cd9ed8619fb4df223cf50230e8e3eb2fb4ef99523f",
+          "unit_id": "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 10,
+          "section_id": "before-cleaning",
+          "text_sha256": "8996acfbb8101e200dc13acee4ce8ada5caeeadd5e18ffcd3382187b520566d7",
+          "unit_id": "section_5023068115e6f8731693ff4ce0d8ce6cee23d842c3050eae60a87ed3500ecac0"
+        }
+      ],
+      "top5": [
+        "section_53dacf82450113ea4367b6fe8c32ce68ce60c3448bd81a7f3eb454caeae9952d",
+        "section_8a2b2257adea580fa384b24eefa8db5d51ef5af65690c1565ea89f973f3c7493",
+        "section_d6658d67cebfd6ff8df28ffd31c9b2911192a291fce27c71ef8fe6d371a286cd",
+        "section_f99c2a81c4fd9088a21e36c7ff1e8528f41c716bccd9f2fc75c6194079980cb1",
+        "section_226693b6ffa0b0676d0aa70a6e0d8eef7b2b65770c690d22ea967f4121e374a2"
+      ]
+    },
+    {
+      "case_id": "GEN-DEV-MH-003",
+      "top10": [
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 1,
+          "section_id": "repair",
+          "text_sha256": "410ff2840c47caf07ef76d2dac77f13cfbfb94b51f1ef3a99183b82e5ad53b48",
+          "unit_id": "section_bc385f934b76209b2de0a022221b6c09122cab216d507582e2905518cc0d12a6"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 2,
+          "section_id": "replacement",
+          "text_sha256": "145f7f696bfa1b6f83b60538b255eb40ba41e36f74ea38964c9488ffc874e4ed",
+          "unit_id": "section_fa91f4203e9aec5348661ff90e7a7dc13321ea9d92d935aa198439f47a94b9a2"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 3,
+          "section_id": "manual-escalation",
+          "text_sha256": "54a074a1b942b75f01badad0efb612a7da164114e160154872cb8f72e06741c7",
+          "unit_id": "section_3602466715618721612a2e59bd5cf2f3b70eaaf808a0eada0c555c6a791e9076"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 4,
+          "section_id": "evidence-check",
+          "text_sha256": "30d135ac7a5ae914316efe3314d4b445e03992909a7b92fc11dadab3917dcd2a",
+          "unit_id": "section_fbe984e7a294e280127dc9e9913853fe2ca3ae9dafa0517a34122fe7d68d20d0"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 5,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 6,
+          "section_id": "e101-wheel-blocked",
+          "text_sha256": "eab82ddf2067c513e9fc76ef634337f6f12527d8404fc55a51fcb114df28a0d5",
+          "unit_id": "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 7,
+          "section_id": "station-setup",
+          "text_sha256": "de2431b3f69f91e80382601b0f90a67b6cf0011108f6f220b28301e128fe06c7",
+          "unit_id": "section_2428a4c1ebd42e911ce3c664e85d7d62bb26e01767daaddf2d620b59b2cee2bb"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 8,
+          "section_id": "priority",
+          "text_sha256": "ac8a5142c13118f692cb7c023328aa8acee96b3d4048fdb92cbeb8d1c7fb1244",
+          "unit_id": "section_8805e752a64b11c7f496a7eefa58e158731dbc095757580e148af085f06fbcfb"
+        },
+        {
+          "document_id": "CZ-R2-MANUAL",
+          "rank": 9,
+          "section_id": "auto-empty",
+          "text_sha256": "893aa5e900b95cadc031f16bb85c0915e9e5abd1b56ae2023df15407f5b0a9f3",
+          "unit_id": "section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 10,
+          "section_id": "intake-fields",
+          "text_sha256": "00e3264c337b242c83362953561778472986fb2f202f83891a51b52afb1976f4",
+          "unit_id": "section_8b172344ca81a3060380597e8bdd409116d3dff066dd79b454d748b70abd5845"
+        }
+      ],
+      "top5": [
+        "section_bc385f934b76209b2de0a022221b6c09122cab216d507582e2905518cc0d12a6",
+        "section_fa91f4203e9aec5348661ff90e7a7dc13321ea9d92d935aa198439f47a94b9a2",
+        "section_3602466715618721612a2e59bd5cf2f3b70eaaf808a0eada0c555c6a791e9076",
+        "section_fbe984e7a294e280127dc9e9913853fe2ca3ae9dafa0517a34122fe7d68d20d0",
+        "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+      ]
+    },
+    {
+      "case_id": "BRD-QA-005",
+      "top10": [
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 1,
+          "section_id": "e101-wheel-blocked",
+          "text_sha256": "eab82ddf2067c513e9fc76ef634337f6f12527d8404fc55a51fcb114df28a0d5",
+          "unit_id": "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 2,
+          "section_id": "map-recovery",
+          "text_sha256": "0dc97a9f5d08c0ef4eefd3b3b7dac35e47cb9b71c61d536613efa89abee510fc",
+          "unit_id": "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 3,
+          "section_id": "maintenance",
+          "text_sha256": "11af3dd33211417b6218fdcd16f9c3cba5ec5febe9b4801e8eeaf0df2ea33b36",
+          "unit_id": "section_77597c79807ddfe31f0cd9984528bdead8c9eb5215e2c3218370383d2ad9cd8c"
+        },
+        {
+          "document_id": "CZ-R1-MANUAL",
+          "rank": 4,
+          "section_id": "reset",
+          "text_sha256": "cc219820918bc57225f822cd9ed8619fb4df223cf50230e8e3eb2fb4ef99523f",
+          "unit_id": "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 5,
+          "section_id": "manual-escalation",
+          "text_sha256": "54a074a1b942b75f01badad0efb612a7da164114e160154872cb8f72e06741c7",
+          "unit_id": "section_3602466715618721612a2e59bd5cf2f3b70eaaf808a0eada0c555c6a791e9076"
+        },
+        {
+          "document_id": "AFTER-SALES-POLICY",
+          "rank": 6,
+          "section_id": "exclusions",
+          "text_sha256": "30a8e4e2867fbb8cd94c5b740e888f96caef6bb3352d62ad94465f0f36b9e58e",
+          "unit_id": "section_d6658d67cebfd6ff8df28ffd31c9b2911192a291fce27c71ef8fe6d371a286cd"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 7,
+          "section_id": "model-difference",
+          "text_sha256": "28ddcdcb51806ca7117a20f4862adeaccee597dc504004c62984b401c6fa8a27",
+          "unit_id": "section_87c3d7a07e97c86faa28ef6e2c414545a73df2936d07220899bf8ea0b885d5db"
+        },
+        {
+          "document_id": "CUSTOMER-SERVICE-SOP",
+          "rank": 8,
+          "section_id": "evidence-check",
+          "text_sha256": "30d135ac7a5ae914316efe3314d4b445e03992909a7b92fc11dadab3917dcd2a",
+          "unit_id": "section_fbe984e7a294e280127dc9e9913853fe2ca3ae9dafa0517a34122fe7d68d20d0"
+        },
+        {
+          "document_id": "FAULT-CODES",
+          "rank": 9,
+          "section_id": "e102-cliff-sensor",
+          "text_sha256": "4ca6028466a569f2d4585c8de62d146795fe687a5c00dbc45b1b3470e47e440e",
+          "unit_id": "section_226693b6ffa0b0676d0aa70a6e0d8eef7b2b65770c690d22ea967f4121e374a2"
+        },
+        {
+          "document_id": "COMMON-FAQ",
+          "rank": 10,
+          "section_id": "before-cleaning",
+          "text_sha256": "8996acfbb8101e200dc13acee4ce8ada5caeeadd5e18ffcd3382187b520566d7",
+          "unit_id": "section_5023068115e6f8731693ff4ce0d8ce6cee23d842c3050eae60a87ed3500ecac0"
+        }
+      ],
+      "top5": [
+        "section_21e4578fd1789847d30af8300b01c24ff081f76ce79d671eddf7a078b8a5682b",
+        "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604",
+        "section_77597c79807ddfe31f0cd9984528bdead8c9eb5215e2c3218370383d2ad9cd8c",
+        "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909",
+        "section_3602466715618721612a2e59bd5cf2f3b70eaaf808a0eada0c555c6a791e9076"
+      ]
+    }
+  ],
+  "schema_version": "migration-retrieval-equivalence-v1"
+}

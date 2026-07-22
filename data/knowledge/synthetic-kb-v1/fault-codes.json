@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "corpus_version": "synthetic-kb-2026.07.12-v1",
+    "document_id": "FAULT-CODES",
+    "title": "澄舟 CZ-R1 与 CZ-R2 故障码及排查说明",
+    "brand": "澄舟实验品牌（虚构）",
+    "source_file": "data/knowledge/synthetic-kb-v1/fault-codes.json",
+    "source_format": "paged_json",
+    "document_version": "1.0.0",
+    "applicable_models": ["CZ-R1", "CZ-R2"],
+    "document_type": "troubleshooting",
+    "effective_date": "2026-07-12",
+    "language": "zh-CN",
+    "synthetic": true,
+    "contains_personal_data": false,
+    "synthetic_notice": "虚构合成资料；非真实品牌、客户或生产系统。"
+  },
+  "pages": [
+    {
+      "page_number": 1,
+      "page_id": "fault-common",
+      "sections": [
+        {
+          "section_id": "notice",
+          "heading": "资料声明",
+          "paragraphs": ["本分页资料完全虚构且为项目原创，不对应真实品牌、客户、故障记录或生产系统，也不包含个人信息。"]
+        },
+        {
+          "section_id": "e101-wheel-blocked",
+          "heading": "E101 驱动轮受阻",
+          "paragraphs": ["适用 CZ-R1 与 CZ-R2。关闭主机，检查左右驱动轮是否被线材或碎屑卡住；清理后转动轮组确认回弹，再重新启动。", "若轮组清理后仍无法自由转动，应停止反复启动并记录型号、故障码和已完成步骤，转人工检查。"]
+        },
+        {
+          "section_id": "e102-cliff-sensor",
+          "heading": "E102 悬崖传感器异常",
+          "paragraphs": ["适用 CZ-R1 与 CZ-R2。把主机移到平整浅色地面，使用干燥软布擦拭底部悬崖传感器，然后重新开始任务。"]
+        }
+      ]
+    },
+    {
+      "page_number": 2,
+      "page_id": "fault-cz-r1",
+      "sections": [
+        {
+          "section_id": "r1-e210-dock",
+          "heading": "E210 CZ-R1 回充失败",
+          "paragraphs": ["仅适用 CZ-R1。确认普通充电座已经通电，前方一米内无遮挡，并擦拭主机和充电座触点。", "不得把 CZ-R2 基站排查步骤用于 CZ-R1；三次尝试仍失败时停止任务并转人工检查充电座。"]
+        }
+      ]
+    },
+    {
+      "page_number": 3,
+      "page_id": "fault-cz-r2-station",
+      "sections": [
+        {
+          "section_id": "r2-e310-dust-bag",
+          "heading": "E310 CZ-R2 集尘通道受阻",
+          "paragraphs": ["仅适用 CZ-R2。断开基站电源，检查集尘袋是否装满、舱盖是否闭合以及进尘口是否堵塞。恢复供电后只执行一次集尘测试。", "若基站仍显示橙色指示灯，应保留故障码并转人工，不得连续触发集尘。"]
+        }
+      ]
+    }
+  ]
+}
+

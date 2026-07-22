@@ -1,0 +1,35 @@
+{
+  "schema_version": "public-api-contract-v1",
+  "routes": {
+    "POST /api/v1/runs": {
+      "success_status": 202,
+      "request_keys": ["task_type", "input_mode", "text", "product_model", "consent"],
+      "response_keys": ["run_id", "status", "estimated_wait_seconds", "poll_url"]
+    },
+    "GET /api/v1/runs/{run_id}": {
+      "success_status": 200,
+      "statuses": ["queued", "retrieving", "planning", "generating", "validating", "completed", "handoff"]
+    },
+    "POST /api/v1/runs/{run_id}/decision": {
+      "success_status": 200,
+      "decisions": ["approve", "edit", "reject"],
+      "external_business_action": false
+    },
+    "GET /api/v1/health": {
+      "success_status": 200,
+      "live_experience_values": ["available", "replay_only"]
+    }
+  },
+  "limits": {
+    "request_bytes": 16384,
+    "input_characters": 500,
+    "provider_calls_per_run": 2,
+    "automatic_retry_count": 0,
+    "reservation_cny_nanos": 1000000000,
+    "daily_cny_nanos": 20000000000,
+    "monthly_cny_nanos": 100000000000,
+    "running": 2,
+    "queued": 4,
+    "retention_days": 30
+  }
+}
