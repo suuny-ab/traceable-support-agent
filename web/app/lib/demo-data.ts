@@ -1,0 +1,55 @@
+export type DemoMode = "qa" | "ticket";
+
+export type DemoResult = {
+  mode: "verified_replay" | "live" | "handoff";
+  outcome: "candidate" | "handoff";
+  title: string;
+  answer: string;
+  actionSteps?: string[];
+  obligations: string[];
+  evidence: Array<{ id: string; source: string; text: string }>;
+  gates: Array<{ label: string; pass: boolean }>;
+  note: string;
+};
+
+export const examples: Record<DemoMode, { label: string; model: "CZ-R1" | "CZ-R2"; input: string; result: DemoResult }> = {
+  qa: {
+    label: "CZ-R1 局部清扫",
+    model: "CZ-R1",
+    input: "CZ-R1 怎么开始局部清扫？",
+    result: {
+      mode: "verified_replay",
+      outcome: "candidate",
+      title: "带来源QA回复",
+      answer: "请在主机停止状态下长按清扫键三秒，CZ-R1 会围绕当前位置清扫约两平方米后停止。如果需要提前结束，可再次短按清扫键暂停。",
+      obligations: ["明确长按三秒的启动动作", "说明局部清扫范围约两平方米", "给出提前停止方式"],
+      evidence: [{
+        id: "KB-CZR1-014",
+        source: "CZ-R1 使用手册 · 清扫模式",
+        text: "长按三秒执行局部清扫，主机会围绕当前位置清扫约两平方米后停止。",
+      }],
+      gates: [{ label: "型号范围", pass: true }, { label: "来源绑定", pass: true }, { label: "义务完整", pass: true }],
+      note: "这是阶段11固定合成资料的已验证回放，不是本次访问产生的新模型输出。",
+    },
+  },
+  ticket: {
+    label: "CZ-R2 地毯风险",
+    model: "CZ-R2",
+    input: "客户反馈 CZ-R2 扫拖时遇到长毛、边缘松散的地毯，应该怎么处理？",
+    result: {
+      mode: "verified_replay",
+      outcome: "candidate",
+      title: "待人工确认工单建议",
+      answer: "您好，CZ-R2 检测到地毯后会抬升拖布并降低行进速度；对于长毛或边缘松散的地毯，仍建议在地图中设置为禁区，确认禁区生效后再开始扫拖。",
+      actionSteps: ["确认设备型号为 CZ-R2", "在地图中把长毛或边缘松散地毯设置为禁区", "确认禁区生效后再重新开始扫拖"],
+      obligations: ["说明设备已有的地毯处理行为", "不得把抬升拖布写成风险完全消除", "明确长毛和松散边缘仍需设置禁区"],
+      evidence: [{
+        id: "KB-CZR2-017",
+        source: "CZ-R2 使用手册 · 地毯处理",
+        text: "检测到地毯后，CZ-R2 会抬升拖布并降低行进速度。长毛地毯或边缘松散的地毯仍应设置为禁区。",
+      }],
+      gates: [{ label: "型号范围", pass: true }, { label: "危险操作", pass: true }, { label: "义务完整", pass: true }],
+      note: "建议只等待客服主管批准、编辑或拒绝；系统不会自动回复客户或改变工单状态。",
+    },
+  },
+};

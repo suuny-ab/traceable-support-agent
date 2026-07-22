@@ -11,10 +11,10 @@
 | Complexity | Full; architecture, repository identity, public source and deployment pipeline change |
 | Risk / maturity | Local work `R0`; GitHub/deployment checkpoints `R2`; product remains `S1 public Beta` |
 | Active work | `docs/work/active/canonical-repository-migration/` |
-| Current action | API/product extraction and eight-case migration-equivalence gate are green; migrate direction-B Web to standard Next.js |
+| Current action | API and standard Next.js migrations are green; add public-repository checks, containers and CI/release/deploy pipeline |
 | Blockers | None for local candidate; public remote, canonical path swap and production deployment require their later gates |
 | Provider | Disabled; zero calls and zero Provider cost in this increment |
-| Next checkpoint | Standard Next.js build, four routes and standalone container pass without Sites/vinext assets |
+| Next checkpoint | Governance, Web, API and container CI jobs pass; replay images remain Provider-disabled |
 
 ## Current product truth
 
