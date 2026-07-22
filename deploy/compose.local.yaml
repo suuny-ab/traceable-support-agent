@@ -1,0 +1,75 @@
+name: traceable-support-local
+
+services:
+  web:
+    image: traceable-support-web:local
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:${TRACEABLE_LOCAL_API_PORT:-8000}
+        VCS_REF: local
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - 127.0.0.1:${TRACEABLE_LOCAL_WEB_PORT:-3000}:3000
+    pids_limit: 160
+
+  api-data-init:
+    image: traceable-support-api-replay:local
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
+      target: replay
+      args:
+        VCS_REF: local
+    user: "0:0"
+    read_only: true
+    network_mode: none
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+    security_opt:
+      - no-new-privileges:true
+    entrypoint: ["chown", "-R", "10001:10001", "/var/lib/traceable"]
+    volumes:
+      - traceable-data:/var/lib/traceable
+
+  api:
+    image: traceable-support-api-replay:local
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
+      target: replay
+      args:
+        VCS_REF: local
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      TRACEABLE_PUBLIC_ORIGIN: http://127.0.0.1:${TRACEABLE_LOCAL_WEB_PORT:-3000}
+      TRACEABLE_PUBLIC_LIVE_ENABLED: "false"
+    volumes:
+      - traceable-data:/var/lib/traceable
+    ports:
+      - 127.0.0.1:${TRACEABLE_LOCAL_API_PORT:-8000}:8000
+    pids_limit: 180
+    depends_on:
+      api-data-init:
+        condition: service_completed_successfully
+
+volumes:
+  traceable-data:
+    name: traceable-support-local-data

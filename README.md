@@ -38,14 +38,17 @@ Evals → Product
 回放版容器：
 
 ```bash
-docker compose -f deploy/compose.yaml up --build
+docker compose -f deploy/compose.local.yaml up --build
 ```
 
 开发模式：
 
-```bash
+```powershell
+$env:PYTHONPATH = "api/src"
 python -m traceable_support.api.http
-cd web && npm ci && npm run dev
+Set-Location web
+npm ci
+npm run dev
 ```
 
 默认地址：Web <http://127.0.0.1:3000/>，API <http://127.0.0.1:8000/api/v1/health>。
@@ -68,4 +71,3 @@ cd web && npm ci && npm run dev
 ## 许可
 
 本仓库未授予开源许可证。源码公开供查看和求职评审，版权保留；未经许可不得复制、分发或用于衍生项目。
-

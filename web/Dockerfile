@@ -1,20 +1,25 @@
-# syntax=docker/dockerfile:1.7
-
-ARG NODE_IMAGE=node:24.13.0-bookworm-slim
+ARG NODE_IMAGE=node:24.13.0-bookworm-slim@sha256:4660b1ca8b28d6d1906fd644abe34b2ed81d15434d26d845ef0aced307cf4b6f
 
 FROM ${NODE_IMAGE} AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,id=traceable-npm,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --no-fund
 
 FROM ${NODE_IMAGE} AS build
+ARG NEXT_PUBLIC_API_BASE_URL=
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
 FROM ${NODE_IMAGE} AS runtime
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.source="https://github.com/suuny-ab/traceable-support-agent" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.title="traceable-support-agent-web"
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \

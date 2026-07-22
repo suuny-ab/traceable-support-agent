@@ -24,6 +24,7 @@ coverage/
 *.db
 /work/
 artifacts/
+.local-model/
 outputs/
 logs/
 

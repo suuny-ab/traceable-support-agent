@@ -1,0 +1,234 @@
+name: ci-release
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out full public history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+      - name: Test governance tools
+        run: python -m unittest discover -s tools/tests -p "test_*.py"
+      - name: Scan current tree and full history
+        run: |
+          python tools/check_public_repo.py --scope tree
+          python tools/check_public_repo.py --scope history --expect-migration-history
+      - name: Check whitespace
+        run: git diff --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
+
+  web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24.13.0"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Reject high or critical dependency advisories
+        run: npm audit --audit-level=high --registry=https://registry.npmjs.org
+      - name: Lint and typecheck
+        run: |
+          npm run lint
+          npm run typecheck
+      - name: Build and test
+        run: npm test
+      - name: Smoke four standalone routes
+        run: |
+          npm start >"$RUNNER_TEMP/traceable-web.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then break; fi
+            sleep 1
+          done
+          for route in / /design /app /privacy; do
+            curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null
+          done
+
+  api:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            api/requirements-test.lock
+            api/requirements-live.lock
+      - name: Install locked test and offline-live dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-deps --requirement api/requirements-test.lock
+          python -m pip install --disable-pip-version-check --no-deps --require-hashes --requirement api/requirements-live.lock
+      - name: Download and verify the pinned embedding model
+        run: |
+          python deploy/download_embedding_model.py \
+            --manifest api/src/traceable_support/retrieval/bge-small-zh-v1.5-fastembed.json \
+            --root "$RUNNER_TEMP/traceable-model"
+      - name: Run API, SQLite, budget and offline product tests
+        env:
+          PYTHONPATH: api/src
+          TRACEABLE_MODEL_ROOT: ${{ runner.temp }}/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5
+        run: python -m pytest api/tests
+      - name: Prove replay control plane has no site dependency
+        env:
+          PYTHONPATH: api/src
+        run: python -S -c "from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"
+
+  containers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - name: Build Web and replay images
+        run: |
+          docker build --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-web:test web
+          docker build --target replay --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-api-replay:test -f api/Dockerfile .
+      - name: Smoke replay images without model or credential
+        run: |
+          test "$(docker image inspect --format '{{.Config.User}}' traceable-web:test)" = "node"
+          test "$(docker image inspect --format '{{.Config.User}}' traceable-api-replay:test)" = "10001:10001"
+          docker run --rm --entrypoint python --network none traceable-api-replay:test -S -c \
+            "from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"
+          docker run -d --name traceable-api-replay-ci --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --tmpfs /var/lib/traceable:rw,noexec,nosuid,uid=10001,gid=10001,size=64m \
+            --cap-drop ALL --security-opt no-new-privileges \
+            -e TRACEABLE_PUBLIC_ORIGIN=http://127.0.0.1:3000 \
+            -e TRACEABLE_PUBLIC_LIVE_ENABLED=false -p 127.0.0.1:8000:8000 \
+            traceable-api-replay:test
+          docker run -d --name traceable-web-ci --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --cap-drop ALL --security-opt no-new-privileges \
+            -p 127.0.0.1:3000:3000 traceable-web:test
+          trap 'docker rm -f traceable-web-ci traceable-api-replay-ci >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then break; fi
+            sleep 1
+          done
+          python -c 'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"'
+          for route in / /design /app /privacy; do curl --fail --silent "http://127.0.0.1:3000$route" >/dev/null; done
+      - name: Build live target but verify only offline retrieval
+        run: |
+          docker build --target live --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-api-live-offline:test -f api/Dockerfile .
+          docker run --rm --network none \
+            -v "$PWD/evals:/verification/evals:ro" \
+            -v "$PWD/tools/check_live_retrieval.py:/verification/check_live_retrieval.py:ro" \
+            --entrypoint python traceable-api-live-offline:test \
+            /verification/check_live_retrieval.py
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'suuny-ab/traceable-support-agent'
+    needs: [governance, web, api, containers]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - name: Log in to GHCR with the repository token
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Web image
+        id: web_image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        with:
+          context: web
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/suuny-ab/traceable-support-agent-web:${{ github.sha }}
+          build-args: VCS_REF=${{ github.sha }}
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+      - name: Publish replay API image
+        id: api_image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        with:
+          context: .
+          file: api/Dockerfile
+          target: replay
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/suuny-ab/traceable-support-agent-api-replay:${{ github.sha }}
+          build-args: VCS_REF=${{ github.sha }}
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=api-replay
+          cache-to: type=gha,mode=max,scope=api-replay
+      - name: Generate immutable release manifest
+        env:
+          WEB_DIGEST: ${{ steps.web_image.outputs.digest }}
+          API_DIGEST: ${{ steps.api_image.outputs.digest }}
+        run: |
+          built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          python tools/release_manifest.py \
+            --git-sha "$GITHUB_SHA" \
+            --web-image "ghcr.io/suuny-ab/traceable-support-agent-web@$WEB_DIGEST" \
+            --api-image "ghcr.io/suuny-ab/traceable-support-agent-api-replay@$API_DIGEST" \
+            --built-at "$built_at" \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --github-run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --output release-manifest.json
+          python tools/release_manifest.py --verify release-manifest.json
+      - name: Store release manifest
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: release-manifest
+          path: release-manifest.json
+          if-no-files-found: error
+          retention-days: 30

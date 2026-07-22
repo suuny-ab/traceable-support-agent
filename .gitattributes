@@ -6,9 +6,12 @@
 *.mjs text eol=lf
 *.json text eol=lf
 *.md text eol=lf
+*.lock text eol=lf
+*.sh text eol=lf
 *.yaml text eol=lf
 *.yml text eol=lf
 Dockerfile text eol=lf
+.dockerignore text eol=lf
 
 # Preserve the approved synthetic corpus byte-for-byte, including its terminal blank line.
 data/knowledge/** whitespace=-blank-at-eof

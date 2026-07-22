@@ -1,0 +1,101 @@
+name: deploy-production
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_run_id:
+        description: Successful ci-release run ID containing release-manifest
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: traceable-support-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Download manifest from the selected green run
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: release-manifest
+          run-id: ${{ inputs.publish_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ runner.temp }}/traceable-release-artifact
+      - name: Read immutable Git identity
+        id: manifest
+        env:
+          RELEASE_MANIFEST: ${{ runner.temp }}/traceable-release-artifact/release-manifest.json
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, re
+          value=json.loads(pathlib.Path(os.environ["RELEASE_MANIFEST"]).read_text(encoding="utf-8"))
+          sha=value.get("git_sha", "")
+          if not re.fullmatch(r"[0-9a-f]{40}", sha): raise SystemExit("manifest_git_sha_invalid")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"git_sha={sha}\n")
+          PY
+      - name: Check out the manifest commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ steps.manifest.outputs.git_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+      - name: Verify manifest and main ancestry
+        env:
+          RELEASE_MANIFEST: ${{ runner.temp }}/traceable-release-artifact/release-manifest.json
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ steps.manifest.outputs.git_sha }}"
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor HEAD origin/main
+          python tools/release_manifest.py --verify "$RELEASE_MANIFEST"
+      - name: Build public deployment package
+        env:
+          RELEASE_MANIFEST: ${{ runner.temp }}/traceable-release-artifact/release-manifest.json
+        run: |
+          mkdir -p release-staging/deploy release-staging/tools
+          cp "$RELEASE_MANIFEST" release-staging/release-manifest.json
+          cp deploy/compose.production.yaml deploy/release-lib.sh deploy/activate-release.sh \
+            deploy/rollback-release.sh deploy/switch_release_state.py \
+            deploy/install_release.py release-staging/deploy/
+          cp tools/release_manifest.py release-staging/tools/
+          cp deploy/production-target.json release-staging/deployment-input.json
+      - name: Upload and activate with strict host verification
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          port="${DEPLOY_PORT:-22}"
+          test -n "$DEPLOY_HOST" -a -n "$DEPLOY_USER" -a -n "$DEPLOY_SSH_KEY" -a -n "$DEPLOY_KNOWN_HOSTS"
+          [[ "$port" =~ ^[0-9]{1,5}$ ]] && test "$port" -ge 1 -a "$port" -le 65535
+          key_file="$RUNNER_TEMP/traceable-deploy-key"
+          known_hosts="$RUNNER_TEMP/traceable-known-hosts"
+          printf '%s\n' "$DEPLOY_SSH_KEY" >"$key_file"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >"$known_hosts"
+          chmod 600 "$key_file" "$known_hosts"
+          trap 'rm -f "$key_file" "$known_hosts"' EXIT
+          remote_stage="/tmp/traceable-support-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          ssh_args=(-i "$key_file" -p "$port" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$known_hosts")
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -m 700 '$remote_stage'"
+          scp -r -i "$key_file" -P "$port" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$known_hosts" \
+            release-staging/. "$DEPLOY_USER@$DEPLOY_HOST:$remote_stage/"
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "python3 '$remote_stage/deploy/install_release.py' --staging '$remote_stage' --release-root /opt/traceable-support"

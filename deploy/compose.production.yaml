@@ -1,0 +1,60 @@
+name: traceable-support
+
+services:
+  web:
+    image: ${WEB_IMAGE:?WEB_IMAGE must be an immutable digest}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - 127.0.0.1:3000:3000
+    mem_limit: 384m
+    cpus: 0.75
+    pids_limit: 160
+    stop_grace_period: 20s
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+
+  api:
+    image: ${API_IMAGE:?API_IMAGE must be an immutable digest}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      TRACEABLE_PUBLIC_HOST: 0.0.0.0
+      TRACEABLE_PUBLIC_PORT: "8000"
+      TRACEABLE_PUBLIC_DB: /var/lib/traceable/public.sqlite3
+      TRACEABLE_PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN is required}
+      TRACEABLE_PUBLIC_LIVE_ENABLED: "false"
+    volumes:
+      - traceable-data:/var/lib/traceable
+    ports:
+      - 127.0.0.1:8000:8000
+    mem_limit: 768m
+    cpus: 1.25
+    pids_limit: 180
+    stop_grace_period: 260s
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+
+volumes:
+  traceable-data:
+    name: traceable-support-data-canonical

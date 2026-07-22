@@ -11,6 +11,12 @@
 - Public control plane imports without third-party packages; a key alone cannot enable live mode.
 - Direction-B Web passes lint, typecheck, standard Next.js production build and 12 tests; all four routes return 200 from standalone output.
 - No Sites/vinext/Wrangler/Worker source, nested Git metadata or frontend build output is tracked.
+- Web and API base images, all GitHub Actions and the full Python live dependency closure are immutable-hash pinned; official npm audit reports zero known vulnerabilities.
+- Replay Web/API images run non-root without a model or credential; the local Compose check passed four routes, exact CORS, replay failure-close, SQLite volume ownership and API restart recovery.
+- The live image contains the byte-verified fixed BGE model and, with network disabled, reproduces all eight approved retrieval cases with `provider_calls=0`; `pip check` reports no broken requirements.
+- The release manifest binds the Git SHA, two image digests, API contract, knowledge/retrieval/replay/prompt/Compose/dependency hashes and explicitly records `provider_enabled=false`.
+- The production path retains host Caddy/IP HTTPS, captures the legacy image IDs before first migration, uses a separate canonical volume and supports the controlled `old → new → old → new` rehearsal. No production switch has been attempted yet.
+- The deployment candidate passed Cycle 3 independent review after closing pre-activation anchor, fixed-origin, metadata half-commit and final-receipt failure paths.
 - Provider calls: `0`; Provider cost: `0 CNY`.
 
 Remote publication, canonical-path switch, production deployment and user acceptance remain pending. The legacy repository and current public deployment are unchanged.

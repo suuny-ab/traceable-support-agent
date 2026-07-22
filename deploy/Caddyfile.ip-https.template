@@ -1,0 +1,43 @@
+{
+	auto_https off
+	admin localhost:2019
+	# IP-literal URLs may omit SNI; explicitly select the installed IP certificate.
+	default_sni __PUBLIC_IP__
+}
+
+http://__PUBLIC_IP__ {
+	handle /.well-known/acme-challenge/* {
+		root * /var/lib/letsencrypt-webroot
+		file_server
+	}
+
+	handle {
+		redir https://__PUBLIC_IP__{uri} 308
+	}
+}
+
+https://__PUBLIC_IP__ {
+	tls /etc/letsencrypt/live/__PUBLIC_IP__/fullchain.pem /etc/letsencrypt/live/__PUBLIC_IP__/privkey.pem
+	encode zstd gzip
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=86400"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Cross-Origin-Opener-Policy "same-origin"
+	}
+
+	handle /api/* {
+		request_body {
+			max_size 16KB
+		}
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3000
+	}
+}
