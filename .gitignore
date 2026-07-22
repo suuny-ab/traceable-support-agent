@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+.npm-cache/
+
+# Runtime state
+*.sqlite
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+/work/
+artifacts/
+outputs/
+logs/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Debug and archives
+*.log
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.dump
+*.har
+
+# Private evaluation material must remain outside Git
+private-artifacts/
+holdout-private/
