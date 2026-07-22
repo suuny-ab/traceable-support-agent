@@ -103,7 +103,7 @@ def build_manifest(
                 "evals/fixtures/migration-retrieval-equivalence-v1.json"
             ),
             "public_regression_sha256": _file_hash("evals/public-regression-v1.json"),
-            "replay_data_sha256": _file_hash("web/app/lib/demo-data.ts"),
+            "replay_data_sha256": _file_hash("web/app/lib/replay-presets.json"),
             "source_prompt_hashes": prompts,
             "source_prompt_set_sha256": prompt_set_hash,
             "production_compose_sha256": _file_hash("deploy/compose.production.yaml"),

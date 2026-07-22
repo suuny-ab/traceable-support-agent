@@ -23,5 +23,4 @@ After cold-start and equivalence checks, add `GEN-DEV-IE-001` as an “insuffici
 
 ## Observed effect
 
-Pending candidate, fresh-clone, deployment and user acceptance.
-
+The governed repository supported a user-visible third replay preset without reopening legacy audit areas or changing the API/Provider boundary. The asset is mechanically bound to the public `GEN-DEV-IE-001` expectation and passed 15 Web tests plus the public scanner. Fresh-clone, deployment and user acceptance remain pending before the governance change can be retained as fully proven.

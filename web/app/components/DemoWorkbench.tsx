@@ -8,6 +8,7 @@ import {
   requestLiveRun,
   submitHumanDecision,
 } from "../lib/live-api.mjs";
+import { selectRunRoute } from "../lib/replay-routing.mjs";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 const stageNames = ["检索证据", "规划义务", "生成候选", "执行质量门"];
@@ -62,10 +63,12 @@ function uncertainResult(kind: string, reason: string): DemoResult {
 }
 
 export function DemoWorkbench() {
+  const initialExample = examples.qa[0];
   const operationRef = useRef(0);
   const [mode, setMode] = useState<DemoMode>("qa");
-  const [input, setInput] = useState(examples.qa.input);
-  const [model, setModel] = useState<"CZ-R1" | "CZ-R2">(examples.qa.model);
+  const [selectedPresetId, setSelectedPresetId] = useState(initialExample.id);
+  const [input, setInput] = useState(initialExample.input);
+  const [model, setModel] = useState<"CZ-R1" | "CZ-R2">(initialExample.model);
   const [trace, setTrace] = useState<TraceState[]>(emptyTrace);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DemoResult | null>(null);
@@ -76,7 +79,8 @@ export function DemoWorkbench() {
   const [decision, setDecision] = useState<Decision | null>(null);
   const [decisionState, setDecisionState] = useState<DecisionState>("idle");
   const [decisionText, setDecisionText] = useState("");
-  const selectedExample = examples[mode];
+  const modeExamples = examples[mode];
+  const selectedExample = modeExamples.find((example) => example.id === selectedPresetId) ?? modeExamples[0];
   const isPreset = input.trim() === selectedExample.input && model === selectedExample.model;
   const inputCount = useMemo(() => Array.from(input).length, [input]);
   const inputLocked = running || decisionState === "submitting";
@@ -104,9 +108,22 @@ export function DemoWorkbench() {
   function changeMode(next: DemoMode) {
     if (inputLocked) return;
     operationRef.current += 1;
+    const nextExample = examples[next][0];
     setMode(next);
-    setInput(examples[next].input);
-    setModel(examples[next].model);
+    setSelectedPresetId(nextExample.id);
+    setInput(nextExample.input);
+    setModel(nextExample.model);
+    clearRun();
+  }
+
+  function changePreset(presetId: string) {
+    if (inputLocked) return;
+    const nextExample = modeExamples.find((example) => example.id === presetId);
+    if (!nextExample) return;
+    operationRef.current += 1;
+    setSelectedPresetId(nextExample.id);
+    setInput(nextExample.input);
+    setModel(nextExample.model);
     clearRun();
   }
 
@@ -147,13 +164,16 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     clearRun();
-    for (let index = 0; index < stageNames.length; index += 1) {
+    const stopIndex = selectedExample.stopStageIndex ?? stageNames.length - 1;
+    for (let index = 0; index <= stopIndex; index += 1) {
       if (operation !== operationRef.current) return;
       setTrace(stageNames.map((_, itemIndex) => itemIndex < index ? "pass" : itemIndex === index ? "run" : "wait"));
       await delay(180);
     }
     if (operation !== operationRef.current) return;
-    setTrace(stageNames.map(() => "pass"));
+    setTrace(selectedExample.result.outcome === "handoff"
+      ? stageNames.map((_, index) => index < stopIndex ? "pass" : index === stopIndex ? "stop" : "wait")
+      : stageNames.map(() => "pass"));
     setResult(selectedExample.result);
     setRunning(false);
   }
@@ -178,8 +198,16 @@ export function DemoWorkbench() {
 
   async function run() {
     if (running || !input.trim() || inputCount > 500) return;
-    if (availability !== "available") {
-      if (isPreset) await showReplay();
+    const route = selectRunRoute({
+      availability,
+      isPreset,
+      replayOnly: selectedExample.replayOnly,
+    });
+    if (route === "replay") {
+      await showReplay();
+      return;
+    }
+    if (route === "blocked") {
       return;
     }
     const operation = ++operationRef.current;
@@ -261,8 +289,12 @@ export function DemoWorkbench() {
       : availability === "unavailable"
         ? "实时调用关闭 · 回放可用"
         : "实时状态未知 · 回放可用";
-  const canRunPrimary = !inputLocked && Boolean(input.trim()) && inputCount <= 500 &&
-    (availability === "available" || isPreset);
+  const selectedRoute = selectRunRoute({
+    availability,
+    isPreset,
+    replayOnly: selectedExample.replayOnly,
+  });
+  const canRunPrimary = !inputLocked && Boolean(input.trim()) && inputCount <= 500 && selectedRoute !== "blocked";
 
   return (
     <div className="workbench">
@@ -285,14 +317,18 @@ export function DemoWorkbench() {
           <select id="product-model" value={model} disabled={inputLocked} onChange={(event) => { operationRef.current += 1; setModel(event.target.value as "CZ-R1" | "CZ-R2"); clearRun(); }}>
             <option value="CZ-R1">CZ-R1</option><option value="CZ-R2">CZ-R2</option>
           </select>
-          <div className="preset-line"><span>推荐预设：{selectedExample.label}</span><button type="button" disabled={inputLocked} onClick={resetExample}>恢复预设</button></div>
+          <label htmlFor="demo-preset">已验证预设</label>
+          <select id="demo-preset" value={selectedExample.id} disabled={inputLocked} onChange={(event) => changePreset(event.target.value)}>
+            {modeExamples.map((example) => <option value={example.id} key={example.id}>{example.label}{example.caseId ? ` · ${example.caseId}` : ""}</option>)}
+          </select>
+          <div className="preset-line"><span>当前预设：{selectedExample.label}{selectedExample.caseId ? ` · ${selectedExample.caseId}` : ""}</span><button type="button" disabled={inputLocked} onClick={resetExample}>恢复预设</button></div>
           <label htmlFor="demo-input">合成问题或工单</label>
           <textarea id="demo-input" maxLength={500} value={input} disabled={inputLocked} onChange={(event) => { operationRef.current += 1; setInput(event.target.value); clearRun(); }} />
           <div className="input-meta"><span className={inputCount > 500 ? "danger-text" : ""}>{inputCount} / 500</span><span>请勿输入个人信息、公司机密或生产数据</span></div>
           <button className="run-button" type="button" disabled={!canRunPrimary} onClick={run}>
-            {running ? "正在运行检查链…" : availability === "available" ? "运行实时模型" : isPreset ? "运行已验证回放" : "实时服务尚未确认"}<span>→</span>
+            {running ? "正在运行检查链…" : selectedRoute === "live" ? "运行实时模型" : selectedRoute === "replay" ? "运行已验证回放" : "实时服务尚未确认"}<span>→</span>
           </button>
-          {availability === "available" && isPreset && <button className="replay-button" type="button" disabled={running} onClick={showReplay}>不调用模型，查看已验证回放</button>}
+          {selectedRoute === "live" && isPreset && <button className="replay-button" type="button" disabled={running} onClick={showReplay}>不调用模型，查看已验证回放</button>}
           <p className="input-boundary">实时路径最多两次 Provider 请求且零自动重试；回放路径不调用模型。两者在结果标签中明确区分。</p>
         </section>
 
@@ -339,9 +375,14 @@ function ResultView({
   onSubmitEdit: () => void;
 }) {
   const decisionLocked = decisionState === "submitting" || decisionState === "recorded";
+  const modeLabel = result.mode === "live"
+    ? "LIVE MODEL"
+    : result.mode === "verified_replay"
+      ? result.outcome === "handoff" ? "VERIFIED REPLAY · HANDOFF" : "VERIFIED REPLAY"
+      : "HONEST HANDOFF";
   return (
     <div className="result-view">
-      <div className={`mode-badge ${result.outcome === "handoff" ? "badge-handoff" : ""}`}>{result.mode === "live" ? "LIVE MODEL" : result.mode === "verified_replay" ? "VERIFIED REPLAY" : "HONEST HANDOFF"}</div>
+      <div className={`mode-badge ${result.outcome === "handoff" ? "badge-handoff" : ""}`}>{modeLabel}</div>
       <div className="answer-card"><span>CUSTOMER-VISIBLE RESULT</span><p>{result.answer}</p></div>
       {result.actionSteps && <div className="result-block"><h3>处理步骤</h3><ol>{result.actionSteps.map((item) => <li key={item}>{item}</li>)}</ol></div>}
       <div className="result-columns">

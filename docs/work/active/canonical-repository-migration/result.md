@@ -17,6 +17,8 @@
 - The release manifest binds the Git SHA, two image digests, API contract, knowledge/retrieval/replay/prompt/Compose/dependency hashes and explicitly records `provider_enabled=false`.
 - The production path retains host Caddy/IP HTTPS, captures the legacy image IDs before first migration, uses a separate canonical volume and supports the controlled `old → new → old → new` rehearsal. No production switch has been attempted yet.
 - The deployment candidate passed Cycle 3 independent review after closing pre-activation anchor, fixed-origin, metadata half-commit and final-receipt failure paths.
-- Provider calls: `0`; Provider cost: `0 CNY`.
+- The real governance-validation increment adds a third replay preset: `GEN-DEV-IE-001` stops at retrieval when no approved source supports a Wi-Fi compatibility claim and shows a typed handoff. Its fixed mechanical expectation declares `provider_call_count=0`; this increment itself also made zero Provider calls. The Web now passes 15 tests; the current public server remains unchanged.
+- A production Web image ran as the non-root `node` user with a read-only root filesystem. Real-browser desktop and mobile-breakpoint checks confirmed the replay-only route, `STOP/WAIT/WAIT/WAIT` trace, absent evidence and approval controls, no horizontal overflow and no console warnings or errors.
+- Calls made while implementing and verifying this increment: `0`; Provider cost: `0 CNY`.
 
 Remote publication, canonical-path switch, production deployment and user acceptance remain pending. The legacy repository and current public deployment are unchanged.

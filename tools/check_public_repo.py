@@ -374,6 +374,43 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             errors.append("public_regression_case_set_invalid")
     except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
         errors.append("public_regression_suite_invalid")
+    try:
+        replay = json.loads(_read(mapped, "web/app/lib/replay-presets.json"))
+        suite = json.loads(_read(mapped, "evals/public-regression-v1.json"))
+        if set(replay) != {"schema_version", "presets"} or replay.get(
+            "schema_version"
+        ) != "verified-replay-presets-v1":
+            errors.append("replay_preset_schema_invalid")
+        presets = replay.get("presets", [])
+        preset_ids = [item.get("id") for item in presets if type(item) is dict]
+        if len(presets) != 3 or len(set(preset_ids)) != 3 or set(preset_ids) != {
+            "qa-local-clean", "ticket-carpet-risk", "qa-insufficient-evidence"
+        }:
+            errors.append("replay_preset_inventory_invalid")
+        expectation = next(
+            case for case in suite["cases"] if case["case_id"] == "GEN-DEV-IE-001"
+        )
+        insufficient = next(
+            item for item in presets if item.get("caseId") == "GEN-DEV-IE-001"
+        )
+        expected = expectation["expected"]
+        result = insufficient.get("result", {})
+        if (
+            insufficient.get("taskType") != expectation["task_type"]
+            or insufficient.get("model") != expectation["product_model"]
+            or insufficient.get("input") != expectation["input"]
+            or insufficient.get("stopStageIndex") != 0
+            or insufficient.get("replayOnly") is not True
+            or result.get("mode") != "verified_replay"
+            or result.get("outcome") != expected["outcome"]
+            or result.get("handoff_reason") != expected["handoff_reason"]
+            or result.get("provider_call_count") != expected["provider_call_count"]
+            or expected.get("source_sections") != []
+            or result.get("evidence") != []
+        ):
+            errors.append("insufficient_evidence_replay_contract_invalid")
+    except (StopIteration, TypeError, KeyError, UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        errors.append("replay_preset_contract_invalid")
     import hashlib
     for path, expected_hash in KNOWLEDGE_HASHES.items():
         entry = mapped.get(path)

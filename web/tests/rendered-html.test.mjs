@@ -68,4 +68,5 @@ test("renders explicit live-health and replay choices", async () => {
   assert.match(html, /正在检测实时服务/);
   assert.match(html, /实时路径最多两次 Provider 请求/);
   assert.match(html, /运行已验证回放/);
+  assert.match(html, /CZ-R1 证据不足转人工/);
 });

@@ -23,3 +23,7 @@ The next correction reads and validates the Caddy hash before any activation. Re
 ## Cycle 3
 
 PASS. The fixed target, pre-activation anchor, pre-activation Caddy evidence, compensated release metadata and receipt-failure rollback are all reachable from the approved workflow and fail closed. Linux ran all 12 governance and failure-injection tests; the staged public scanner, Python AST, workflow YAML, Bash syntax, Compose config and whitespace checks passed. No Provider, GitHub or server write occurred during review.
+
+## Replay increment
+
+PASS. The approved entry was the `/app` preset selector and run button. The review covered misleading replay/live provenance, accidental live POST, unsupported evidence display, unsafe handoff controls, the two-mode UI and claim boundaries. Index and worktree were identical; the replay fields matched the public regression; `available + exact replayOnly` routed to replay while edited input retained the live route; evidence and approval controls were conditionally absent; and the release hash matched the new replay JSON. Web 15/15, lint, typecheck, public scanner and relevant governance tool tests passed. The conclusion remains limited to the replay UI and its public mechanical expectation; the live product does not yet enforce the same `GEN-DEV-IE-001` stop.

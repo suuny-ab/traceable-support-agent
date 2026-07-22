@@ -11,10 +11,10 @@
 | Complexity | Full; architecture, repository identity, public source and deployment pipeline change |
 | Risk / maturity | Local work `R0`; GitHub/deployment checkpoints `R2`; product remains `S1 public Beta` |
 | Active work | `docs/work/active/canonical-repository-migration/` |
-| Current action | Deployment pipeline fixed snapshot passed Cycle 3 independent review; create migration commit 4 |
+| Current action | `GEN-DEV-IE-001` replay increment passed fixed-snapshot review; create migration commit 5 |
 | Blockers | None for local candidate; public remote, canonical path swap and production deployment require their later gates |
 | Provider | Disabled; zero calls and zero Provider cost in this increment |
-| Next checkpoint | Create migration commit 4, then add the `GEN-DEV-IE-001` insufficient-evidence replay preset as the governed product increment |
+| Next checkpoint | Create migration commit 5, then close the local six-commit candidate and run fresh-clone plus cold-start gates |
 
 ## Current product truth
 
