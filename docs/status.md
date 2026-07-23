@@ -14,7 +14,7 @@
 | 最近完成 | `docs/work/completed/meta-development-governance-audit/` |
 | 当前动作 | 阶段 5：Stage 12 已执行（19/24、9 通过、2 条边界缺陷登记、用户选择收口）；收口 PR 准备中 |
 | 阻碍 | 无 |
-| Provider | 公网已禁用；Stage 12 一次性授权执行 31 调用 / 记账 ¥0.7096 / 重试 0（信封内） |
+| Provider | 公网已禁用；`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；Stage 12 一次性授权执行 31 调用 / 记账 ¥0.7096 / 重试 0（信封内，不经公网） |
 | 下一检查点 | runner PR 合入并冻结候选 SHA 后，起草并机械冻结私有未见集 |
 
 ## 当前产品事实
