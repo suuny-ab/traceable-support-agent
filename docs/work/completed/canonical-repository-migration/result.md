@@ -1,6 +1,6 @@
 # 结果记录
 
-> 状态：`in_progress`
+> 状态：`completed`
 
 ## 阶段性验证回执
 
@@ -52,8 +52,11 @@
 - 公网就绪修复经 PR #9 合并为 `f5dbcb74cb9efb43b267a9767ce98dca5213e503`；主线运行 `29998493217` 和生产运行 `29998634293` 成功。服务器正式回执绑定该 SHA，记录 `旧 → 新 → 旧 → 新` 三步全部通过、`provider_enabled=false`、公网健康为 `replay_only`；Web/API 容器健康，用户交互验收通过。
 - 用户随后明确授予绿色 `main` 常设自动生产部署权限。GitHub `production` environment 已移除 required reviewer，仍只接受受保护分支。对同一主线运行的 attempt 2 自动创建生产运行 `29999265733` 且未进入 `waiting`，证明逐次批准门已经消失；该运行因 attempt 改变导致同 SHA manifest 与既有发布目录冲突，被不可变发布门以 `existing_release_identity_conflict` 正确拒绝，现网和原正式回执未改变。
 - 全自动路径的最终验收仍需要一个新的 `main` SHA：其 CI 成功后应自动创建并完成生产运行，不进行人工批准，并形成绑定新 SHA 的三步演练、正式回执与公网健康证据。
+- 自动部署语义经 PR #10 合并为 `fff847f9d9f9197fceedf20df49d0a913cfdfc68`；主线运行 `29999870811` 的治理、Web、API、容器和 GHCR 发布全部成功。生产运行 `30000004137` 自动创建并直接进入执行，没有进入 `waiting` 或接受人工批准，也没有自动重试。
+- 服务器只读回执确认 `current` 指向 `fff847f9d9f9197fceedf20df49d0a913cfdfc68`、`previous` 指向 `f5dbcb74cb9efb43b267a9767ce98dca5213e503`；`deployment-receipt.json` 绑定新 SHA，三步演练完整，`provider_enabled=false`、`public_health=replay_only`。两个容器为 `healthy`，公网四页和健康接口均返回 `200`。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
 公开远端、GitHub 来源构建、分支保护、GHCR 发布、本机 canonical 开发路径、首次生产部署、
-强制回滚演练和用户验收已经通过。绿色 `main` 的无点击自动生产部署仍待新 SHA 验证，因此
-活动工作继续位于 `docs/work/active/`。
+强制回滚演练、用户验收和绿色 `main` 的无点击自动生产部署已经通过。当前仓库成为唯一
+权威开发来源，本增量关闭并移入 `docs/work/completed/`。旧仓和临时回滚材料仅保留为
+非权威材料；其删除需要独立、精确的破坏性清理授权。

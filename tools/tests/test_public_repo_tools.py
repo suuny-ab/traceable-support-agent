@@ -14,6 +14,7 @@ from unittest import mock
 
 from tools.check_public_repo import (
     Entry,
+    _active_increment_errors,
     _container_smoke_workflow_errors,
     _content_errors,
     _deployment_workflow_errors,
@@ -45,6 +46,75 @@ from tools.validate_deploy_port import normalize_deploy_port
 
 
 class PublicScannerTest(unittest.TestCase):
+    def test_active_increment_allows_explicit_ready_idle_state(self) -> None:
+        ready = Entry(
+            "docs/status.md",
+            "| `state` | `ready` |\n| 活动工作 | 无 |\n".encode(),
+        )
+        self.assertEqual(_active_increment_errors([ready]), [])
+
+        migrating = Entry(
+            "docs/status.md",
+            "| `state` | `migrating` |\n| 活动工作 | 无 |\n".encode(),
+        )
+        self.assertIn(
+            "active_increment_count:0",
+            _active_increment_errors([migrating]),
+        )
+
+    def test_active_increment_still_rejects_parallel_work(self) -> None:
+        entries = [
+            Entry(
+                "docs/status.md",
+                "docs/work/active/one/\n".encode(),
+            )
+        ]
+        for slug in ("one", "two"):
+            for name in ("spec.md", "plan.md", "result.md", "review.md"):
+                entries.append(Entry(f"docs/work/active/{slug}/{name}", b""))
+        self.assertIn(
+            "active_increment_count:2",
+            _active_increment_errors(entries),
+        )
+
+    def test_active_increment_requires_exact_direct_file_set_and_status_link(self) -> None:
+        names = ("spec.md", "plan.md", "result.md", "review.md")
+
+        def active_entries(paths: tuple[str, ...], status: str) -> list[Entry]:
+            return [
+                Entry("docs/status.md", status.encode()),
+                *(Entry(path, b"") for path in paths),
+            ]
+
+        valid_paths = tuple(f"docs/work/active/one/{name}" for name in names)
+        linked_status = "docs/work/active/one/\n"
+        self.assertEqual(
+            _active_increment_errors(active_entries(valid_paths, linked_status)),
+            [],
+        )
+
+        incomplete = valid_paths[:-1]
+        self.assertIn(
+            "active_increment_file_set_invalid",
+            _active_increment_errors(active_entries(incomplete, linked_status)),
+        )
+        self.assertIn(
+            "status_does_not_link_active_increment",
+            _active_increment_errors(active_entries(valid_paths, "not linked\n")),
+        )
+
+        malformed_cases = (
+            ("docs/work/active/notes.md",),
+            tuple(f"docs/work/active/one/nested/{name}" for name in names),
+            valid_paths + ("docs/work/active/one/nested/spec.md",),
+        )
+        for paths in malformed_cases:
+            with self.subTest(paths=paths):
+                self.assertIn(
+                    "active_increment_layout_invalid",
+                    _active_increment_errors(active_entries(paths, linked_status)),
+                )
+
     def test_environment_examples_are_exact(self) -> None:
         self.assertNotIn("environment_file_not_allowed", _path_errors(Entry("web/.env.example", b"X=\n")))
         self.assertIn("environment_file_not_allowed", _path_errors(Entry("web/local.env.example", b"X=\n")))

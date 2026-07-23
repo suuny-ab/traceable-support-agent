@@ -62,7 +62,9 @@
 - 公开源码仓库已建立在 <https://github.com/suuny-ab/traceable-support-agent>。
 - GitHub Actions 运行 `29980390180` 在提交 `ab2771b60624788edcf1ac952a32628e3586d818` 上通过治理、Web、API、容器和发布任务；发布任务生成两个不可变 GHCR 镜像及其发布清单。
 - `main` 启用严格状态检查，要求 `governance`、`web`、`api` 和 `containers` 通过；同时禁止强推和删除，并要求线性历史与对话解决。
-- 本机开发入口已切换到当前 canonical 工作树。该工作树的 `main` 与 `origin/main` 同为上述提交，检查时工作树干净。
-- 旧仓仍在原位置保留，未连接公开远端；它只作为迁移完成前的回滚材料，不再作为日常开发入口。
+- 本机开发入口已切换到当前 canonical 工作树。迁移收口前，本地 `main` 与 `origin/main` 同为 `fff847f9d9f9197fceedf20df49d0a913cfdfc68`，检查时工作树干净。
+- PR #10 合并后的主线运行 `29999870811` 全部成功；生产运行 `30000004137` 未进入人工等待并自动完成。服务器 `current` 指向 `fff847f9d9f9197fceedf20df49d0a913cfdfc68`，正式回执记录三步回滚演练通过、`provider_enabled=false` 和 `public_health=replay_only`；公网四页与健康接口均返回 `200`。
+- 旧仓仍在原位置保留，但不再具有权威性，也不是日常开发入口。删除旧仓或临时回滚材料属于独立破坏性清理，不是本次迁移完成门。
 
-这些证据关闭公开远端和本机路径检查点，不代表已经完成生产部署、生产回滚演练或用户验收。当前公网版本仍保持 `replay_only`。
+这些证据关闭公开远端、本机路径、生产部署、生产回滚演练、用户验收和全自动部署检查点。
+当前公网版本保持 `replay_only`，不形成实时 Provider、`product/0.1.0`、高可用或 SLA 主张。
