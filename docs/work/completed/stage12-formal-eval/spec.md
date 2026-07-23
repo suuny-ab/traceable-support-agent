@@ -1,6 +1,6 @@
 # Stage 12 全新未见正式评测规格
 
-> 状态：`active`
+> 状态：`completed`
 >
 > 活动入口：GitHub Issue [#12](https://github.com/suuny-ab/traceable-support-agent/issues/12)
 >
