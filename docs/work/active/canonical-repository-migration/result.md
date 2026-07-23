@@ -30,6 +30,10 @@
 - 固定暂存树 `63c39b87dc79663a1701c3d2b9fb48037147f7c0` 通过两项独立公开前复核：现网与候选第三预设没有混淆，Stage 12、Provider、GitHub、公开镜像、生产部署和回滚演练均未被写成已完成；README 入口、相对链接和手动开发参数与实现一致。
 - 用户确认后创建公开仓库 <https://github.com/suuny-ab/traceable-support-agent>，并推送六个既定主题提交。首次 GitHub Actions 运行 `29979801403` 中 API 与容器任务通过，治理与 Web 任务失败，镜像发布按门禁跳过。
 - 首次 CI 的两个根因均已缩到批准范围：治理任务发现 `PROJECT.md` 两处 Markdown 行尾空格；Web 安全审计发现 Next.js `16.2.6` 存在高危公告，官方修复版本为 `16.2.11`。本轮只移除空格、升级 Next.js 与配套 ESLint 配置补丁版本，并同步已公开的仓库事实；不改变产品算法、接口、Provider 或部署。
+- 修复后的 GitHub Actions 运行 `29980390180` 在提交 `ab2771b60624788edcf1ac952a32628e3586d818` 上通过全部五项任务：治理、Web、API、容器和发布。治理任务读取完整公开历史；Web / API / 容器任务从远端检出后重新安装、构建和测试；发布任务向 GHCR 推送不可变 Web / 回放 API 镜像并保存发布清单。
+- `main` 分支保护要求 `governance`、`web`、`api` 和 `containers` 严格通过，禁止强推与删除，并启用线性历史和对话解决。
+- 本机开发入口已经切换到当前 canonical 工作树；该工作树的 `main` 与 `origin/main` 同为上述成功提交，核验时工作树干净。旧仓继续留在原位置作为回滚材料，不再作为日常开发入口。
+- 公开健康接口在路径切换核验后仍返回 `status=ok` 和 `live_experience=replay_only`。本次只关闭公开远端与本机路径检查点，没有执行生产镜像切换、回滚演练或 Provider 调用。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
-公开源码仓库已经建立；修复版 CI、分支保护和 GitHub 来源全新克隆仍属于本检查点。正式路径切换、生产部署和用户验收尚未完成。旧仓库和当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。
+公开远端、GitHub 来源构建、分支保护、GHCR 发布和本机 canonical 开发路径已经通过。生产部署、强制回滚演练和用户验收尚未完成，当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。
