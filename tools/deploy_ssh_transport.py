@@ -57,6 +57,8 @@ SAFE_INSTALL_ERROR_CODES = frozenset(
         "previous_release_health_failed",
         "previous_release_start_failed",
         "public_health_contract_invalid",
+        "public_smoke_contract_failed",
+        "public_smoke_not_ready",
         "release_stop_not_settled",
         "release_stop_state_query_failed",
         "required_receipt_input_missing",
