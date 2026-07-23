@@ -39,6 +39,9 @@
 - GitHub API 在线回执确认 `production` environment 的 required reviewer 为 `suuny-ab`、`prevent_self_review=false`，部署分支只接受受保护分支；五个 production secret 名称完整，值未读取或修改。该候选仍未合并或触发部署，现网保持不变。
 - PR #2 squash merge 后，`main` 运行 `29986738719` 的治理、Web、API、容器和发布全部通过，生产运行 `29986846110` 按预期停在人工批准页。用户批准后，该运行在第一次 SSH 调用的本地端口解析阶段以 `Bad port` 失败；服务器未被连接、上传或切换，公网健康仍为 `status=ok`、`replay_only`。
 - 根因是 `DEPLOY_PORT` 格式错误，同时旧的 Bash `[[ regex ]] && test` 校验会因 `set -e` 对 AND 列表左侧失败的豁免而继续执行。production secret 已精确重设为 `22`；修复候选改用不回显原值的标准库校验器，在 SSH 前只接受并规范化 `1..65535` 的 ASCII 十进制端口。
+- 端口修复 PR #3 合并为 `c1a0bca623ad1258a40f155e6acb4586f44ec988`，对应 `ci-release` 运行 `29988231501` 成功。第二次生产运行 `29988369130` 经用户批准后，在第一次 SSH 的主机名解析阶段失败；错误字节 `EF BB BF` 对应 `DEPLOY_HOST` 开头的 UTF-8 BOM，因此仍未建立服务器连接、上传文件或触发安装。
+- `DEPLOY_HOST` 已按公开服务器地址精确重设。新的修复不再逐项追加 Bash guard，而是从受保护 `main` 暂存统一控制器，并在 secret step 前按固定 SHA-256 复核其字节；控制器在任何网络前规范化五项 SSH 输入，并用 `ssh-keygen` 本地验证私钥和精确目标 `known_hosts` 条目。工作流本身不再直接展开 secret、写密钥文件或调用 SSH / SCP。
+- 第二次失败后，公网 `/api/v1/health` 再次返回 `status=ok`、`live_experience=replay_only`，证明旧服务继续在线；这不证明新部署可用。统一预检候选仍须通过 PR CI、合并后的生产批准、真实切换、强制回滚演练和用户验收。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
 公开远端、GitHub 来源构建、分支保护、GHCR 发布和本机 canonical 开发路径已经通过。生产部署、强制回滚演练和用户验收尚未完成，当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。

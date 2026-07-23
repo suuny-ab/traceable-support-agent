@@ -155,3 +155,38 @@ checkout action、`ref: main`、`persist-credentials: false` 且禁止另一个 
 本地 16 项工具测试、工作树公开扫描、YAML 解析和空白检查通过，其中 3 项 Windows 符号链接
 测试按预期跳过。该结论只允许进入修复 PR；新的 `main` 发布、生产批准、部署、强制回滚
 演练和用户验收仍须分别取得真实回执。
+
+## 第 10 轮：主机名 BOM 与统一 SSH 预检
+
+本地代码复核通过，远程 CI 待验证。端口修复 PR #3 合并后，`ci-release` 运行 `29988231501` 成功；生产运行
+`29988369130` 经用户批准，在第一次 SSH 的主机名解析阶段失败。日志中的
+`\357\273\277` 是 UTF-8 BOM 的八进制表示，位于公开服务器地址之前。失败发生在 runner
+本地主机名解析，服务器没有被连接、上传或切换；随后公网健康仍为 `status=ok`、
+`replay_only`。`DEPLOY_HOST` 已按公开地址精确重设。
+
+候选将分散的 Bash secret 处理替换为从受保护 `main` 暂存的统一控制器。主机、受限用户、
+端口、私钥和 `known_hosts` 都在任何网络动作前移除至多一个开头 BOM 并失败关闭；私钥和
+精确目标主机条目还须通过本地 `ssh-keygen`。标准端口与非标准端口使用 OpenSSH 各自实际
+查询形式，明文通配 host 不得冒充精确条目。工作流只允许调用一次固定控制器，不再直接
+展开 secret、写密钥文件或调用 SSH / SCP。
+
+第一轮独立复核发现，stage 块虽然包含两条可信 install，仍允许追加命令覆盖固定控制器；
+修正后 stage 和 upload 都改为完整命令白名单。第二轮复核又发现额外 step、step / 顶层
+shell override、附加 `BASH_ENV`、stage 前后文件改写以及默认端口的方括号 host 形式仍会
+改变实际语义。最新候选固定完整 10-step 顺序、精确 job / upload 环境、禁止全 workflow
+的 shell override，并在 secret step 前用绝对 `sha256sum` 和固定 SHA-256 校验控制器字节。
+扫描器反例覆盖上述变异以及错误 controller ref、外部仓库、直接 SSH / SCP、直接 secret
+展开和陈旧哈希；三条 SSH / SCP 参数数组由完整命令元组测试锁定。
+
+后续复核继续关闭了 `continue-on-error`、`if: always()`、引号 / flow-style shell defaults、
+额外环境变量、错误步骤引用 production secret、`known_hosts` marker 和混合通配 host 等
+执行语义绕过。上传步骤改用绝对 Python / OpenSSH 路径、忽略 Python 环境变量、隔离 SSH
+配置和系统 known-hosts，子进程不继承部署 secret 或 SSH agent。
+
+Windows 的 25 项工具测试通过，4 项 Linux 权限 / 符号链接场景按设计跳过；WSL Ubuntu 的
+同 25 项无跳过通过，其中合成密钥真实经过 `ssh-keygen`。51 项稳定 API 测试、工作树公开
+扫描、YAML 解析、Python 编译、控制器摘要和空白检查通过。安全与质量两项独立只读复核均
+未发现剩余 P0–P3 问题。
+
+该结论只允许进入修复 PR；GitHub Ubuntu CI 仍是独立硬门。新的生产运行必须再次停在人工
+批准页，不能据此宣称生产部署、回滚演练或用户验收完成。Provider 调用和费用仍为 0。

@@ -49,8 +49,13 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.13"
-      - name: Stage trusted deployment input validator
-        run: install -m 600 tools/validate_deploy_port.py "$RUNNER_TEMP/traceable-validate-deploy-port.py"
+      - name: Stage trusted deployment controller
+        run: |
+          set -Eeuo pipefail
+          controller_dir="$RUNNER_TEMP/traceable-deploy-controller"
+          install -d -m 700 "$controller_dir"
+          install -m 600 tools/validate_deploy_port.py "$controller_dir/validate_deploy_port.py"
+          install -m 600 tools/deploy_ssh_transport.py "$controller_dir/deploy_ssh_transport.py"
       - name: Download manifest from the selected green run
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
@@ -101,6 +106,14 @@ jobs:
             deploy/install_release.py release-staging/deploy/
           cp tools/release_manifest.py release-staging/tools/
           cp deploy/production-target.json release-staging/deployment-input.json
+      - name: Verify trusted deployment controller integrity
+        run: |
+          set -Eeuo pipefail
+          controller_dir="$RUNNER_TEMP/traceable-deploy-controller"
+          printf '%s  %s\n' \
+            '6a1af83611a5164e53a8697fe654725a867fe8bc8a8e1b81af01d34cc2b70e52' "$controller_dir/validate_deploy_port.py" \
+            '04672e995d5283ffc10fa3d069cf1510f7180e74f6296bfb21584e7586bd0203' "$controller_dir/deploy_ssh_transport.py" \
+            | /usr/bin/sha256sum --check --strict
       - name: Upload and activate with strict host verification
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -108,23 +121,12 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          BASH_ENV: /dev/null
+          LD_LIBRARY_PATH: ""
+          LD_PRELOAD: ""
         run: |
           set -Eeuo pipefail
-          umask 077
-          port="$(python "$RUNNER_TEMP/traceable-validate-deploy-port.py" "${DEPLOY_PORT:-22}")" || exit 64
-          test -n "$DEPLOY_HOST" -a -n "$DEPLOY_USER" -a -n "$DEPLOY_SSH_KEY" -a -n "$DEPLOY_KNOWN_HOSTS"
-          key_file="$RUNNER_TEMP/traceable-deploy-key"
-          known_hosts="$RUNNER_TEMP/traceable-known-hosts"
-          printf '%s\n' "$DEPLOY_SSH_KEY" >"$key_file"
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >"$known_hosts"
-          chmod 600 "$key_file" "$known_hosts"
-          trap 'rm -f "$key_file" "$known_hosts"' EXIT
-          remote_stage="/tmp/traceable-support-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          ssh_args=(-i "$key_file" -p "$port" -o BatchMode=yes -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$known_hosts")
-          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -m 700 '$remote_stage'"
-          scp -r -i "$key_file" -P "$port" -o BatchMode=yes -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$known_hosts" \
-            release-staging/. "$DEPLOY_USER@$DEPLOY_HOST:$remote_stage/"
-          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "python3 '$remote_stage/deploy/install_release.py' --staging '$remote_stage' --release-root /opt/traceable-support"
+          /usr/bin/python3 -E "$RUNNER_TEMP/traceable-deploy-controller/deploy_ssh_transport.py" \
+            --staging release-staging \
+            --remote-stage "/tmp/traceable-support-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --release-root /opt/traceable-support
