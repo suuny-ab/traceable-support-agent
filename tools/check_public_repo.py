@@ -353,7 +353,6 @@ def _folded_yaml_scalar(value: str | None, key: str, indent: int) -> str | None:
 
 
 def _container_smoke_workflow_errors(workflow: str) -> list[str]:
-    errors: list[str] = []
     jobs = _yaml_block(workflow, "jobs", 0)
     containers = _yaml_block(jobs or "", "containers", 2)
     steps = _yaml_block(containers or "", "steps", 4)
@@ -370,53 +369,53 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
     run = _yaml_block(smoke_step or "", "run", 8)
     if run is None:
         return ["ci_container_smoke_step_missing"]
-
-    api_contract = (
+    script_lines = tuple(
+        line.strip()
+        for line in run.splitlines()[1:]
+        if line.strip() and not line.lstrip().startswith("#")
+    )
+    readiness_contract = (
         "api_ready=false",
-        "http://127.0.0.1:8000/api/v1/health",
+        "for attempt in $(seq 1 15); do",
+        'if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then',
         "api_ready=true",
+        "break",
+        "fi",
+        "sleep 1",
+        "done",
         'if [[ "$api_ready" != true ]]; then',
         'echo "api_container_not_ready" >&2',
         "docker logs traceable-api-replay-ci >&2 || true",
-    )
-    api_timeout = re.search(
-        r'if \[\[ "\$api_ready" != true \]\]; then(?P<body>.*?)^\s*fi\s*$',
-        run,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    if (
-        any(value not in run for value in api_contract)
-        or api_timeout is None
-        or "exit 1" not in api_timeout.group("body")
-    ):
-        errors.append("ci_container_api_readiness_missing")
-
-    web_contract = (
+        "exit 1",
+        "fi",
+        'python -c \'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"\'',
         "web_ready=false",
-        "http://127.0.0.1:3000/",
+        "for attempt in $(seq 1 15); do",
+        "if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/ >/dev/null; then",
         "web_ready=true",
+        "break",
+        "fi",
+        "sleep 1",
+        "done",
         'if [[ "$web_ready" != true ]]; then',
         'echo "web_container_not_ready" >&2',
         "docker logs traceable-web-ci >&2 || true",
+        "exit 1",
+        "fi",
+        "for route in / /design /app /privacy; do",
+        'curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null',
+        "done",
     )
-    web_timeout = re.search(
-        r'if \[\[ "\$web_ready" != true \]\]; then(?P<body>.*?)^\s*fi\s*$',
-        run,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    route_check = "for route in / /design /app /privacy; do"
-    if (
-        any(value not in run for value in web_contract)
-        or web_timeout is None
-        or "exit 1" not in web_timeout.group("body")
-        or route_check not in run
-        or run.find(route_check) < run.find('if [[ "$web_ready" != true ]]; then')
-    ):
-        errors.append("ci_container_web_readiness_missing")
-
-    if run.count("for attempt in $(seq 1 30); do") != 2:
-        errors.append("ci_container_readiness_bound_invalid")
-    return errors
+    starts = [
+        index for index, line in enumerate(script_lines) if line == "api_ready=false"
+    ]
+    if len(starts) != 1:
+        return ["ci_container_readiness_contract_invalid"]
+    start = starts[0]
+    actual = script_lines[start:start + len(readiness_contract)]
+    if actual != readiness_contract:
+        return ["ci_container_readiness_contract_invalid"]
+    return []
 
 
 def _deployment_workflow_errors(workflow: str) -> list[str]:

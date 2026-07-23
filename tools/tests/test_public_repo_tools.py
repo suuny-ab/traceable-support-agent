@@ -71,8 +71,8 @@ jobs:
       - name: Smoke replay images without model or credential
         run: |
           api_ready=false
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then
               api_ready=true
               break
             fi
@@ -83,9 +83,10 @@ jobs:
             docker logs traceable-api-replay-ci >&2 || true
             exit 1
           fi
+          python -c 'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"'
           web_ready=false
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:3000/ >/dev/null; then
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/ >/dev/null; then
               web_ready=true
               break
             fi
@@ -102,26 +103,30 @@ jobs:
 """
         self.assertEqual(_container_smoke_workflow_errors(workflow), [])
 
-        without_web_wait = workflow.replace("web_ready=true", "web_started=true")
-        self.assertIn(
-            "ci_container_web_readiness_missing",
-            _container_smoke_workflow_errors(without_web_wait),
+        mutations = (
+            workflow.replace("web_ready=true", "web_started=true"),
+            workflow.replace("sleep 1", "sleep 300", 1),
+            workflow.replace("exit 1", "true # exit 1", 1),
+            workflow.replace(
+                "curl --fail --silent --show-error --connect-timeout 1 --max-time 1",
+                "curl --fail --silent --show-error --connect-timeout 1 --max-time 1 --retry 10",
+                1,
+            ),
+            workflow.replace(
+                """          for route in / /design /app /privacy; do
+            curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null
+          done""",
+                "          # for route in / /design /app /privacy; do",
+            ),
+            workflow.replace("--connect-timeout 1", "--connect-timeout 30", 1),
+            workflow.replace("--max-time 1", "--max-time 30", 1),
         )
-
-        without_api_timeout = workflow.replace(
-            'echo "api_container_not_ready" >&2',
-            'echo "api wait failed" >&2',
-        )
-        self.assertIn(
-            "ci_container_api_readiness_missing",
-            _container_smoke_workflow_errors(without_api_timeout),
-        )
-
-        unbounded = workflow.replace("for attempt in $(seq 1 30); do", "while true; do", 1)
-        self.assertIn(
-            "ci_container_readiness_bound_invalid",
-            _container_smoke_workflow_errors(unbounded),
-        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                self.assertEqual(
+                    _container_smoke_workflow_errors(mutation),
+                    ["ci_container_readiness_contract_invalid"],
+                )
 
     def test_production_deploy_requires_trusted_unified_ssh_preflight(self) -> None:
         workflow = """
