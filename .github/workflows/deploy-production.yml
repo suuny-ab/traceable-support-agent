@@ -1,6 +1,11 @@
 name: deploy-production
+run-name: "production approval for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"
 
 on:
+  workflow_run:
+    workflows: ["ci-release"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       publish_run_id:
@@ -18,40 +23,63 @@ concurrency:
 
 jobs:
   deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: production
+    env:
+      PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}
+      PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
+      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}
     steps:
+      - name: Check out the trusted deployment controller
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
       - name: Download manifest from the selected green run
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
           name: release-manifest
-          run-id: ${{ inputs.publish_run_id }}
+          run-id: ${{ env.PUBLISH_RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: ${{ runner.temp }}/traceable-release-artifact
-      - name: Read immutable Git identity
+      - name: Bind manifest to the selected green run
         id: manifest
         env:
           RELEASE_MANIFEST: ${{ runner.temp }}/traceable-release-artifact/release-manifest.json
         run: |
-          python - <<'PY'
-          import json, os, pathlib, re
-          value=json.loads(pathlib.Path(os.environ["RELEASE_MANIFEST"]).read_text(encoding="utf-8"))
-          sha=value.get("git_sha", "")
-          if not re.fullmatch(r"[0-9a-f]{40}", sha): raise SystemExit("manifest_git_sha_invalid")
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"git_sha={sha}\n")
-          PY
+          set -Eeuo pipefail
+          verify_args=(
+            --verify "$RELEASE_MANIFEST"
+            --github-run-id "$PUBLISH_RUN_ID"
+            --github-output "$GITHUB_OUTPUT"
+          )
+          if [[ -n "$PUBLISH_HEAD_SHA" ]]; then
+            verify_args+=(--git-sha "$PUBLISH_HEAD_SHA")
+          fi
+          if [[ -n "$PUBLISH_RUN_ATTEMPT" ]]; then
+            verify_args+=(--github-run-attempt "$PUBLISH_RUN_ATTEMPT")
+          fi
+          python tools/release_manifest.py "${verify_args[@]}"
       - name: Check out the manifest commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           ref: ${{ steps.manifest.outputs.git_sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: "3.13"
       - name: Verify manifest and main ancestry
         env:
           RELEASE_MANIFEST: ${{ runner.temp }}/traceable-release-artifact/release-manifest.json

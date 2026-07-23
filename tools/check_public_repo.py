@@ -291,6 +291,144 @@ def _read(entries: dict[str, Entry], path: str) -> str:
     return entry.data.decode("utf-8")
 
 
+def _yaml_block(value: str, key: str, indent: int) -> str | None:
+    lines = value.splitlines()
+    prefix = " " * indent + key + ":"
+    for index, line in enumerate(lines):
+        if not line.startswith(prefix):
+            continue
+        suffix = line[len(prefix):]
+        if suffix and not suffix.startswith((" ", "\t")):
+            continue
+        block = [line]
+        for candidate in lines[index + 1:]:
+            stripped = candidate.strip()
+            if not stripped or stripped.startswith("#"):
+                block.append(candidate)
+                continue
+            candidate_indent = len(candidate) - len(candidate.lstrip(" "))
+            if candidate_indent <= indent:
+                break
+            block.append(candidate)
+        return "\n".join(block)
+    return None
+
+
+def _has_exact_yaml_line(value: str | None, indent: int, line: str) -> bool:
+    if value is None:
+        return False
+    expected = " " * indent + line
+    return any(candidate.rstrip() == expected for candidate in value.splitlines())
+
+
+def _folded_yaml_scalar(value: str | None, key: str, indent: int) -> str | None:
+    if value is None:
+        return None
+    block = _yaml_block(value, key, indent)
+    if block is None:
+        return None
+    lines = block.splitlines()
+    if lines[0].rstrip() != " " * indent + key + ": >-":
+        return None
+    return " ".join(line.strip() for line in lines[1:] if line.strip())
+
+
+def _deployment_workflow_errors(workflow: str) -> list[str]:
+    errors: list[str] = []
+    on_block = _yaml_block(workflow, "on", 0)
+    workflow_run = _yaml_block(on_block or "", "workflow_run", 2)
+    workflow_dispatch = _yaml_block(on_block or "", "workflow_dispatch", 2)
+    concurrency = _yaml_block(workflow, "concurrency", 0)
+    jobs = _yaml_block(workflow, "jobs", 0)
+    deploy = _yaml_block(jobs or "", "deploy", 2)
+    deploy_env = _yaml_block(deploy or "", "env", 4)
+
+    if not _has_exact_yaml_line(
+        workflow,
+        0,
+        'run-name: "production approval for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"',
+    ):
+        errors.append("production_deploy_run_name_missing")
+
+    if workflow_dispatch is None:
+        errors.append("production_deploy_manual_fallback_missing")
+    else:
+        inputs = _yaml_block(workflow_dispatch, "inputs", 4)
+        publish_run_id = _yaml_block(inputs or "", "publish_run_id", 6)
+        if not (
+            _has_exact_yaml_line(publish_run_id, 8, "required: true")
+            and _has_exact_yaml_line(publish_run_id, 8, "type: string")
+        ):
+            errors.append("production_deploy_manual_input_invalid")
+
+    if workflow_run is None:
+        errors.append("production_deploy_auto_queue_missing")
+    else:
+        trigger_contract = (
+            (4, 'workflows: ["ci-release"]', "production_deploy_source_workflow_invalid"),
+            (4, "types: [completed]", "production_deploy_completion_trigger_missing"),
+            (4, "branches: [main]", "production_deploy_branch_filter_missing"),
+        )
+        for indent, line, error in trigger_contract:
+            if not _has_exact_yaml_line(workflow_run, indent, line):
+                errors.append(error)
+
+    expected_condition = (
+        "github.event_name == 'workflow_dispatch' || "
+        "( github.event_name == 'workflow_run' && "
+        "github.event.workflow_run.conclusion == 'success' && "
+        "github.event.workflow_run.event == 'push' && "
+        "github.event.workflow_run.head_branch == 'main' && "
+        "github.event.workflow_run.head_repository.full_name == github.repository )"
+    )
+    if _folded_yaml_scalar(deploy, "if", 4) != expected_condition:
+        errors.append("production_deploy_condition_invalid")
+
+    if not _has_exact_yaml_line(deploy, 4, "environment: production"):
+        errors.append("production_deploy_environment_gate_missing")
+    env_contract = (
+        (
+            "PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}",
+            "production_deploy_run_identity_missing",
+        ),
+        (
+            "PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}",
+            "production_deploy_head_identity_missing",
+        ),
+        (
+            "PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}",
+            "production_deploy_attempt_identity_missing",
+        ),
+    )
+    for line, error in env_contract:
+        if not _has_exact_yaml_line(deploy_env, 6, line):
+            errors.append(error)
+    if not _has_exact_yaml_line(deploy, 10, "run-id: ${{ env.PUBLISH_RUN_ID }}"):
+        errors.append("production_deploy_artifact_identity_missing")
+    for line, error in (
+        (
+            '--github-run-id "$PUBLISH_RUN_ID"',
+            "production_deploy_manifest_run_binding_missing",
+        ),
+        (
+            'verify_args+=(--git-sha "$PUBLISH_HEAD_SHA")',
+            "production_deploy_manifest_sha_binding_missing",
+        ),
+        (
+            'verify_args+=(--github-run-attempt "$PUBLISH_RUN_ATTEMPT")',
+            "production_deploy_manifest_attempt_binding_missing",
+        ),
+    ):
+        if not _has_exact_yaml_line(deploy, 12, line):
+            errors.append(error)
+
+    if not _has_exact_yaml_line(concurrency, 2, "group: traceable-support-production"):
+        errors.append("production_deploy_concurrency_missing")
+    if not _has_exact_yaml_line(concurrency, 2, "cancel-in-progress: false"):
+        errors.append("production_deploy_must_not_cancel_in_progress")
+    return errors
+
+
 def _markdown_link_errors(entries: dict[str, Entry]) -> list[str]:
     errors: list[str] = []
     link_re = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
@@ -450,6 +588,7 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             errors.append("production_target_not_bound_to_deployment")
         if "deploy/switch_release_state.py" not in deploy_workflow:
             errors.append("release_state_switcher_not_packaged")
+        errors.extend(_deployment_workflow_errors(deploy_workflow))
     except (UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         errors.append(str(exc))
     try:
