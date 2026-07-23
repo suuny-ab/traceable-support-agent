@@ -30,14 +30,31 @@ UNKNOWN_PATH = "__classification_unknown__"
 def normalize_paths(paths: list[str] | tuple[str, ...]) -> tuple[str, ...]:
     normalized: set[str] = set()
     for raw in paths:
-        value = raw.strip().replace("\\", "/")
-        if not value:
-            continue
-        path = PurePosixPath(value)
-        if path.is_absolute() or ".." in path.parts:
+        try:
+            raw.encode("utf-8", "strict")
+        except UnicodeError:
             normalized.add(UNKNOWN_PATH)
             continue
-        normalized.add(path.as_posix())
+        if (
+            not raw
+            or raw != raw.strip()
+            or "\\" in raw
+            or "\x00" in raw
+            or "\r" in raw
+            or "\n" in raw
+        ):
+            normalized.add(UNKNOWN_PATH)
+            continue
+        value = raw
+        path = PurePosixPath(value)
+        if (
+            path.is_absolute()
+            or ".." in path.parts
+            or path.as_posix() != value
+        ):
+            normalized.add(UNKNOWN_PATH)
+            continue
+        normalized.add(value)
     return tuple(sorted(normalized))
 
 
@@ -70,15 +87,22 @@ def git_changed_paths(base: str, head: str) -> tuple[str, ...]:
         return (UNKNOWN_PATH,)
     try:
         completed = subprocess.run(
-            ["git", "diff", "--name-only", "--no-renames", base, head],
+            ["git", "diff", "--name-only", "-z", "--no-renames", base, head],
             check=True,
             capture_output=True,
-            text=True,
-            encoding="utf-8",
         )
     except (OSError, subprocess.CalledProcessError, UnicodeError):
         return (UNKNOWN_PATH,)
-    paths = normalize_paths(tuple(completed.stdout.splitlines()))
+    if completed.stdout and not completed.stdout.endswith(b"\x00"):
+        return (UNKNOWN_PATH,)
+    raw_paths = completed.stdout.split(b"\x00")
+    if raw_paths and raw_paths[-1] == b"":
+        raw_paths.pop()
+    try:
+        decoded = tuple(raw.decode("utf-8", "strict") for raw in raw_paths)
+    except UnicodeError:
+        return (UNKNOWN_PATH,)
+    paths = normalize_paths(decoded)
     return paths or (UNKNOWN_PATH,)
 
 

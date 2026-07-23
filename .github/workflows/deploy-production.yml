@@ -37,6 +37,8 @@ jobs:
     outputs:
       classification: ${{ steps.decision.outputs.classification }}
       deploy_required: ${{ steps.decision.outputs.deploy_required }}
+      git_sha: ${{ steps.decision.outputs.git_sha }}
+      run_attempt: ${{ steps.decision.outputs.run_attempt }}
     env:
       PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}
       PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
@@ -57,37 +59,56 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -Eeuo pipefail
-          artifact_id="$(
-            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISH_RUN_ID/artifacts" \
-              --jq '.artifacts | map(select(.name == "release-decision" and .expired == false)) | sort_by(.created_at) | last | .id // empty'
-          )"
-          if [[ -z "$artifact_id" ]]; then
-            if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then
-              echo "release_decision_missing" >&2
-              exit 65
-            fi
-            echo "classification=runtime" >>"$GITHUB_OUTPUT"
-            echo "deploy_required=true" >>"$GITHUB_OUTPUT"
-            echo "legacy_decision=true" >>"$GITHUB_OUTPUT"
+          run_metadata="$RUNNER_TEMP/traceable-release-run.json"
+          artifacts_metadata="$RUNNER_TEMP/traceable-release-artifacts.json"
+          selection_output="$RUNNER_TEMP/traceable-release-selection.env"
+          decision_output="$RUNNER_TEMP/traceable-release-decision.env"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISH_RUN_ID" \
+            >"$run_metadata"
+          gh api --paginate --slurp \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISH_RUN_ID/artifacts?per_page=100" \
+            >"$artifacts_metadata"
+          selection_args=(
+            --run "$run_metadata"
+            --artifacts "$artifacts_metadata"
+            --repository "$GITHUB_REPOSITORY"
+            --run-id "$PUBLISH_RUN_ID"
+            --github-output "$selection_output"
+          )
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            selection_args+=(--manual)
+          fi
+          if [[ -n "$PUBLISH_HEAD_SHA" ]]; then
+            selection_args+=(--expected-git-sha "$PUBLISH_HEAD_SHA")
+          fi
+          if [[ -n "$PUBLISH_RUN_ATTEMPT" ]]; then
+            selection_args+=(--expected-run-attempt "$PUBLISH_RUN_ATTEMPT")
+          fi
+          python tools/release_run.py "${selection_args[@]}"
+          source "$selection_output"
+          if [[ -z "$release_decision_artifact_id" ]]; then
+            cat "$selection_output" >>"$GITHUB_OUTPUT"
             exit 0
           fi
           decision_dir="$RUNNER_TEMP/traceable-release-decision"
           install -d -m 700 "$decision_dir"
-          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" \
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$release_decision_artifact_id/zip" \
             >"$RUNNER_TEMP/release-decision.zip"
           python -m zipfile -e "$RUNNER_TEMP/release-decision.zip" "$decision_dir"
           verify_args=(
             --verify "$decision_dir/release-decision.json"
+            --git-sha "$git_sha"
             --github-run-id "$PUBLISH_RUN_ID"
-            --github-output "$GITHUB_OUTPUT"
+            --github-run-attempt "$run_attempt"
+            --github-output "$decision_output"
           )
-          if [[ -n "$PUBLISH_HEAD_SHA" ]]; then
-            verify_args+=(--git-sha "$PUBLISH_HEAD_SHA")
-          fi
-          if [[ -n "$PUBLISH_RUN_ATTEMPT" ]]; then
-            verify_args+=(--github-run-attempt "$PUBLISH_RUN_ATTEMPT")
-          fi
           python tools/release_decision.py "${verify_args[@]}"
+          source "$decision_output"
+          if [[ "$deploy_required" == true && -z "$release_manifest_artifact_id" ]]; then
+            echo "release_manifest_missing" >&2
+            exit 65
+          fi
+          cat "$selection_output" "$decision_output" >>"$GITHUB_OUTPUT"
 
   deploy:
     needs: preflight
@@ -97,8 +118,8 @@ jobs:
     environment: production
     env:
       PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}
-      PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
-      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}
+      PUBLISH_HEAD_SHA: ${{ needs.preflight.outputs.git_sha }}
+      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}
     steps:
       - name: Check out the trusted deployment controller
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803

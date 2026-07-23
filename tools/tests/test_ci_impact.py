@@ -52,6 +52,18 @@ class CiImpactTest(unittest.TestCase):
         self.assertEqual(classify_paths(()), "runtime")
         self.assertEqual(classify_paths((UNKNOWN_PATH,)), "runtime")
         self.assertEqual(classify_paths(("../escape.md",)), "runtime")
+        for path in (
+            " AGENTS.md",
+            "AGENTS.md ",
+            " docs/meta/a.md",
+            "docs/meta/a.md ",
+            "docs\\meta\\a.md",
+            "./docs/meta/a.md",
+            "docs//meta/a.md",
+            "docs/meta/a.md\n",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(classify_paths((path,)), "runtime")
 
     def test_mixed_change_is_runtime_and_hash_is_canonical(self) -> None:
         self.assertEqual(
@@ -62,10 +74,7 @@ class CiImpactTest(unittest.TestCase):
             changed_paths_sha256(("docs/meta/b.md", "docs/meta/a.md")),
             changed_paths_sha256(("docs/meta/a.md", "docs/meta/b.md")),
         )
-        self.assertEqual(
-            normalize_paths(("docs\\meta\\a.md", "docs/meta/a.md")),
-            ("docs/meta/a.md",),
-        )
+        self.assertEqual(normalize_paths(("docs/meta/a.md",)), ("docs/meta/a.md",))
 
 
 class ReleaseDecisionTest(unittest.TestCase):

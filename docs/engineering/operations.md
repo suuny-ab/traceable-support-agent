@@ -50,8 +50,10 @@ run ID / attempt、影响分类、是否部署和规范化变化路径哈希。�
 生产工作流先在没有 `production` environment 的 preflight job 中验证 decision。若
 `deploy_required=false`，后续 deploy job 被跳过，因此不读取 production secrets、不生成
 镜像、不进入 environment、不连接服务器。若为 `true`，继续执行既有发布清单、SSH、健康、
-回滚和正式回执门。手动恢复仍兼容引入 decision 之前的成功发布 run ID；此兼容只存在于
-显式 `workflow_dispatch`，自动入口缺少 decision 时失败关闭。
+回滚和正式回执门。手动恢复只兼容固定白名单中的、引入 decision 之前且已经验证成功的
+`ci-release` main push；当前唯一兼容 run ID 为 `29999870811`。预检在进入 production
+environment 前核验同仓来源、工作流、push / main / success 身份、唯一未过期 manifest
+和完整 SHA / attempt 绑定。其他缺少 decision 的 run 一律失败关闭，自动入口也不例外。
 
 受保护 `main` 会在检出待发布提交前，把统一 SSH 控制器和端口校验器暂存到 runner 私有临时目录，并在 secret 步骤之前按固定 SHA-256 重新验证两份文件。部署 step 顺序、默认 shell、job 环境和 secret step 环境都由公开扫描器精确约束，不能插入额外 step、覆盖 shell 或附加环境变量。控制器在任何网络连接前一次性读取 `DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PORT`、`DEPLOY_SSH_KEY` 和 `DEPLOY_KNOWN_HOSTS`：每项只允许移除一个开头的 UTF-8 BOM，多行内容统一为 LF；主机、受限用户和端口执行精确格式校验，私钥通过 `ssh-keygen -y` 验证为无口令可用密钥，`known_hosts` 同时验证文件语法和目标主机条目。标准端口只接受普通主机条目，非标准端口只接受 `[host]:port`；明文通配模式失败关闭，经过 `ssh-keygen -F` 匹配的哈希主机条目可以使用。任一失败只输出 `deploy_*_invalid` 稳定错误码，不回显原始 secret，也不会运行 SSH / SCP。
 

@@ -277,8 +277,8 @@ jobs:
     environment: production
     env:
       PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}
-      PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
-      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}
+      PUBLISH_HEAD_SHA: ${{ needs.preflight.outputs.git_sha }}
+      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}
     steps:
       - name: Check out the trusted deployment controller
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -367,10 +367,10 @@ jobs:
             "PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}": (
                 "production_deploy_run_identity_missing"
             ),
-            "PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}": (
+            "PUBLISH_HEAD_SHA: ${{ needs.preflight.outputs.git_sha }}": (
                 "production_deploy_head_identity_missing"
             ),
-            "PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}": (
+            "PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}": (
                 "production_deploy_attempt_identity_missing"
             ),
             "run-id: ${{ env.PUBLISH_RUN_ID }}": "production_deploy_artifact_identity_missing",
@@ -592,8 +592,8 @@ jobs:
             _deployment_workflow_errors(flow_style_defaults),
         )
         extra_job_environment = workflow.replace(
-            "      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}\n",
-            "      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}\n"
+            "      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}\n",
+            "      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}\n"
             "      BASH_ENV: /tmp/custom-env\n",
         )
         self.assertIn(
@@ -667,8 +667,8 @@ jobs:
             (
                 ci_workflow,
                 deploy_workflow.replace(
-                    'if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then',
-                    'if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then',
+                    "selection_args+=(--manual)",
+                    "selection_args+=(--manual-bypass)",
                 ),
             ),
             (

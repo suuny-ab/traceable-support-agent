@@ -549,11 +549,11 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
             "production_deploy_run_identity_missing",
         ),
         (
-            "PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}",
+            "PUBLISH_HEAD_SHA: ${{ needs.preflight.outputs.git_sha }}",
             "production_deploy_head_identity_missing",
         ),
         (
-            "PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}",
+            "PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}",
             "production_deploy_attempt_identity_missing",
         ),
     )
@@ -891,11 +891,18 @@ def _release_decision_workflow_errors(
         )
         required_preflight_tokens = (
             "release-decision",
-            "release_decision_missing",
-            "GITHUB_EVENT_NAME\" != workflow_dispatch",
-            "legacy_decision=true",
+            "python tools/release_run.py",
+            '--repository "$GITHUB_REPOSITORY"',
+            '--run-id "$PUBLISH_RUN_ID"',
+            "selection_args+=(--manual)",
+            'source "$selection_output"',
+            "release_decision_artifact_id",
+            "release_manifest_artifact_id",
+            'gh api --paginate --slurp',
             "python tools/release_decision.py",
+            '--git-sha "$git_sha"',
             "--github-run-id \"$PUBLISH_RUN_ID\"",
+            '--github-run-attempt "$run_attempt"',
         )
         if (
             preflight_condition != expected_condition
