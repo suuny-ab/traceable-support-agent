@@ -12,9 +12,9 @@
 | 风险 / 成熟度 | 文档与 runner `R0`；主机执行 `R1`；目标 `S3 正式` 证据 |
 | 活动工作 | `docs/work/active/stage12-formal-eval/` |
 | 最近完成 | `docs/work/completed/meta-development-governance-audit/` |
-| 当前动作 | 阶段 2 完成：PR #18 合并为 `650fa29`，main CI `30022933330` 与生产部署 `30023103516` 成功，健康保持 `replay_only`；候选身份已固定并写入 spec；阶段 4 等待用户批准授权信封 |
-| 阻碍 | 生产主机执行前需用户显式批准授权信封（≤24 案例 / ≤150 调用 / ≤¥10 / 重试 0） |
-| Provider | 已禁用；`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0` |
+| 当前动作 | 阶段 5：Stage 12 已执行（19/24、9 通过、2 条边界缺陷登记、用户选择收口）；收口 PR 准备中 |
+| 阻碍 | 无 |
+| Provider | 公网已禁用；`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；Stage 12 一次性授权执行 31 调用 / 记账 ¥0.7096 / 重试 0（信封内，不经公网） |
 | 下一检查点 | runner PR 合入并冻结候选 SHA 后，起草并机械冻结私有未见集 |
 
 ## 当前产品事实

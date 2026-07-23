@@ -4,7 +4,7 @@
 >
 > 状态：`public_beta_replay_only`
 >
-> 最后核实：`2026-07-23`
+> 最后核实：`2026-07-24`
 
 本文件只保存稳定产品事实。开发进度见 `docs/status.md`，路线见 `ROADMAP.md`，历史过程见 `docs/work/completed/`。
 
@@ -38,7 +38,8 @@
 - 稳定确定性基线：`demo-a/1.0`。
 - 当前求职交付：公开 Beta 回放版。
 - `product/0.1.0`：`not_released`。
-- Stage 12、实时 Provider、最终视觉和独立域名均未完成。
+- Stage 12 已执行一次：19/24 案例、9 通过，发现 2 条边界不变量缺陷；结果见 `evals/stage12-aggregate-v1.json` 与对应工作记录。
+- 实时 Provider、最终视觉和独立域名均未完成。
 
 ## 公开接口
 
