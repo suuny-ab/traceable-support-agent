@@ -192,6 +192,12 @@ jobs:
           PYTHONPATH: api/src
           TRACEABLE_MODEL_ROOT: ${{ runner.temp }}/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5
         run: python -m pytest api/tests
+      - name: Run Stage 12 evaluation runner and freeze checker tests
+        if: steps.impact.outputs.classification == 'runtime'
+        env:
+          PYTHONPATH: api/src
+          TRACEABLE_MODEL_ROOT: ${{ runner.temp }}/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5
+        run: python -m pytest tools/tests/test_stage12_eval.py
       - name: Prove replay control plane has no site dependency
         if: steps.impact.outputs.classification == 'runtime'
         env:

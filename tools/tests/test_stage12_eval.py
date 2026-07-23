@@ -21,8 +21,25 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools import stage12_eval  # noqa: E402
-from tools import stage12_freeze_check  # noqa: E402
+# The governance CI job runs the tools tests without the live retrieval
+# dependencies (numpy/fastembed).  Guard each import chain separately so the
+# freeze-checker tests (stdlib-only by design) still run there while the
+# product-chain evaluation tests skip instead of erroring at import time.
+try:
+    from tools import stage12_freeze_check
+
+    _FREEZE_IMPORT_ERROR: ModuleNotFoundError | None = None
+except ModuleNotFoundError as exc:  # pragma: no cover - depends on environment
+    stage12_freeze_check = None
+    _FREEZE_IMPORT_ERROR = exc
+
+try:
+    from tools import stage12_eval
+
+    _EVAL_IMPORT_ERROR: ModuleNotFoundError | None = None
+except ModuleNotFoundError as exc:  # pragma: no cover - depends on environment
+    stage12_eval = None
+    _EVAL_IMPORT_ERROR = exc
 
 QUESTION = "CZ-R1 怎么开始局部清扫？"
 USAGE = {
@@ -157,6 +174,10 @@ def _case(case_id: str, task_type: str, hit, *, outcome: str = "candidate") -> d
     }
 
 
+@unittest.skipUnless(
+    stage12_eval is not None,
+    f"live retrieval dependencies unavailable: {_EVAL_IMPORT_ERROR}",
+)
 class Stage12EvalTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -354,6 +375,10 @@ class Stage12EvalTest(unittest.TestCase):
         )
 
 
+@unittest.skipUnless(
+    stage12_freeze_check is not None,
+    f"freeze checker dependencies unavailable: {_FREEZE_IMPORT_ERROR}",
+)
 class Stage12FreezeCheckTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

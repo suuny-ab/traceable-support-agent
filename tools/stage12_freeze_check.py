@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import sys
@@ -30,7 +31,20 @@ if str(_API_SRC) not in sys.path:
     sys.path.insert(0, str(_API_SRC))
 
 from traceable_support.generation.checklist import _squash  # noqa: E402
-from traceable_support.retrieval.corpus import SUPPORTED_FORMATS, parse_document  # noqa: E402
+
+# Load corpus.py directly from its file path.  Importing it as
+# ``traceable_support.retrieval.corpus`` executes the retrieval package
+# ``__init__``, which pulls the hybrid pipeline and its numpy/fastembed
+# dependencies; the freeze checker must stay runnable with the standard
+# library alone (corpus.py itself is stdlib-only).
+_CORPUS_SPEC = importlib.util.spec_from_file_location(
+    "stage12_freeze_corpus",
+    _API_SRC / "traceable_support" / "retrieval" / "corpus.py",
+)
+_corpus = importlib.util.module_from_spec(_CORPUS_SPEC)
+_CORPUS_SPEC.loader.exec_module(_corpus)
+SUPPORTED_FORMATS = _corpus.SUPPORTED_FORMATS
+parse_document = _corpus.parse_document
 
 SET_SCHEMA_VERSION = "stage12-unseen-v1"
 MAX_CASES = 24
