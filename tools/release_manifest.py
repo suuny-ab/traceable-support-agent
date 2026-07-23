@@ -179,6 +179,26 @@ def verify_manifest(value: object) -> dict[str, Any]:
     return value
 
 
+def verify_manifest_identity(
+    value: object,
+    *,
+    expected_run_id: str,
+    expected_git_sha: str | None = None,
+    expected_run_attempt: int | None = None,
+) -> dict[str, Any]:
+    manifest = verify_manifest(value)
+    if manifest["build"]["github_run_id"] != expected_run_id:
+        raise ValueError("release_manifest_run_id_mismatch")
+    if expected_git_sha is not None and manifest["git_sha"] != expected_git_sha:
+        raise ValueError("release_manifest_git_sha_mismatch")
+    if (
+        expected_run_attempt is not None
+        and manifest["build"]["github_run_attempt"] != expected_run_attempt
+    ):
+        raise ValueError("release_manifest_attempt_mismatch")
+    return manifest
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--verify", type=Path)
@@ -188,12 +208,29 @@ def main() -> int:
     parser.add_argument("--built-at")
     parser.add_argument("--github-run-id")
     parser.add_argument("--github-run-attempt", type=int)
+    parser.add_argument("--github-output", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.verify:
-        verify_manifest(json.loads(args.verify.read_text(encoding="utf-8")))
+        value = json.loads(args.verify.read_text(encoding="utf-8"))
+        if args.github_run_id is not None:
+            manifest = verify_manifest_identity(
+                value,
+                expected_run_id=args.github_run_id,
+                expected_git_sha=args.git_sha,
+                expected_run_attempt=args.github_run_attempt,
+            )
+        else:
+            if args.git_sha is not None or args.github_run_attempt is not None:
+                parser.error("--git-sha and --github-run-attempt require --github-run-id")
+            manifest = verify_manifest(value)
+        if args.github_output:
+            with args.github_output.open("a", encoding="utf-8") as output:
+                output.write(f"git_sha={manifest['git_sha']}\n")
         print("release_manifest=valid")
         return 0
+    if args.github_output:
+        parser.error("--github-output requires --verify")
     required = {
         "git_sha": args.git_sha,
         "web_image": args.web_image,

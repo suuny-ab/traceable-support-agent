@@ -12,8 +12,9 @@
 
 ```text
 GitHub main → CI → GHCR linux/amd64 images → release manifest
-           → manual production deploy → health → atomic current switch
-                                      ↘ failure: restore previous
+           → automatic production queue → GitHub environment approval
+                                        → health → atomic current switch
+                                                 ↘ failure: restore previous
 ```
 
 镜像：
@@ -38,6 +39,10 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
 公开源站与首次迁移演练标志经过复核后固定在 `deploy/production-target.json`，不接受自由输入的调度参数。首次生产迁移执行受控的 `old → new → old → new` 演练。如果不存在经过验证的旧版回滚锚点，就会在激活唯一权威版本前失败，而不是假装已经测试回滚。三个发布元数据路径使用补偿事务；普通写入失败会先恢复原状态，再重新激活旧容器。激活前读取 Caddy 回执证据；最终回执持久化本身也是检查门，失败时回滚至经过验证的旧版本。旧版本会一直保留到下一次成功的生产部署之后。
 
 部署使用受限服务器用户与 GitHub production environment。服务器主机、用户和私钥作为 Actions secrets 保存；服务器匿名拉取公开 GHCR 镜像。
+
+`main` 的 `ci-release` 全部成功后，GitHub 自动把该次运行的不可变发布清单送入生产队列；PR、失败运行、非 `main` push 和其他仓库来源均不得进入该队列。自动路径把清单精确绑定到触发运行的 ID、Git SHA 和运行尝试号；手动恢复路径至少把清单绑定到用户选择的运行 ID。`production` environment 必须在任何自动队列生效前配置人工审批，部署在用户点击 `Approve and deploy` 前不会读取生产 secrets 或连接服务器。手动 `workflow_dispatch` 入口只作为有界恢复通道保留，仍必须经过同一个 environment 审批门。
+
+生产并发锁永不取消已经开始或正在等待批准的部署；GitHub 最多再保留一个待处理候选，更新的绿色版本可能替换尚未开始的旧待处理候选。审批页的运行名称固定显示来源 `ci-release` 运行 ID，用户应只批准预期版本。
 
 ## 数据保留
 
