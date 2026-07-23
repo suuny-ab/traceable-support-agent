@@ -60,10 +60,16 @@ Issue #14 依据本证据单独判断，不由本增量机械阻断。
 - **样本**：24 个全新合成案例（8 维度 × 3），ID 前缀 `STG12-`，私有保管于仓库外，
   SHA-256 `7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0`；
   期望全部从 `data/knowledge/` 语料原文逐字派生并经冻结校验器验证。
-- **身份**：代码 = runner PR 合并后的部署 main SHA；模型 = DeepSeek `MODEL`
-  （`api/src/traceable_support/provider/contract.py` 固定，
-  `tg07a-deepseek-chat-request-v1`）；prompt / 知识 / 合同哈希取自该次 `ci-release`
-  发布清单。
+- **身份**：代码 = `650fa29043040ed86c2da1ee5a9a3a3365919957`（PR #18 合并后的部署
+  main SHA）；线上镜像摘要 = api-replay `@sha256:690fb174e69fb2be2a8fce1e3deb022ebd665c2165cb041fe2811497ab23c1e8`、
+  web `@sha256:5dccd214fa357a2f69908ac857d5c12112bbbb50d628f2854854a502b293097e`
+  （Stage 12 执行的 `live` target 镜像从同一 SHA 构建，摘要执行时记录）；模型 =
+  DeepSeek `MODEL`（`api/src/traceable_support/provider/contract.py` 固定，
+  `tg07a-deepseek-chat-request-v1`）；prompt 集合 SHA-256
+  `dccfa22698af9da6c6af9454a8c7e7ba9b4c193396b8801bf6e81be68189a293`；知识清单
+  SHA-256 `41948be4be64f6e1aeb49db7a5be30c5b5570b8dbbf7ee6c1bfa74bddf0f3303`——
+  均取自 run `30022933330` 发布清单，生产部署 run `30023103516` 成功且健康回执为
+  `replay_only`。
 - **重复次数**：全量 1 次；失败案例允许在信封余量内重跑并标注。
 - **评分方式**：全机械，按上文"测量定位与判定标准"。
 - **泄漏控制**：未见集明文与 Provider 原始输出永不进 Git；未见集不用于调参；执行后
