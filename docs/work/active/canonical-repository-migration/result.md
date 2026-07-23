@@ -46,6 +46,9 @@
 - PR #4 最终合并为 `71e4754c1b77f90e1b06fcf21e7d7230cac7d5fb`；主线运行 `29994730093` 的治理、Web、API、容器和 GHCR 发布全部成功。自动生产运行 `29994891860` 经用户批准后成功完成发布清单绑定、可信控制器校验、服务器登录、远程目录创建和上传，但服务器端安装/激活返回 `deploy_ssh_transport_failed:activate`。
 - 随后的服务器只读调查确认：`current` 指向 `71e4754c1b77f90e1b06fcf21e7d7230cac7d5fb`，`previous` 指向 `legacy-ab2c4b8-b1bcc94`；两个新容器均为 `healthy`，公网健康为 `status=ok`、`replay_only`，但 `deployment-receipt.json` 不存在。Docker 事件显示新容器在 17:21:24 启动，17:21:26 被回滚演练主动停止，且没有任何旧容器 create/start 事件；17:21:27 恢复逻辑重新创建并启动新容器。因此失败精确位于旧版 `docker compose up`，不是锚点缺失、新版本启动或健康检查失败。
 - 旧版 Compose `config --quiet` 和只读 `--dry-run up -d` 均通过，旧镜像、外部数据卷、磁盘和可用内存均存在；服务器普通部署账号无权读取 Docker system journal，而既有控制器丢弃远端 stderr，因此本次原始 Compose 错误不可追溯。剩余最高概率是同一 Compose project 在 `down → up` 之间的短暂资源清理竞态，保留 `待验证`。修复候选加入有界停止完成屏障，并只把白名单稳定阶段码带回 Actions；不增加部署自动重试。
+- 停止完成屏障和脱敏诊断经 PR #8 合并为 `2177382f1dd7c316f68c06f8e778f71e469d33bf`；主线运行 `29997228090` 全部成功。生产运行 `29997377787` 返回 `deploy_install_failed:unexpected_failure`。服务器只读事件证明它已完成旧 `71e4754` 停止、新 `2177382` 启动和首次公开冒烟，又成功停止新版本并恢复旧 `71e4754`；没有发生第二次新版本启动。
+- 失败后的 `current` 指向 `71e4754`、`previous` 指向 `2177382`，正式回执缺失，旧容器均为 `healthy`，公网健康仍为 `replay_only`。结合安装器控制流，失败精确位于回滚后的 Caddy 公网冒烟；本地健康已经通过。Caddy 没有可读访问日志，旧异常归约没有保留具体 HTTP/连接类型，因此 502、连接重置或超时之间仍为待验证，不能宣称某一个已经证实。
+- 修复候选为每次公网冒烟设置统一 15 秒 deadline，由受控 `/usr/bin/curl --max-time`、Python 子进程 timeout 和成功返回后的绝对 deadline 复核共同形成 wall-clock 上界；只对 502 / 503 / 504、已枚举 curl 连接/传输错误和超时等待就绪，4xx、证书错误及健康内容错误立即失败关闭。持续瞬时故障输出 `public_smoke_not_ready`，永久 HTTP/TLS 错误输出 `public_smoke_contract_failed`。这是切换内的只读就绪轮询，不会重新执行部署或 Provider 调用。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
 公开远端、GitHub 来源构建、分支保护、GHCR 发布和本机 canonical 开发路径已经通过。生产部署、强制回滚演练和用户验收尚未完成，当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。

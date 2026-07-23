@@ -8,11 +8,9 @@ import json
 import os
 import re
 import shutil
-import ssl
 import subprocess
 import sys
 import time
-import urllib.request
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urlparse
@@ -28,6 +26,14 @@ COPY_FILES = {
     "tools/release_manifest.py": "tools/release_manifest.py",
 }
 STABLE_ERROR_PATTERN = re.compile(r"[a-z][a-z0-9_]*(?::[a-z][a-z0-9_]*){0,2}")
+PUBLIC_SMOKE_TIMEOUT_SECONDS = 15.0
+PUBLIC_SMOKE_RETRY_DELAY_SECONDS = 1.0
+CURL_PATH = "/usr/bin/curl"
+TRANSIENT_CURL_EXIT_CODES = frozenset({5, 6, 7, 16, 18, 28, 52, 55, 56, 92})
+
+
+class _TransientPublicSmokeError(RuntimeError):
+    pass
 
 
 def _run(*args: str) -> None:
@@ -78,25 +84,104 @@ def _commit_receipt_or_restore(
         raise
 
 
-def _public_smoke(origin: str) -> None:
-    context = ssl.create_default_context()
+def _public_smoke(
+    origin: str,
+    *,
+    deadline: float,
+    monotonic: Callable[[], float] = time.monotonic,
+    runner: Callable[..., subprocess.CompletedProcess[bytes]] = subprocess.run,
+) -> None:
+    def request(url: str, *, capture_body: bool = False) -> tuple[int, bytes]:
+        remaining = deadline - monotonic()
+        if remaining <= 0:
+            raise _TransientPublicSmokeError("public smoke deadline exhausted")
+        command = [
+            CURL_PATH,
+            "--silent",
+            "--show-error",
+            "--max-time",
+            f"{max(0.001, remaining):.3f}",
+            "--user-agent",
+            "traceable-release/1",
+        ]
+        if capture_body:
+            command.extend(("--max-filesize", "4096", "--write-out", "\n%{http_code}"))
+        else:
+            command.extend(("--output", "/dev/null", "--write-out", "%{http_code}"))
+        command.append(url)
+        try:
+            completed = runner(
+                command,
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=remaining,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise _TransientPublicSmokeError("public request timed out") from error
+        if monotonic() > deadline:
+            raise _TransientPublicSmokeError("public smoke deadline exhausted")
+        if completed.returncode in TRANSIENT_CURL_EXIT_CODES:
+            raise _TransientPublicSmokeError("public transport not ready")
+        if completed.returncode != 0:
+            raise RuntimeError("public_smoke_contract_failed")
+        try:
+            if capture_body:
+                body, status_text = completed.stdout.rsplit(b"\n", 1)
+            else:
+                body, status_text = b"", completed.stdout
+            status = int(status_text.decode("ascii"))
+        except (UnicodeDecodeError, ValueError):
+            raise RuntimeError("public_smoke_contract_failed") from None
+        return status, body
+
     for route in ("/", "/design", "/app", "/privacy"):
-        request = urllib.request.Request(origin + route, headers={"User-Agent": "traceable-release/1"})
-        with urllib.request.urlopen(request, timeout=15, context=context) as response:
-            if response.status != 200:
-                raise RuntimeError(f"public_route_invalid:{route}:{response.status}")
-            response.read(1024)
-    request = urllib.request.Request(
-        origin + "/api/v1/health", headers={"Accept": "application/json", "User-Agent": "traceable-release/1"}
-    )
-    with urllib.request.urlopen(request, timeout=15, context=context) as response:
-        health = json.load(response)
+        status, _body = request(origin + route)
+        if status in {502, 503, 504}:
+            raise _TransientPublicSmokeError("public proxy not ready")
+        if status != 200:
+            raise RuntimeError("public_smoke_contract_failed")
+    status, body = request(origin + "/api/v1/health", capture_body=True)
+    if status in {502, 503, 504}:
+        raise _TransientPublicSmokeError("public proxy not ready")
+    if status != 200:
+        raise RuntimeError("public_smoke_contract_failed")
+    try:
+        health = json.loads(body)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise RuntimeError("public_health_contract_invalid") from None
     if health != {
         "status": "ok",
         "service": "traceable-support-public-api",
         "live_experience": "replay_only",
     }:
         raise RuntimeError("public_health_contract_invalid")
+
+
+def _wait_public_smoke(
+    origin: str,
+    *,
+    timeout_seconds: float = PUBLIC_SMOKE_TIMEOUT_SECONDS,
+    retry_delay_seconds: float = PUBLIC_SMOKE_RETRY_DELAY_SECONDS,
+    smoke: Callable[..., None] = _public_smoke,
+    monotonic: Callable[[], float] = time.monotonic,
+    sleeper: Callable[[float], None] = time.sleep,
+) -> None:
+    deadline = monotonic() + timeout_seconds
+    while True:
+        failure: BaseException
+        try:
+            smoke(origin, deadline=deadline, monotonic=monotonic)
+        except _TransientPublicSmokeError as caught:
+            failure = caught
+        else:
+            if monotonic() > deadline:
+                raise RuntimeError("public_smoke_not_ready")
+            return
+        remaining = deadline - monotonic()
+        if remaining <= 0:
+            raise RuntimeError("public_smoke_not_ready") from failure
+        sleeper(min(retry_delay_seconds, remaining))
 
 
 def _validated_input(staging: Path) -> str:
@@ -187,7 +272,7 @@ def main() -> int:
     def activate_and_smoke(label: str) -> None:
         _run("bash", str(activate), str(release_root), str(release_dir))
         try:
-            _public_smoke(public_origin)
+            _wait_public_smoke(public_origin)
         except Exception:
             if (release_root / "previous").is_symlink():
                 _run("bash", str(rollback), str(release_root))
@@ -198,10 +283,10 @@ def main() -> int:
     if not (release_root / "previous").is_symlink():
         recovery = rehearsal_anchor / "deploy" / "activate-release.sh"
         _run("bash", str(recovery), str(release_root), str(rehearsal_anchor))
-        _public_smoke(public_origin)
+        _wait_public_smoke(public_origin)
         raise RuntimeError("rollback_rehearsal_anchor_not_committed")
     _run("bash", str(rollback), str(release_root))
-    _public_smoke(public_origin)
+    _wait_public_smoke(public_origin)
     steps.append("canonical_to_legacy")
     activate_and_smoke("legacy_to_canonical_again")
 
@@ -217,7 +302,7 @@ def main() -> int:
 
     def restore_legacy_after_receipt_failure() -> None:
         _run("bash", str(rollback), str(release_root))
-        _public_smoke(public_origin)
+        _wait_public_smoke(public_origin)
 
     _commit_receipt_or_restore(
         release_dir / "deployment-receipt.json",

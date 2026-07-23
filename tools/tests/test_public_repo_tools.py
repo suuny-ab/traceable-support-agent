@@ -250,7 +250,7 @@ jobs:
           controller_dir="$RUNNER_TEMP/traceable-deploy-controller"
           printf '%s  %s\\n' \\
             '6a1af83611a5164e53a8697fe654725a867fe8bc8a8e1b81af01d34cc2b70e52' "$controller_dir/validate_deploy_port.py" \\
-            '322d19bc4c29e529da51b2d419a16da3532a4e9836bd851a077ffe373e884545' "$controller_dir/deploy_ssh_transport.py" \\
+            '0ac333ace233077586ad161bd579bc7708e2345e8f0a03f8886f2c91aa9e4166' "$controller_dir/deploy_ssh_transport.py" \\
             | /usr/bin/sha256sum --check --strict
       - name: Upload and activate with strict host verification
         env:
@@ -338,7 +338,7 @@ jobs:
                 '/usr/bin/python3 -E "$RUNNER_TEMP/traceable-deploy-controller/'
                 'deploy_ssh_transport.py" \\'
             ): "production_deploy_transport_preflight_invalid",
-            "322d19bc4c29e529da51b2d419a16da3532a4e9836bd851a077ffe373e884545": (
+            "0ac333ace233077586ad161bd579bc7708e2345e8f0a03f8886f2c91aa9e4166": (
                 "production_deploy_controller_integrity_missing"
             ),
             "DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}": (
