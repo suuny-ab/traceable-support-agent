@@ -49,6 +49,11 @@
 - 停止完成屏障和脱敏诊断经 PR #8 合并为 `2177382f1dd7c316f68c06f8e778f71e469d33bf`；主线运行 `29997228090` 全部成功。生产运行 `29997377787` 返回 `deploy_install_failed:unexpected_failure`。服务器只读事件证明它已完成旧 `71e4754` 停止、新 `2177382` 启动和首次公开冒烟，又成功停止新版本并恢复旧 `71e4754`；没有发生第二次新版本启动。
 - 失败后的 `current` 指向 `71e4754`、`previous` 指向 `2177382`，正式回执缺失，旧容器均为 `healthy`，公网健康仍为 `replay_only`。结合安装器控制流，失败精确位于回滚后的 Caddy 公网冒烟；本地健康已经通过。Caddy 没有可读访问日志，旧异常归约没有保留具体 HTTP/连接类型，因此 502、连接重置或超时之间仍为待验证，不能宣称某一个已经证实。
 - 修复候选为每次公网冒烟设置统一 15 秒 deadline，由受控 `/usr/bin/curl --max-time`、Python 子进程 timeout 和成功返回后的绝对 deadline 复核共同形成 wall-clock 上界；只对 502 / 503 / 504、已枚举 curl 连接/传输错误和超时等待就绪，4xx、证书错误及健康内容错误立即失败关闭。持续瞬时故障输出 `public_smoke_not_ready`，永久 HTTP/TLS 错误输出 `public_smoke_contract_failed`。这是切换内的只读就绪轮询，不会重新执行部署或 Provider 调用。
+- 公网就绪修复经 PR #9 合并为 `f5dbcb74cb9efb43b267a9767ce98dca5213e503`；主线运行 `29998493217` 和生产运行 `29998634293` 成功。服务器正式回执绑定该 SHA，记录 `旧 → 新 → 旧 → 新` 三步全部通过、`provider_enabled=false`、公网健康为 `replay_only`；Web/API 容器健康，用户交互验收通过。
+- 用户随后明确授予绿色 `main` 常设自动生产部署权限。GitHub `production` environment 已移除 required reviewer，仍只接受受保护分支。对同一主线运行的 attempt 2 自动创建生产运行 `29999265733` 且未进入 `waiting`，证明逐次批准门已经消失；该运行因 attempt 改变导致同 SHA manifest 与既有发布目录冲突，被不可变发布门以 `existing_release_identity_conflict` 正确拒绝，现网和原正式回执未改变。
+- 全自动路径的最终验收仍需要一个新的 `main` SHA：其 CI 成功后应自动创建并完成生产运行，不进行人工批准，并形成绑定新 SHA 的三步演练、正式回执与公网健康证据。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
-公开远端、GitHub 来源构建、分支保护、GHCR 发布和本机 canonical 开发路径已经通过。生产部署、强制回滚演练和用户验收尚未完成，当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。
+公开远端、GitHub 来源构建、分支保护、GHCR 发布、本机 canonical 开发路径、首次生产部署、
+强制回滚演练和用户验收已经通过。绿色 `main` 的无点击自动生产部署仍待新 SHA 验证，因此
+活动工作继续位于 `docs/work/active/`。

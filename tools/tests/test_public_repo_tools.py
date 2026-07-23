@@ -178,7 +178,7 @@ jobs:
 
     def test_production_deploy_requires_trusted_unified_ssh_preflight(self) -> None:
         workflow = """
-run-name: "production approval for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"
+run-name: "production deploy for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"
 on:
   workflow_run:
     workflows: ["ci-release"]
@@ -272,7 +272,7 @@ jobs:
         self.assertEqual(_deployment_workflow_errors(workflow), [])
 
         required_errors = {
-            'run-name: "production approval for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"': (
+            'run-name: "production deploy for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"': (
                 "production_deploy_run_name_missing"
             ),
             "workflow_dispatch:": "production_deploy_manual_fallback_missing",

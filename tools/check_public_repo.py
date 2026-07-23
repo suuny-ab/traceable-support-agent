@@ -483,7 +483,7 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     if not _has_exact_yaml_line(
         workflow,
         0,
-        'run-name: "production approval for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"',
+        'run-name: "production deploy for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"',
     ):
         errors.append("production_deploy_run_name_missing")
 
