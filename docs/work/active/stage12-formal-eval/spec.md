@@ -42,7 +42,8 @@ Issue #14 依据本证据单独判断，不由本增量机械阻断。
   `required_facts` 逐字覆盖、结构合同、category / priority），聚合报告观测分数与每个
   失败案例及失败码，如实呈现，不四舍五入为"通过"。
 - **期望的语料可追溯性（冻结时强制）**：每个案例的 `required_facts` 必须是其所绑定
-  `source_sections` 语料原文中的逐字片段，`source_sections` 必须存在于
+  `source_sections` 语料原文中的逐字片段（精确口径：NFKC 归一化 + 去空白后逐字包含，
+  与检索分块和运行时机械门同口径），`source_sections` 必须存在于
   `data/knowledge/`。由冻结校验器机械验证——期望不依赖编写者的记忆或品味。
 - **单案例机械判定**：结构合同通过（运行时已失败关闭）∧ 引用来源章节 = 期望集合 ∧
   全部 `required_facts` 逐字出现在客户可见正文 ∧ outcome / 转人工失败码正确（工单
@@ -56,8 +57,9 @@ Issue #14 依据本证据单独判断，不由本增量机械阻断。
 
 - **问题**：冻结候选在 ≤24 个全新未见合成案例上的不变量成立性与机械质量观测。
 - **非目标**：调参、prompt 优化、启用公开实时 Provider、发布 `0.1.0`、语义质量结论。
-- **样本**：≤24 个全新合成案例（约 8 维度 × 3），ID 前缀 `STG12-`，私有保管于仓库外，
-  记录 SHA-256；期望全部从 `data/knowledge/` 语料原文逐字派生并经冻结校验器验证。
+- **样本**：24 个全新合成案例（8 维度 × 3），ID 前缀 `STG12-`，私有保管于仓库外，
+  SHA-256 `7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0`；
+  期望全部从 `data/knowledge/` 语料原文逐字派生并经冻结校验器验证。
 - **身份**：代码 = runner PR 合并后的部署 main SHA；模型 = DeepSeek `MODEL`
   （`api/src/traceable_support/provider/contract.py` 固定，
   `tg07a-deepseek-chat-request-v1`）；prompt / 知识 / 合同哈希取自该次 `ci-release`
