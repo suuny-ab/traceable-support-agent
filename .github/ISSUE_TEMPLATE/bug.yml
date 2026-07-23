@@ -1,0 +1,36 @@
+name: 缺陷
+description: 报告可复现的产品或开发流程缺陷
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: 实际行为
+      description: 发生了什么？请提供脱敏后的稳定错误码或公开回执。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 最小复现
+      description: 不得包含 secret、私有数据、Provider 原文或本机敏感路径。
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: 影响
+      options:
+        - 用户体验
+        - CI / 开发流程
+        - 生产 / 发布
+        - 安全 / 隐私 / 费用
+    validations:
+      required: true

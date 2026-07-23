@@ -16,15 +16,15 @@
 
 ## 当前
 
-暂无活动增量；下一个增量须在启动时明确用户结果、风险和完成门。
+用 Issue [#7](https://github.com/suuny-ab/traceable-support-agent/issues/7) 审计并精简元开发治理，
+同时完成四页商业 SaaS 重设计，验证绿色 Draft PR 固定候选、一次正式复核和全自动生产部署。
 
 ## 下一步
 
-- [ ] 继续设计最终前端视觉与移动端体验。
-- [ ] 固定同一候选并创建全新未见 Stage 12 评测。
-- [ ] 在费用授权和全部硬门通过后评估开启实时 Provider。
-- [ ] 依据质量门发布真实 Beta 或 `product/0.1.0`。
-- [ ] 独立域名作为非阻塞增强。
+- [ ] [固定同一候选并创建全新未见 Stage 12 评测](https://github.com/suuny-ab/traceable-support-agent/issues/12)。
+- [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
+- [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
+- [ ] [独立域名作为非阻塞增强](https://github.com/suuny-ab/traceable-support-agent/issues/15)。
 
 ## 长期范围外
 

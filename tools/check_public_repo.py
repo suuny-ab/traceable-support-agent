@@ -364,6 +364,12 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
     )
     if job_metadata_lines != (
         "  containers:",
+        "    needs: classify",
+        "    runs-on: ubuntu-24.04",
+        "    timeout-minutes: 30",
+        "    steps:",
+    ) and job_metadata_lines != (
+        "  containers:",
         "    runs-on: ubuntu-24.04",
         "    timeout-minutes: 30",
         "    steps:",
@@ -391,6 +397,10 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         and len(line) - len(line.lstrip(" ")) <= 8
     )
     if metadata_lines != (
+        "      - name: Smoke replay images without model or credential",
+        "        if: steps.impact.outputs.classification == 'runtime'",
+        "        run: |",
+    ) and metadata_lines != (
         "      - name: Smoke replay images without model or credential",
         "        run: |",
     ):
@@ -518,7 +528,17 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         "github.event.workflow_run.head_branch == 'main' && "
         "github.event.workflow_run.head_repository.full_name == github.repository )"
     )
-    if _folded_yaml_scalar(deploy, "if", 4) != expected_condition:
+    actual_condition = _folded_yaml_scalar(deploy, "if", 4)
+    if _has_exact_yaml_line(
+        deploy,
+        4,
+        "if: needs.preflight.outputs.deploy_required == 'true'",
+    ):
+        actual_condition = "needs.preflight.outputs.deploy_required == 'true'"
+    if actual_condition not in {
+        expected_condition,
+        "needs.preflight.outputs.deploy_required == 'true'",
+    }:
         errors.append("production_deploy_condition_invalid")
 
     if not _has_exact_yaml_line(deploy, 4, "environment: production"):
@@ -809,6 +829,95 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     return errors
 
 
+def _release_decision_workflow_errors(
+    ci_workflow: str,
+    deploy_workflow: str,
+) -> list[str]:
+    errors: list[str] = []
+    ci_jobs = _yaml_block(ci_workflow, "jobs", 0)
+    governance = _yaml_block(ci_jobs or "", "governance", 2)
+    if governance is None:
+        errors.append("ci_impact_classification_missing")
+    else:
+        required_classify_tokens = (
+            "python tools/ci_impact.py",
+            "--github-output \"$GITHUB_OUTPUT\"",
+            "python tools/release_decision.py",
+            "--output release-decision.json",
+            "--changed-paths-sha256 \"$CHANGED_PATHS_SHA256\"",
+            "name: release-decision",
+        )
+        if any(token not in governance for token in required_classify_tokens):
+            errors.append("ci_release_decision_generation_invalid")
+
+    for name in ("governance", "web", "api", "containers"):
+        job = _yaml_block(ci_jobs or "", name, 2)
+        if (
+            "- name: Classify changed paths" not in (job or "")
+            or "--github-output \"$GITHUB_OUTPUT\"" not in (job or "")
+        ):
+            errors.append(f"ci_impact_classification_missing:{name}")
+    for name in ("web", "api", "containers"):
+        job = _yaml_block(ci_jobs or "", name, 2)
+        if (
+            "Report governance-only impact" not in (job or "")
+            or "steps.impact.outputs.classification == 'governance_only'"
+            not in (job or "")
+            or "steps.impact.outputs.classification == 'runtime'"
+            not in (job or "")
+        ):
+            errors.append(f"ci_no_impact_success_missing:{name}")
+    publish = _yaml_block(ci_jobs or "", "publish", 2)
+    if (
+        "needs.governance.outputs.classification == 'runtime'" not in (publish or "")
+        or "needs: [governance, web, api, containers]" not in (publish or "")
+    ):
+        errors.append("ci_publish_impact_gate_invalid")
+
+    deploy_jobs = _yaml_block(deploy_workflow, "jobs", 0)
+    preflight = _yaml_block(deploy_jobs or "", "preflight", 2)
+    deploy = _yaml_block(deploy_jobs or "", "deploy", 2)
+    if preflight is None:
+        errors.append("production_release_decision_preflight_missing")
+    else:
+        preflight_condition = _folded_yaml_scalar(preflight, "if", 4)
+        expected_condition = (
+            "github.event_name == 'workflow_dispatch' || "
+            "( github.event_name == 'workflow_run' && "
+            "github.event.workflow_run.conclusion == 'success' && "
+            "github.event.workflow_run.event == 'push' && "
+            "github.event.workflow_run.head_branch == 'main' && "
+            "github.event.workflow_run.head_repository.full_name == github.repository )"
+        )
+        required_preflight_tokens = (
+            "release-decision",
+            "release_decision_missing",
+            "GITHUB_EVENT_NAME\" != workflow_dispatch",
+            "legacy_decision=true",
+            "python tools/release_decision.py",
+            "--github-run-id \"$PUBLISH_RUN_ID\"",
+        )
+        if (
+            preflight_condition != expected_condition
+            or any(token not in preflight for token in required_preflight_tokens)
+            or "environment: production" in preflight
+            or "secrets.DEPLOY_" in preflight
+            or re.search(r"(?<![A-Za-z0-9_])(?:ssh|scp)(?![A-Za-z0-9_])", preflight)
+        ):
+            errors.append("production_release_decision_preflight_invalid")
+    if (
+        not _has_exact_yaml_line(deploy, 4, "needs: preflight")
+        or not _has_exact_yaml_line(
+            deploy,
+            4,
+            "if: needs.preflight.outputs.deploy_required == 'true'",
+        )
+        or not _has_exact_yaml_line(deploy, 4, "environment: production")
+    ):
+        errors.append("production_release_decision_gate_invalid")
+    return errors
+
+
 def _markdown_link_errors(entries: dict[str, Entry]) -> list[str]:
     errors: list[str] = []
     link_re = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")
@@ -998,6 +1107,9 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
         errors.extend(_deployment_workflow_errors(deploy_workflow))
         ci_workflow = _read(mapped, ".github/workflows/ci-release.yml")
         errors.extend(_container_smoke_workflow_errors(ci_workflow))
+        errors.extend(
+            _release_decision_workflow_errors(ci_workflow, deploy_workflow)
+        )
     except (UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         errors.append(str(exc))
     try:

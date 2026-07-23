@@ -14,20 +14,20 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase,
     title: {
-      default: "Traceable Support Agent｜可追溯客服智能体",
+      default: "Traceable Support Agent｜可追溯客服决策支持",
       template: "%s｜Traceable Support Agent",
     },
-    description: "以混合检索、义务规划、机械质量门和人工决定构成的可追溯客服LLM工作流。",
+    description: "让客服 AI 的每个结论有证据、有退出机制，并把最终决定留给团队。",
     openGraph: {
       type: "website",
       title: "Traceable Support Agent",
-      description: "让每个LLM结论都有证据，让每次失败诚实停止。",
+      description: "让客服 AI 的每个结论有证据、有退出机制。",
       images: [{ url: "/og.png", width: 1672, height: 941, alt: "Traceable Support Agent evidence console" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Traceable Support Agent",
-      description: "让每个LLM结论都有证据，让每次失败诚实停止。",
+      description: "让客服 AI 的每个结论有证据、有退出机制。",
       images: ["/og.png"],
     },
   };

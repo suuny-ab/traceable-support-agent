@@ -16,6 +16,8 @@ jobs:
   governance:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    outputs:
+      classification: ${{ steps.impact.outputs.classification }}
     steps:
       - name: Check out full public history
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -26,6 +28,45 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.13"
+      - name: Classify changed paths
+        id: impact
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PUSH_BASE_SHA: ${{ github.event.before || '' }}
+        run: |
+          base_sha="$PR_BASE_SHA"
+          if [[ -z "$base_sha" ]]; then
+            base_sha="$PUSH_BASE_SHA"
+          fi
+          python tools/ci_impact.py \
+            --base "$base_sha" \
+            --head "$GITHUB_SHA" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Generate immutable release decision
+        env:
+          CLASSIFICATION: ${{ steps.impact.outputs.classification }}
+          CHANGED_PATHS_SHA256: ${{ steps.impact.outputs.changed_paths_sha256 }}
+        run: |
+          deploy_required=false
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/main && "$CLASSIFICATION" == runtime ]]; then
+            deploy_required=true
+          fi
+          python tools/release_decision.py \
+            --output release-decision.json \
+            --git-sha "$GITHUB_SHA" \
+            --github-run-id "$GITHUB_RUN_ID" \
+            --github-run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --classification "$CLASSIFICATION" \
+            --deploy-required "$deploy_required" \
+            --changed-paths-sha256 "$CHANGED_PATHS_SHA256"
+          python tools/release_decision.py --verify release-decision.json
+      - name: Store release decision
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: release-decision
+          path: release-decision.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Test governance tools
         run: python -m unittest discover -s tools/tests -p "test_*.py"
       - name: Scan current tree and full history
@@ -45,24 +86,48 @@ jobs:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - name: Classify changed paths
+        id: impact
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PUSH_BASE_SHA: ${{ github.event.before || '' }}
+        run: |
+          base_sha="$PR_BASE_SHA"
+          if [[ -z "$base_sha" ]]; then
+            base_sha="$PUSH_BASE_SHA"
+          fi
+          python ../tools/ci_impact.py \
+            --base "$base_sha" \
+            --head "$GITHUB_SHA" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Report governance-only impact
+        if: steps.impact.outputs.classification == 'governance_only'
+        run: echo "web=not_affected classification=governance_only"
       - name: Set up Node
+        if: steps.impact.outputs.classification == 'runtime'
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: "24.13.0"
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Install locked dependencies
+        if: steps.impact.outputs.classification == 'runtime'
         run: npm ci
       - name: Reject high or critical dependency advisories
+        if: steps.impact.outputs.classification == 'runtime'
         run: npm audit --audit-level=high --registry=https://registry.npmjs.org
       - name: Lint and typecheck
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           npm run lint
           npm run typecheck
       - name: Build and test
+        if: steps.impact.outputs.classification == 'runtime'
         run: npm test
       - name: Smoke four standalone routes
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           npm start >"$RUNNER_TEMP/traceable-web.log" 2>&1 &
           server_pid=$!
@@ -82,8 +147,27 @@ jobs:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - name: Classify changed paths
+        id: impact
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PUSH_BASE_SHA: ${{ github.event.before || '' }}
+        run: |
+          base_sha="$PR_BASE_SHA"
+          if [[ -z "$base_sha" ]]; then
+            base_sha="$PUSH_BASE_SHA"
+          fi
+          python tools/ci_impact.py \
+            --base "$base_sha" \
+            --head "$GITHUB_SHA" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Report governance-only impact
+        if: steps.impact.outputs.classification == 'governance_only'
+        run: echo "api=not_affected classification=governance_only"
       - name: Set up Python
+        if: steps.impact.outputs.classification == 'runtime'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.13"
@@ -92,20 +176,24 @@ jobs:
             api/requirements-test.lock
             api/requirements-live.lock
       - name: Install locked test and offline-live dependencies
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           python -m pip install --disable-pip-version-check --no-deps --requirement api/requirements-test.lock
           python -m pip install --disable-pip-version-check --no-deps --require-hashes --requirement api/requirements-live.lock
       - name: Download and verify the pinned embedding model
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           python deploy/download_embedding_model.py \
             --manifest api/src/traceable_support/retrieval/bge-small-zh-v1.5-fastembed.json \
             --root "$RUNNER_TEMP/traceable-model"
       - name: Run API, SQLite, budget and offline product tests
+        if: steps.impact.outputs.classification == 'runtime'
         env:
           PYTHONPATH: api/src
           TRACEABLE_MODEL_ROOT: ${{ runner.temp }}/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5
         run: python -m pytest api/tests
       - name: Prove replay control plane has no site dependency
+        if: steps.impact.outputs.classification == 'runtime'
         env:
           PYTHONPATH: api/src
         run: python -S -c "from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"
@@ -117,14 +205,35 @@ jobs:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - name: Classify changed paths
+        id: impact
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PUSH_BASE_SHA: ${{ github.event.before || '' }}
+        run: |
+          base_sha="$PR_BASE_SHA"
+          if [[ -z "$base_sha" ]]; then
+            base_sha="$PUSH_BASE_SHA"
+          fi
+          python tools/ci_impact.py \
+            --base "$base_sha" \
+            --head "$GITHUB_SHA" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Report governance-only impact
+        if: steps.impact.outputs.classification == 'governance_only'
+        run: echo "containers=not_affected classification=governance_only"
       - name: Set up Buildx
+        if: steps.impact.outputs.classification == 'runtime'
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
       - name: Build Web and replay images
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           docker build --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-web:test web
           docker build --target replay --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-api-replay:test -f api/Dockerfile .
       - name: Smoke replay images without model or credential
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           test "$(docker image inspect --format '{{.Config.User}}' traceable-web:test)" = "node"
           test "$(docker image inspect --format '{{.Config.User}}' traceable-api-replay:test)" = "10001:10001"
@@ -173,6 +282,7 @@ jobs:
             curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null
           done
       - name: Build live target but verify only offline retrieval
+        if: steps.impact.outputs.classification == 'runtime'
         run: |
           docker build --target live --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-api-live-offline:test -f api/Dockerfile .
           docker run --rm --network none \
@@ -182,7 +292,11 @@ jobs:
             /verification/check_live_retrieval.py
 
   publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'suuny-ab/traceable-support-agent'
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'suuny-ab/traceable-support-agent' &&
+      needs.governance.outputs.classification == 'runtime'
     needs: [governance, web, api, containers]
     runs-on: ubuntu-24.04
     timeout-minutes: 30

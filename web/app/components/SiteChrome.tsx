@@ -1,29 +1,90 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+
+const links = [
+  ["/", "产品"],
+  ["/design", "设计与证据"],
+  ["/app", "在线工作台"],
+  ["/privacy", "隐私与边界"],
+] as const;
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
   return (
-    <header className="site-header shell">
-      <Link className="brand" href="/" aria-label="Traceable Support Agent 产品主页">
-        <span className="brand-mark" aria-hidden="true"><i /><i /></span>
-        <span><strong>Traceable Support Agent</strong><small>可追溯客服智能体</small></span>
-      </Link>
-      <nav aria-label="主导航">
-        <Link href="/">产品主页</Link>
-        <Link href="/design">设计说明</Link>
-        <Link href="/app">在线体验</Link>
-        <span aria-label="源码仓库将在公开检查点开放">GitHub · 准备中</span>
-      </nav>
-      <div className="deploy-status"><i /> DEPLOYMENT CANDIDATE · REPLAY READY</div>
+    <header className="site-header">
+      <div className="shell header-inner">
+        <Link className="brand" href="/" aria-label="Traceable Support Agent 产品主页" onClick={() => setOpen(false)}>
+          <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
+          <span>
+            <strong>Traceable Support Agent</strong>
+            <small>Evidence-led support decisions</small>
+          </span>
+        </Link>
+
+        <button
+          className="mobile-menu-button"
+          type="button"
+          aria-expanded={open}
+          aria-controls="site-navigation"
+          aria-label={open ? "关闭主导航" : "打开主导航"}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
+
+        <nav id="site-navigation" className={open ? "site-navigation navigation-open" : "site-navigation"} aria-label="主导航">
+          {links.map(([href, label]) => (
+            <Link
+              href={href}
+              key={href}
+              aria-current={pathname === href ? "page" : undefined}
+              onClick={() => setOpen(false)}
+            >
+              {label}
+            </Link>
+          ))}
+          <a
+            className="github-link"
+            href="https://github.com/suuny-ab/traceable-support-agent"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub <span aria-hidden="true">↗</span>
+          </a>
+        </nav>
+
+        <div className="deploy-status" aria-label="公开体验状态">
+          <i aria-hidden="true" />
+          <span><strong>公开回放在线</strong><small>Provider disabled</small></span>
+        </div>
+      </div>
     </header>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="site-footer shell">
-      <div><strong>Traceable Support Agent</strong><span>AI Application Engineering Portfolio</span></div>
-      <nav aria-label="页脚导航"><Link href="/design">设计说明</Link><Link href="/app">在线体验</Link><Link href="/privacy">隐私与边界</Link></nav>
-      <p>合成数据 · 无自动外部动作 · product/0.1.0 尚未发布</p>
+    <footer className="site-footer">
+      <div className="shell footer-inner">
+        <div>
+          <strong>Traceable Support Agent</strong>
+          <span>可追溯客服决策支持 · AI Application Engineering Portfolio</span>
+        </div>
+        <nav aria-label="页脚导航">
+          <Link href="/design">设计与证据</Link>
+          <Link href="/app">在线工作台</Link>
+          <Link href="/privacy">隐私与边界</Link>
+          <a href="https://github.com/suuny-ab/traceable-support-agent" target="_blank" rel="noreferrer">GitHub ↗</a>
+        </nav>
+        <p>合成数据 · 无自动外部动作 · product/0.1.0 尚未发布</p>
+      </div>
     </footer>
   );
 }

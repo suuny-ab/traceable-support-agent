@@ -45,10 +45,10 @@ after(() => {
 });
 
 const routes = [
-  ["/", /让每个 LLM 结论都有/],
-  ["/design", /设计的重点不是让模型/],
-  ["/app", /实际体验候选、来源、义务与失败边界/],
-  ["/privacy", /这是合成数据演示/],
+  ["/", /让客服 AI 的结论/],
+  ["/design", /把模型放进一条/],
+  ["/app", /从输入到决定/],
+  ["/privacy", /这里不是客服入口/],
 ];
 
 for (const [pathname, expected] of routes) {
@@ -58,6 +58,9 @@ for (const [pathname, expected] of routes) {
     assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
     const html = await response.text();
     assert.match(html, expected);
+    assert.match(html, /https:\/\/github\.com\/suuny-ab\/traceable-support-agent/);
+    assert.match(html, /打开主导航/);
+    assert.match(html, /产品|设计与证据|在线工作台|隐私与边界/);
     assert.doesNotMatch(html, /react-loading-skeleton|Your site is taking shape/);
   });
 }

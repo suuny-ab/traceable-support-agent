@@ -18,6 +18,7 @@ from tools.check_public_repo import (
     _container_smoke_workflow_errors,
     _content_errors,
     _deployment_workflow_errors,
+    _release_decision_workflow_errors,
     _path_errors,
 )
 from tools.deploy_ssh_transport import (
@@ -632,6 +633,61 @@ jobs:
             digest = hashlib.sha256((root / relative).read_bytes()).hexdigest()
             with self.subTest(relative=relative):
                 self.assertIn(digest, workflow)
+
+    def test_release_decision_preflight_is_fail_closed(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        ci_workflow = (root / ".github/workflows/ci-release.yml").read_text(
+            encoding="utf-8"
+        )
+        deploy_workflow = (
+            root / ".github/workflows/deploy-production.yml"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(
+            _release_decision_workflow_errors(ci_workflow, deploy_workflow),
+            [],
+        )
+
+        mutations = (
+            (
+                ci_workflow.replace(
+                    "needs: [governance, web, api, containers]",
+                    "needs: [web, api, containers]",
+                    1,
+                ),
+                deploy_workflow,
+            ),
+            (
+                ci_workflow,
+                deploy_workflow.replace(
+                    "needs.preflight.outputs.deploy_required == 'true'",
+                    "true",
+                    1,
+                ),
+            ),
+            (
+                ci_workflow,
+                deploy_workflow.replace(
+                    'if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then',
+                    'if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then',
+                ),
+            ),
+            (
+                ci_workflow,
+                deploy_workflow.replace(
+                    "  preflight:",
+                    "  preflight:\n    environment: production",
+                    1,
+                ),
+            ),
+        )
+        for ci_mutation, deploy_mutation in mutations:
+            with self.subTest():
+                self.assertTrue(
+                    _release_decision_workflow_errors(
+                        ci_mutation,
+                        deploy_mutation,
+                    )
+                )
 
 
 class DeployPortValidationTest(unittest.TestCase):

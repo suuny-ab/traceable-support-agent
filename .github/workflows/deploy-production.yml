@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  preflight:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
@@ -32,6 +32,66 @@ jobs:
         github.event.workflow_run.head_branch == 'main' &&
         github.event.workflow_run.head_repository.full_name == github.repository
       )
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      classification: ${{ steps.decision.outputs.classification }}
+      deploy_required: ${{ steps.decision.outputs.deploy_required }}
+    env:
+      PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}
+      PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
+      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}
+    steps:
+      - name: Check out the trusted deployment controller
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+      - name: Validate release decision before production
+        id: decision
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -Eeuo pipefail
+          artifact_id="$(
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISH_RUN_ID/artifacts" \
+              --jq '.artifacts | map(select(.name == "release-decision" and .expired == false)) | sort_by(.created_at) | last | .id // empty'
+          )"
+          if [[ -z "$artifact_id" ]]; then
+            if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then
+              echo "release_decision_missing" >&2
+              exit 65
+            fi
+            echo "classification=runtime" >>"$GITHUB_OUTPUT"
+            echo "deploy_required=true" >>"$GITHUB_OUTPUT"
+            echo "legacy_decision=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          decision_dir="$RUNNER_TEMP/traceable-release-decision"
+          install -d -m 700 "$decision_dir"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" \
+            >"$RUNNER_TEMP/release-decision.zip"
+          python -m zipfile -e "$RUNNER_TEMP/release-decision.zip" "$decision_dir"
+          verify_args=(
+            --verify "$decision_dir/release-decision.json"
+            --github-run-id "$PUBLISH_RUN_ID"
+            --github-output "$GITHUB_OUTPUT"
+          )
+          if [[ -n "$PUBLISH_HEAD_SHA" ]]; then
+            verify_args+=(--git-sha "$PUBLISH_HEAD_SHA")
+          fi
+          if [[ -n "$PUBLISH_RUN_ATTEMPT" ]]; then
+            verify_args+=(--github-run-attempt "$PUBLISH_RUN_ATTEMPT")
+          fi
+          python tools/release_decision.py "${verify_args[@]}"
+
+  deploy:
+    needs: preflight
+    if: needs.preflight.outputs.deploy_required == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: production
