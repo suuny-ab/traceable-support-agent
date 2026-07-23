@@ -17,11 +17,10 @@
 
 ## 当前
 
-无活动增量；等待从下列结果中选择唯一下一项。
+Stage 12 全新未见正式评测（[Issue #12](https://github.com/suuny-ab/traceable-support-agent/issues/12)），活动工作：`docs/work/active/stage12-formal-eval/`。
 
 ## 下一步
 
-- [ ] [固定同一候选并创建全新未见 Stage 12 评测](https://github.com/suuny-ab/traceable-support-agent/issues/12)。
 - [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
 - [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
 - [ ] [独立域名作为非阻塞增强](https://github.com/suuny-ab/traceable-support-agent/issues/15)。
