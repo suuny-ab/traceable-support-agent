@@ -1,5 +1,5 @@
 name: deploy-production
-run-name: "production approval for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"
+run-name: "production deploy for ci-release #${{ github.event.workflow_run.id || inputs.publish_run_id }}"
 
 on:
   workflow_run:
