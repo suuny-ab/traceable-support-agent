@@ -1,6 +1,6 @@
 # 元开发治理审计与商业 SaaS 重设计规格
 
-> 状态：`active`
+> 状态：`completed`
 >
 > 活动入口：GitHub Issue [#7](https://github.com/suuny-ab/traceable-support-agent/issues/7)
 >
