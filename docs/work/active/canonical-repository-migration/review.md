@@ -226,3 +226,11 @@ GitHub 运行 `29993056669` 的第一次尝试中全部实际 step 已成功，�
 检查、两个容器启动命令、唯一 `EXIT` 清理 trap、两个就绪门、健康断言和四路由检查；
 任何额外前缀、后缀或 `ERR` trap 都会失败关闭。该修改再次使旧回执失效，最终结论必须
 绑定后续新候选。
+
+固定候选 `d75890ce2e7693f744089b7e93e0e936161bb3a5` 的增量终审确认完整脚本合同已经
+拒绝 `ERR` trap 和活动命令前后缀，但 smoke step 的 YAML 元数据仍未锁定；
+`continue-on-error: true`、`if: false` 或 folded `run: >` 可以绕过或改变检查语义。
+扫描器现只接受精确 step 名称与 literal `run: |`，再对完整活动脚本做合同检查；上述三种
+元数据变异和独立活动后缀均纳入测试。容器 job 同时只允许固定 runner、30 分钟 job 上限
+和 steps 入口，job 级 `continue-on-error`、`if` 或超时放宽也会失败关闭。该 finding 的
+修复同样需要绑定后续新候选终审。

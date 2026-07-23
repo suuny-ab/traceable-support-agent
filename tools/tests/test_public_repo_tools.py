@@ -67,6 +67,8 @@ class PublicScannerTest(unittest.TestCase):
         workflow = """
 jobs:
   containers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Smoke replay images without model or credential
         run: |
@@ -144,13 +146,33 @@ jobs:
                 "trap 'docker rm -f traceable-web-ci traceable-api-replay-ci >/dev/null 2>&1 || true' EXIT",
                 "trap 'exit 0' ERR",
             ),
+            workflow.replace(
+                "        run: |",
+                "        continue-on-error: true\n        run: |",
+                1,
+            ),
+            workflow.replace(
+                "        run: |",
+                "        if: false\n        run: |",
+                1,
+            ),
+            workflow.replace("        run: |", "        run: >", 1),
+            workflow.rstrip() + '\n          echo "unexpected suffix"\n',
+            workflow.replace(
+                "  containers:",
+                "  containers:\n    continue-on-error: true",
+                1,
+            ),
+            workflow.replace(
+                "  containers:",
+                "  containers:\n    if: false",
+                1,
+            ),
+            workflow.replace("    timeout-minutes: 30", "    timeout-minutes: 300", 1),
         )
         for mutation in mutations:
             with self.subTest(mutation=mutation):
-                self.assertEqual(
-                    _container_smoke_workflow_errors(mutation),
-                    ["ci_container_readiness_contract_invalid"],
-                )
+                self.assertTrue(_container_smoke_workflow_errors(mutation))
 
     def test_production_deploy_requires_trusted_unified_ssh_preflight(self) -> None:
         workflow = """

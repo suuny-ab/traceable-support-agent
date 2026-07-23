@@ -355,6 +355,20 @@ def _folded_yaml_scalar(value: str | None, key: str, indent: int) -> str | None:
 def _container_smoke_workflow_errors(workflow: str) -> list[str]:
     jobs = _yaml_block(workflow, "jobs", 0)
     containers = _yaml_block(jobs or "", "containers", 2)
+    job_metadata_lines = tuple(
+        line.rstrip()
+        for line in (containers or "").splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and len(line) - len(line.lstrip(" ")) <= 4
+    )
+    if job_metadata_lines != (
+        "  containers:",
+        "    runs-on: ubuntu-24.04",
+        "    timeout-minutes: 30",
+        "    steps:",
+    ):
+        return ["ci_container_job_metadata_invalid"]
     steps = _yaml_block(containers or "", "steps", 4)
     step_blocks = _yaml_list_item_blocks(steps, 6)
     smoke_step = next(
@@ -369,6 +383,18 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
     run = _yaml_block(smoke_step or "", "run", 8)
     if run is None:
         return ["ci_container_smoke_step_missing"]
+    metadata_lines = tuple(
+        line.rstrip()
+        for line in (smoke_step or "").splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and len(line) - len(line.lstrip(" ")) <= 8
+    )
+    if metadata_lines != (
+        "      - name: Smoke replay images without model or credential",
+        "        run: |",
+    ):
+        return ["ci_container_smoke_metadata_invalid"]
     script_lines = tuple(
         line.strip()
         for line in run.splitlines()[1:]
