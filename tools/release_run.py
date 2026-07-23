@@ -9,6 +9,7 @@ import sys
 
 
 LEGACY_RUN_IDS = frozenset({"29999870811"})
+TRUSTED_WORKFLOW_PATH = ".github/workflows/ci-release.yml"
 
 
 def _load_json(path: Path) -> object:
@@ -33,6 +34,7 @@ def validate_release_run(
     values = {
         "id": str(run.get("id", "")),
         "name": run.get("name"),
+        "path": run.get("path"),
         "event": run.get("event"),
         "head_branch": run.get("head_branch"),
         "status": run.get("status"),
@@ -53,6 +55,7 @@ def validate_release_run(
     expected = {
         "id": run_id,
         "name": "ci-release",
+        "path": TRUSTED_WORKFLOW_PATH,
         "event": "push",
         "head_branch": "main",
         "status": "completed",

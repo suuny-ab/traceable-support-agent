@@ -16,6 +16,7 @@ def release_run(run_id: str = RUN_ID) -> dict[str, object]:
     return {
         "id": int(run_id),
         "name": "ci-release",
+        "path": ".github/workflows/ci-release.yml",
         "event": "push",
         "head_branch": "main",
         "status": "completed",
@@ -93,6 +94,7 @@ class ReleaseRunTest(unittest.TestCase):
     def test_untrusted_run_identity_and_ambiguous_artifacts_are_rejected(self) -> None:
         mutations = {
             "name": "other",
+            "path": ".github/workflows/not-ci-release.yml",
             "event": "pull_request",
             "head_branch": "feature",
             "status": "in_progress",
