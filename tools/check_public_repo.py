@@ -352,6 +352,107 @@ def _folded_yaml_scalar(value: str | None, key: str, indent: int) -> str | None:
     return " ".join(line.strip() for line in lines[1:] if line.strip())
 
 
+def _container_smoke_workflow_errors(workflow: str) -> list[str]:
+    jobs = _yaml_block(workflow, "jobs", 0)
+    containers = _yaml_block(jobs or "", "containers", 2)
+    job_metadata_lines = tuple(
+        line.rstrip()
+        for line in (containers or "").splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and len(line) - len(line.lstrip(" ")) <= 4
+    )
+    if job_metadata_lines != (
+        "  containers:",
+        "    runs-on: ubuntu-24.04",
+        "    timeout-minutes: 30",
+        "    steps:",
+    ):
+        return ["ci_container_job_metadata_invalid"]
+    steps = _yaml_block(containers or "", "steps", 4)
+    step_blocks = _yaml_list_item_blocks(steps, 6)
+    smoke_step = next(
+        (
+            block
+            for block in step_blocks
+            if block.splitlines()[0].strip()
+            == "- name: Smoke replay images without model or credential"
+        ),
+        None,
+    )
+    run = _yaml_block(smoke_step or "", "run", 8)
+    if run is None:
+        return ["ci_container_smoke_step_missing"]
+    metadata_lines = tuple(
+        line.rstrip()
+        for line in (smoke_step or "").splitlines()
+        if line.strip()
+        and not line.lstrip().startswith("#")
+        and len(line) - len(line.lstrip(" ")) <= 8
+    )
+    if metadata_lines != (
+        "      - name: Smoke replay images without model or credential",
+        "        run: |",
+    ):
+        return ["ci_container_smoke_metadata_invalid"]
+    script_lines = tuple(
+        line.strip()
+        for line in run.splitlines()[1:]
+        if line.strip() and not line.lstrip().startswith("#")
+    )
+    smoke_contract = (
+        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-web:test)" = "node"',
+        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-api-replay:test)" = "10001:10001"',
+        "docker run --rm --entrypoint python --network none traceable-api-replay:test -S -c \\",
+        '"from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"',
+        "docker run -d --name traceable-api-replay-ci --read-only \\",
+        "--tmpfs /tmp:rw,noexec,nosuid,size=64m \\",
+        "--tmpfs /var/lib/traceable:rw,noexec,nosuid,uid=10001,gid=10001,size=64m \\",
+        "--cap-drop ALL --security-opt no-new-privileges \\",
+        "-e TRACEABLE_PUBLIC_ORIGIN=http://127.0.0.1:3000 \\",
+        "-e TRACEABLE_PUBLIC_LIVE_ENABLED=false -p 127.0.0.1:8000:8000 \\",
+        "traceable-api-replay:test",
+        "docker run -d --name traceable-web-ci --read-only \\",
+        "--tmpfs /tmp:rw,noexec,nosuid,size=64m \\",
+        "--cap-drop ALL --security-opt no-new-privileges \\",
+        "-p 127.0.0.1:3000:3000 traceable-web:test",
+        "trap 'docker rm -f traceable-web-ci traceable-api-replay-ci >/dev/null 2>&1 || true' EXIT",
+        "api_ready=false",
+        "for attempt in $(seq 1 15); do",
+        'if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then',
+        "api_ready=true",
+        "break",
+        "fi",
+        "sleep 1",
+        "done",
+        'if [[ "$api_ready" != true ]]; then',
+        'echo "api_container_not_ready" >&2',
+        "docker logs traceable-api-replay-ci >&2 || true",
+        "exit 1",
+        "fi",
+        'python -c \'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"\'',
+        "web_ready=false",
+        "for attempt in $(seq 1 15); do",
+        "if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/ >/dev/null; then",
+        "web_ready=true",
+        "break",
+        "fi",
+        "sleep 1",
+        "done",
+        'if [[ "$web_ready" != true ]]; then',
+        'echo "web_container_not_ready" >&2',
+        "docker logs traceable-web-ci >&2 || true",
+        "exit 1",
+        "fi",
+        "for route in / /design /app /privacy; do",
+        'curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null',
+        "done",
+    )
+    if script_lines != smoke_contract:
+        return ["ci_container_readiness_contract_invalid"]
+    return []
+
+
 def _deployment_workflow_errors(workflow: str) -> list[str]:
     errors: list[str] = []
     on_block = _yaml_block(workflow, "on", 0)
@@ -363,6 +464,21 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     deploy_env = _yaml_block(deploy or "", "env", 4)
     steps = _yaml_block(deploy or "", "steps", 4)
     step_blocks = _yaml_list_item_blocks(steps, 6)
+    expected_step_names = (
+        "- name: Check out the trusted deployment controller",
+        "- name: Set up Python",
+        "- name: Stage trusted deployment controller",
+        "- name: Download manifest from the selected green run",
+        "- name: Bind manifest to the selected green run",
+        "- name: Check out the manifest commit",
+        "- name: Verify manifest and main ancestry",
+        "- name: Build public deployment package",
+        "- name: Verify trusted deployment controller integrity",
+        "- name: Upload and activate with strict host verification",
+    )
+    actual_step_names = tuple(
+        block.splitlines()[0].strip() for block in step_blocks
+    )
 
     if not _has_exact_yaml_line(
         workflow,
@@ -424,6 +540,13 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     for line, error in env_contract:
         if not _has_exact_yaml_line(deploy_env, 6, line):
             errors.append(error)
+    deploy_env_entries = tuple(
+        line.strip()
+        for line in (deploy_env or "").splitlines()[1:]
+        if line.strip() and not line.strip().startswith("#")
+    )
+    if deploy_env_entries != tuple(line for line, _ in env_contract):
+        errors.append("production_deploy_environment_invalid")
     if not _has_exact_yaml_line(deploy, 10, "run-id: ${{ env.PUBLISH_RUN_ID }}"):
         errors.append("production_deploy_artifact_identity_missing")
     for line, error in (
@@ -445,8 +568,9 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
 
     step_names = {
         "trusted": "- name: Check out the trusted deployment controller",
-        "stage": "- name: Stage trusted deployment input validator",
+        "stage": "- name: Stage trusted deployment controller",
         "manifest": "- name: Check out the manifest commit",
+        "integrity": "- name: Verify trusted deployment controller integrity",
         "upload": "- name: Upload and activate with strict host verification",
     }
     named_steps: dict[str, tuple[int, str]] = {}
@@ -459,18 +583,57 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         if len(matches) == 1:
             named_steps[key] = matches[0]
 
-    staged_validator = (
-        'run: install -m 600 tools/validate_deploy_port.py '
-        '"$RUNNER_TEMP/traceable-validate-deploy-port.py"'
+    staged_controller_lines = (
+        'controller_dir="$RUNNER_TEMP/traceable-deploy-controller"',
+        'install -d -m 700 "$controller_dir"',
+        'install -m 600 tools/validate_deploy_port.py "$controller_dir/validate_deploy_port.py"',
+        (
+            'install -m 600 tools/deploy_ssh_transport.py '
+            '"$controller_dir/deploy_ssh_transport.py"'
+        ),
     )
     trusted_block = named_steps.get("trusted", (-1, ""))[1]
     trusted_with = _yaml_block(trusted_block, "with", 8)
+    stage_block = named_steps.get("stage", (-1, ""))[1]
+    stage_run = _yaml_block(stage_block, "run", 8)
+    stage_commands = tuple(
+        line.strip()
+        for line in (stage_run or "").splitlines()[1:]
+        if line.strip() and not line.strip().startswith("#")
+    )
+    expected_stage_commands = ("set -Eeuo pipefail",) + staged_controller_lines
+    stage_block_lines = tuple(
+        line.rstrip()
+        for line in (stage_block or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    )
+    expected_stage_block_lines = (
+        "      - name: Stage trusted deployment controller",
+        "        run: |",
+    ) + tuple("          " + line for line in expected_stage_commands)
     trusted_order = tuple(
-        named_steps[key][0] for key in ("trusted", "stage", "manifest", "upload") if key in named_steps
+        named_steps[key][0]
+        for key in ("trusted", "stage", "manifest", "integrity", "upload")
+        if key in named_steps
+    )
+    shell_override_pattern = re.compile(r"""^(?:["']?shell["']?)\s*:""")
+    defaults_override_pattern = re.compile(r"""\bdefaults["']?\s*:""")
+    shell_override = any(
+        shell_override_pattern.match(line.strip()) is not None
+        for line in (workflow or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    )
+    defaults_override = any(
+        defaults_override_pattern.search(line.strip()) is not None
+        for line in (workflow or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
     )
     if (
         len(named_steps) != len(step_names)
+        or actual_step_names != expected_step_names
         or trusted_order != tuple(sorted(trusted_order))
+        or shell_override
+        or defaults_override
         or not _has_exact_yaml_line(
             trusted_block,
             8,
@@ -479,43 +642,165 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         or not _has_exact_yaml_line(trusted_with, 10, "ref: main")
         or not _has_exact_yaml_line(trusted_with, 10, "persist-credentials: false")
         or any(line.startswith(" " * 10 + "repository:") for line in (trusted_with or "").splitlines())
-        or not _has_exact_yaml_line(named_steps.get("stage", (-1, ""))[1], 8, staged_validator)
-        or _count_exact_yaml_lines(deploy, 8, staged_validator) != 1
+        or not _has_exact_yaml_line(stage_block, 8, "run: |")
+        or any(
+            not _has_exact_yaml_line(stage_block, 10, line)
+            or _count_exact_yaml_lines(stage_block, 10, line) != 1
+            for line in staged_controller_lines
+        )
+        or stage_commands != expected_stage_commands
+        or stage_block_lines != expected_stage_block_lines
     ):
-        errors.append("production_deploy_port_validator_not_trusted")
+        errors.append("production_deploy_controller_not_trusted")
 
-    validation_line = (
-        'port="$(python "$RUNNER_TEMP/traceable-validate-deploy-port.py" '
-        '"${DEPLOY_PORT:-22}")" || exit 64'
+    validator_sha256 = "6a1af83611a5164e53a8697fe654725a867fe8bc8a8e1b81af01d34cc2b70e52"
+    transport_sha256 = "04672e995d5283ffc10fa3d069cf1510f7180e74f6296bfb21584e7586bd0203"
+    integrity_lines = (
+        (10, 'controller_dir="$RUNNER_TEMP/traceable-deploy-controller"'),
+        (10, "printf '%s  %s\\n' \\"),
+        (
+            12,
+            f"'{validator_sha256}' "
+            '"$controller_dir/validate_deploy_port.py" \\',
+        ),
+        (
+            12,
+            f"'{transport_sha256}' "
+            '"$controller_dir/deploy_ssh_transport.py" \\',
+        ),
+        (12, "| /usr/bin/sha256sum --check --strict"),
+    )
+    integrity_block = named_steps.get("integrity", (-1, ""))[1]
+    integrity_run = _yaml_block(integrity_block, "run", 8)
+    integrity_commands = tuple(
+        line.strip()
+        for line in (integrity_run or "").splitlines()[1:]
+        if line.strip() and not line.strip().startswith("#")
+    )
+    integrity_block_lines = tuple(
+        line.rstrip()
+        for line in (integrity_block or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    )
+    expected_integrity_block_lines = (
+        "      - name: Verify trusted deployment controller integrity",
+        "        run: |",
+        "          set -Eeuo pipefail",
+    ) + tuple(" " * indent + line for indent, line in integrity_lines)
+    if (
+        integrity_commands
+        != ("set -Eeuo pipefail",) + tuple(line for _, line in integrity_lines)
+        or integrity_block_lines != expected_integrity_block_lines
+    ):
+        errors.append("production_deploy_controller_integrity_missing")
+
+    transport_lines = (
+        (
+            10,
+            '/usr/bin/python3 -E "$RUNNER_TEMP/traceable-deploy-controller/'
+            'deploy_ssh_transport.py" \\',
+        ),
+        (12, "--staging release-staging \\"),
+        (
+            12,
+            '--remote-stage "/tmp/traceable-support-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \\',
+        ),
+        (12, "--release-root /opt/traceable-support"),
     )
     upload_block = named_steps.get("upload", (-1, ""))[1]
-    upload_lines = upload_block.splitlines()
-    validation_indices = [
-        index
-        for index, line in enumerate(upload_lines)
-        if line.rstrip() == " " * 10 + validation_line
-    ]
-    deploy_lines = (deploy or "").splitlines()
-    deploy_validation_indices = [
-        index
-        for index, line in enumerate(deploy_lines)
-        if line.rstrip() == " " * 10 + validation_line
-    ]
+    upload_env = _yaml_block(upload_block, "env", 8)
+    upload_run = _yaml_block(upload_block, "run", 8)
+    secret_contract = (
+        "DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}",
+        "DEPLOY_USER: ${{ secrets.DEPLOY_USER }}",
+        "DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}",
+        "DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}",
+        "DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}",
+    )
+    upload_environment_contract = secret_contract + (
+        "BASH_ENV: /dev/null",
+        'LD_LIBRARY_PATH: ""',
+        'LD_PRELOAD: ""',
+    )
+    deploy_secret_expression = re.compile(
+        r"\$\{\{\s*secrets\.DEPLOY_"
+        r"(?:HOST|USER|PORT|SSH_KEY|KNOWN_HOSTS)\s*\}\}"
+    )
+    invalid_secret_mapping = any(
+        deploy_secret_expression.search(line.strip()) is not None
+        and line.strip() not in secret_contract
+        for line in (workflow or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ) or any(
+        sum(candidate.strip() == expected for candidate in (workflow or "").splitlines()) != 1
+        for expected in secret_contract
+    )
+    upload_env_entries = tuple(
+        line.strip()
+        for line in (upload_env or "").splitlines()[1:]
+        if line.strip() and not line.strip().startswith("#")
+    )
+    direct_secret_use = re.compile(
+        r"\$(?:\{)?DEPLOY_(?:HOST|USER|PORT|SSH_KEY|KNOWN_HOSTS)(?:\})?"
+    )
     transport_command = re.compile(r"(?<![A-Za-z0-9_])(?:ssh|scp)(?![A-Za-z0-9_])")
-    transport_indices = []
-    for index, line in enumerate(deploy_lines):
+    direct_transport = False
+    direct_secret_reference = False
+    for line in (deploy or "").splitlines():
         stripped = line.strip()
         if stripped and not stripped.startswith("#") and transport_command.search(stripped):
-            transport_indices.append(index)
+            direct_transport = True
+        if (
+            stripped
+            and not stripped.startswith("#")
+            and direct_secret_use.search(stripped)
+            and stripped not in secret_contract
+        ):
+            direct_secret_reference = True
     unsafe_guard = '[[ "$port" =~ ^[0-9]{1,5}$ ]] && test "$port"'
+    upload_commands = tuple(
+        line.strip()
+        for line in (upload_run or "").splitlines()[1:]
+        if line.strip() and not line.strip().startswith("#")
+    )
+    expected_upload_commands = ("set -Eeuo pipefail",) + tuple(
+        line for _, line in transport_lines
+    )
+    upload_block_lines = tuple(
+        line.rstrip()
+        for line in (upload_block or "").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    )
+    expected_upload_block_lines = (
+        "      - name: Upload and activate with strict host verification",
+        "        env:",
+    ) + tuple(
+        "          " + line for line in upload_environment_contract
+    ) + (
+        "        run: |",
+        "          set -Eeuo pipefail",
+    ) + tuple(
+        " " * indent + line for indent, line in transport_lines
+    )
     if (
-        len(validation_indices) != 1
-        or len(deploy_validation_indices) != 1
-        or not transport_indices
-        or deploy_validation_indices[0] >= min(transport_indices)
+        any(
+            not _has_exact_yaml_line(upload_env, 10, line)
+            for line in upload_environment_contract
+        )
+        or upload_env_entries != upload_environment_contract
+        or invalid_secret_mapping
+        or upload_commands != expected_upload_commands
+        or upload_block_lines != expected_upload_block_lines
+        or any(
+            not _has_exact_yaml_line(upload_block, indent, line)
+            or _count_exact_yaml_lines(deploy, indent, line) != 1
+            for indent, line in transport_lines
+        )
+        or direct_transport
+        or direct_secret_reference
         or unsafe_guard in (deploy or "")
     ):
-        errors.append("production_deploy_port_validation_invalid")
+        errors.append("production_deploy_transport_preflight_invalid")
 
     if not _has_exact_yaml_line(concurrency, 2, "group: traceable-support-production"):
         errors.append("production_deploy_concurrency_missing")
@@ -684,6 +969,8 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
         if "deploy/switch_release_state.py" not in deploy_workflow:
             errors.append("release_state_switcher_not_packaged")
         errors.extend(_deployment_workflow_errors(deploy_workflow))
+        ci_workflow = _read(mapped, ".github/workflows/ci-release.yml")
+        errors.extend(_container_smoke_workflow_errors(ci_workflow))
     except (UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         errors.append(str(exc))
     try:

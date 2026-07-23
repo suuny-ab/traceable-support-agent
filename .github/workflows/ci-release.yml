@@ -142,12 +142,36 @@ jobs:
             --cap-drop ALL --security-opt no-new-privileges \
             -p 127.0.0.1:3000:3000 traceable-web:test
           trap 'docker rm -f traceable-web-ci traceable-api-replay-ci >/dev/null 2>&1 || true' EXIT
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then break; fi
+          api_ready=false
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then
+              api_ready=true
+              break
+            fi
             sleep 1
           done
+          if [[ "$api_ready" != true ]]; then
+            echo "api_container_not_ready" >&2
+            docker logs traceable-api-replay-ci >&2 || true
+            exit 1
+          fi
           python -c 'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"'
-          for route in / /design /app /privacy; do curl --fail --silent "http://127.0.0.1:3000$route" >/dev/null; done
+          web_ready=false
+          for attempt in $(seq 1 15); do
+            if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/ >/dev/null; then
+              web_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$web_ready" != true ]]; then
+            echo "web_container_not_ready" >&2
+            docker logs traceable-web-ci >&2 || true
+            exit 1
+          fi
+          for route in / /design /app /privacy; do
+            curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null
+          done
       - name: Build live target but verify only offline retrieval
         run: |
           docker build --target live --build-arg "VCS_REF=$GITHUB_SHA" -t traceable-api-live-offline:test -f api/Dockerfile .
