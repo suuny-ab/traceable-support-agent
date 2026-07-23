@@ -42,6 +42,19 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
 
 `main` 的 `ci-release` 全部成功后，GitHub 自动把该次运行的不可变发布清单送入生产环境并直接部署；PR、失败运行、非 `main` push 和其他仓库来源均不得进入该队列。自动路径把清单精确绑定到触发运行的 ID、Git SHA 和运行尝试号；手动恢复路径至少把清单绑定到用户选择的运行 ID，再验证清单自洽且提交属于 `main`。`production` environment 只接受受保护分支，不再要求逐次人工 reviewer；这是用户明确授予的常设 R2 自动部署授权。手动 `workflow_dispatch` 入口只作为有界恢复通道保留，并与自动路径共享清单、健康和回滚门。
 
+每次 PR 和 `main` 运行都会先生成不可变 `release-decision`，绑定 schema、Git SHA、GitHub
+run ID / attempt、影响分类、是否部署和规范化变化路径哈希。只有明确列入白名单的仓库治理
+路径可以分类为 `governance_only`；未知路径、工作流、工具、Web、API、部署资产和公共事实
+变化均按 `runtime` 处理。四个 required check 始终存在；未受影响任务返回明确成功。
+
+生产工作流先在没有 `production` environment 的 preflight job 中验证 decision。若
+`deploy_required=false`，后续 deploy job 被跳过，因此不读取 production secrets、不生成
+镜像、不进入 environment、不连接服务器。若为 `true`，继续执行既有发布清单、SSH、健康、
+回滚和正式回执门。手动恢复只兼容固定白名单中的、引入 decision 之前且已经验证成功的
+`ci-release` main push；当前唯一兼容 run ID 为 `29999870811`。预检在进入 production
+environment 前核验同仓来源、工作流、push / main / success 身份、唯一未过期 manifest
+和完整 SHA / attempt 绑定。其他缺少 decision 的 run 一律失败关闭，自动入口也不例外。
+
 受保护 `main` 会在检出待发布提交前，把统一 SSH 控制器和端口校验器暂存到 runner 私有临时目录，并在 secret 步骤之前按固定 SHA-256 重新验证两份文件。部署 step 顺序、默认 shell、job 环境和 secret step 环境都由公开扫描器精确约束，不能插入额外 step、覆盖 shell 或附加环境变量。控制器在任何网络连接前一次性读取 `DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PORT`、`DEPLOY_SSH_KEY` 和 `DEPLOY_KNOWN_HOSTS`：每项只允许移除一个开头的 UTF-8 BOM，多行内容统一为 LF；主机、受限用户和端口执行精确格式校验，私钥通过 `ssh-keygen -y` 验证为无口令可用密钥，`known_hosts` 同时验证文件语法和目标主机条目。标准端口只接受普通主机条目，非标准端口只接受 `[host]:port`；明文通配模式失败关闭，经过 `ssh-keygen -F` 匹配的哈希主机条目可以使用。任一失败只输出 `deploy_*_invalid` 稳定错误码，不回显原始 secret，也不会运行 SSH / SCP。
 
 服务器端失败只允许通过白名单格式返回稳定阶段码；任意路径、命令原文、环境值和未分类 stdout/stderr 均不进入 Actions 日志。没有安全阶段码时只报告 `deploy_ssh_transport_failed:activate`。该边界用于区分首次引导、镜像、权限、候选健康和回滚失败，不把增强可观察性变成服务器信息泄漏。

@@ -18,6 +18,7 @@ from tools.check_public_repo import (
     _container_smoke_workflow_errors,
     _content_errors,
     _deployment_workflow_errors,
+    _release_decision_workflow_errors,
     _path_errors,
 )
 from tools.deploy_ssh_transport import (
@@ -276,8 +277,8 @@ jobs:
     environment: production
     env:
       PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}
-      PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
-      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}
+      PUBLISH_HEAD_SHA: ${{ needs.preflight.outputs.git_sha }}
+      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}
     steps:
       - name: Check out the trusted deployment controller
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -366,10 +367,10 @@ jobs:
             "PUBLISH_RUN_ID: ${{ github.event.workflow_run.id || inputs.publish_run_id }}": (
                 "production_deploy_run_identity_missing"
             ),
-            "PUBLISH_HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}": (
+            "PUBLISH_HEAD_SHA: ${{ needs.preflight.outputs.git_sha }}": (
                 "production_deploy_head_identity_missing"
             ),
-            "PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}": (
+            "PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}": (
                 "production_deploy_attempt_identity_missing"
             ),
             "run-id: ${{ env.PUBLISH_RUN_ID }}": "production_deploy_artifact_identity_missing",
@@ -591,8 +592,8 @@ jobs:
             _deployment_workflow_errors(flow_style_defaults),
         )
         extra_job_environment = workflow.replace(
-            "      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}\n",
-            "      PUBLISH_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || '' }}\n"
+            "      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}\n",
+            "      PUBLISH_RUN_ATTEMPT: ${{ needs.preflight.outputs.run_attempt }}\n"
             "      BASH_ENV: /tmp/custom-env\n",
         )
         self.assertIn(
@@ -632,6 +633,61 @@ jobs:
             digest = hashlib.sha256((root / relative).read_bytes()).hexdigest()
             with self.subTest(relative=relative):
                 self.assertIn(digest, workflow)
+
+    def test_release_decision_preflight_is_fail_closed(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        ci_workflow = (root / ".github/workflows/ci-release.yml").read_text(
+            encoding="utf-8"
+        )
+        deploy_workflow = (
+            root / ".github/workflows/deploy-production.yml"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(
+            _release_decision_workflow_errors(ci_workflow, deploy_workflow),
+            [],
+        )
+
+        mutations = (
+            (
+                ci_workflow.replace(
+                    "needs: [governance, web, api, containers]",
+                    "needs: [web, api, containers]",
+                    1,
+                ),
+                deploy_workflow,
+            ),
+            (
+                ci_workflow,
+                deploy_workflow.replace(
+                    "needs.preflight.outputs.deploy_required == 'true'",
+                    "true",
+                    1,
+                ),
+            ),
+            (
+                ci_workflow,
+                deploy_workflow.replace(
+                    "selection_args+=(--manual)",
+                    "selection_args+=(--manual-bypass)",
+                ),
+            ),
+            (
+                ci_workflow,
+                deploy_workflow.replace(
+                    "  preflight:",
+                    "  preflight:\n    environment: production",
+                    1,
+                ),
+            ),
+        )
+        for ci_mutation, deploy_mutation in mutations:
+            with self.subTest():
+                self.assertTrue(
+                    _release_decision_workflow_errors(
+                        ci_mutation,
+                        deploy_mutation,
+                    )
+                )
 
 
 class DeployPortValidationTest(unittest.TestCase):

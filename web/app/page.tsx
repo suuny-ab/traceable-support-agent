@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { SiteFooter, SiteHeader } from "./components/SiteChrome";
 
+const outcomes = [
+  ["每个事实可回读", "客户可见结论绑定批准来源，主管能回到原始证据。"],
+  ["不确定就转人工", "证据不足、型号冲突或运行异常不会被包装成成功。"],
+  ["决定权留给团队", "系统给出候选与检查结果，但不发送、不退款、不结单。"],
+];
+
 const stages = [
-  ["01", "Hybrid Retrieval", "型号约束下融合稀疏与语义候选。"],
-  ["02", "Obligation Planning", "生成前先枚举必须覆盖的业务义务。"],
-  ["03", "Generation", "模型只在批准来源范围内组织客户正文。"],
-  ["04", "Mechanical Gates", "来源、结构或完整性失败立即转人工。"],
-  ["05", "Human Decision", "客服主管批准、编辑或拒绝，不自动执行。"],
+  ["01", "检索", "在型号边界内融合稀疏与语义候选。"],
+  ["02", "规划", "生成前枚举本次必须覆盖的业务义务。"],
+  ["03", "生成", "只用批准来源组织客户可见候选。"],
+  ["04", "检查", "来源、结构或完整性失败立即停止。"],
+  ["05", "决定", "主管批准、编辑或拒绝，不自动执行。"],
 ];
 
 export default function Home() {
@@ -16,67 +22,68 @@ export default function Home() {
       <main>
         <section className="hero shell">
           <div className="hero-copy">
-            <p className="eyebrow"><span>01</span> Evidence-first LLM Workflow</p>
-            <h1>
-              让每个 LLM 结论都有<span className="outline-word">证据</span>，
-              让每次失败<span className="lime-word">诚实停止</span>
-            </h1>
+            <p className="eyebrow"><span>公开 Beta</span> 可追溯客服决策支持</p>
+            <h1>让客服 AI 的结论<br /><em>有证据，能退出。</em></h1>
             <p className="hero-lede">
-              一个面向客服决策支持的可追溯 AI 工作流。它不追求“总能回答”，
-              而是把检索证据、业务义务和机械质量门变成每次生成都能检查的合同。
+              Traceable Support Agent 把检索证据、业务义务、质量门和人工决定放进一条可检查
+              的工作流。团队得到的是可信候选，不是一个无法解释的答案框。
             </p>
             <div className="hero-actions">
-              <Link className="button button-primary" href="/app">进入在线体验 <span>↗</span></Link>
-              <Link className="button button-secondary" href="/design">查看设计说明 <span>→</span></Link>
+              <Link className="button button-primary" href="/app">体验工作台 <span>→</span></Link>
+              <Link className="button button-secondary" href="/design">查看工程证据</Link>
             </div>
-            <div className="role-notes">
-              <span>AI APPLICATION ENGINEERING</span>
-              <span>RAG · EVALS · GUARDRAILS</span>
-            </div>
+            <ul className="trust-line" aria-label="核心边界">
+              <li>只用合成数据</li>
+              <li>失败关闭</li>
+              <li>人工最终决定</li>
+            </ul>
           </div>
 
-          <aside className="trace-console" aria-label="证据链运行预览">
-            <div className="console-header">
-              <div>
-                <p>VERIFIED TRACE / QA PIPELINE</p>
-                <h2>CZ-R1 怎么开始局部清扫？</h2>
-              </div>
-              <code>RUN DEMO-01<br />REPLAY READY</code>
+          <aside className="decision-preview" aria-label="一次可追溯决定预览">
+            <div className="preview-topline">
+              <span className="status-pill status-success">证据检查通过</span>
+              <code>RUN · VERIFIED REPLAY</code>
             </div>
-            <div className="console-body">
-              <div className="source-stack">
-                <div className="source-chip"><strong>KB-CZR1-014</strong><span>清扫模式</span></div>
-                <div className="source-chip"><strong>SCOPE</strong><span>型号 CZ-R1</span></div>
-                <div className="source-chip"><strong>POLICY</strong><span>人工最终决定</span></div>
-              </div>
-              <div className="trace-nodes">
-                <div className="trace-node"><b>01</b><div><strong>Obligation Planning</strong><span>按键动作 · 清扫范围 · 停止条件</span></div></div>
-                <div className="trace-node"><b>02</b><div><strong>Evidence-bound Generation</strong><span>3 obligations / 1 approved source</span></div></div>
-                <div className="trace-node trace-gate"><b>03</b><div><strong>Mechanical Gates</strong><span className="pass-tag">EVIDENCE PASS</span><span className="pass-tag">SCOPE PASS</span></div></div>
-              </div>
+            <div className="customer-question">
+              <span>客户问题</span>
+              <h2>CZ-R1 怎么开始局部清扫？</h2>
             </div>
-            <div className="console-footer"><span>NO EXTERNAL ACTION EXECUTED</span><strong>READY FOR HUMAN DECISION →</strong></div>
+            <div className="preview-answer">
+              <span>建议回复</span>
+              <p>将设备放到需要清扫的区域，短按局部清扫键；设备会在当前区域执行局部清扫。</p>
+            </div>
+            <div className="preview-evidence">
+              <div><span>批准来源</span><strong>KB-CZR1-014 · 清扫模式</strong></div>
+              <div><span>义务覆盖</span><strong>3 / 3</strong></div>
+              <div><span>外部动作</span><strong>0</strong></div>
+            </div>
+            <div className="preview-decision">
+              <span>等待主管决定</span>
+              <div><b>批准</b><b>编辑</b><b>拒绝</b></div>
+            </div>
           </aside>
         </section>
 
-        <section className="metrics shell" aria-label="当前产品事实">
-          <div><strong>QA + 工单</strong><span>双主链，共用证据合同</span></div>
-          <div><strong>≤ 2</strong><span>次 Provider 调用上限</span></div>
-          <div><strong>启用后 ≤ 30 DAYS</strong><span>原始内容留存上限</span></div>
-          <div><strong>0 ACTION</strong><span>自动外部业务动作</span></div>
+        <section className="outcome-strip">
+          <div className="shell outcome-grid">
+            {outcomes.map(([title, copy], index) => (
+              <article key={title}>
+                <span>0{index + 1}</span>
+                <div><h2>{title}</h2><p>{copy}</p></div>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="system-section shell">
           <div className="section-heading">
-            <p>02 / SYSTEM CONTRACT</p>
-            <h2>一条可以回读、<br />也允许失败的技术链</h2>
+            <p>工作方式</p>
+            <div><h2>从输入到人工决定，<br />每一步都有责任边界。</h2><p>模型负责组织候选；宿主负责证据、预算、状态和停止。</p></div>
           </div>
           <div className="pipeline">
             {stages.map(([index, title, copy]) => (
               <article className="pipeline-stage" key={index}>
-                <span>STEP {index}</span>
-                <h3>{title}</h3>
-                <p>{copy}</p>
+                <span>{index}</span><h3>{title}</h3><p>{copy}</p>
               </article>
             ))}
           </div>
@@ -84,21 +91,23 @@ export default function Home() {
 
         <section className="proof-section shell">
           <div className="proof-copy">
-            <p className="section-kicker">03 / ENGINEERING EVIDENCE</p>
-            <h2>把失败过程也变成作品的一部分</h2>
-            <p>项目没有隐藏失败候选。它用公开开发切片、独立未见评测和人工复核区分“结构正确”“事实完整”和“业务可用”。</p>
+            <p className="section-kicker">当前公开能力</p>
+            <h2>把边界讲清楚，<br />比把 Demo 说大更重要。</h2>
+            <p>当前公网体验固定为已验证回放，Provider 关闭。真实模型主链已在本地固定场景验证，
+              但不据此宣称生产级高可用、SLA 或 product/0.1.0 已发布。</p>
+            <Link className="text-link" href="/privacy">查看完整运行边界 →</Link>
           </div>
           <div className="proof-grid">
-            <article><span>FORMAL B1</span><strong>27 / 36</strong><p>护栏未达到冻结发布门，候选正式失败。</p></article>
-            <article><span>TOP-10 V3</span><strong>11 / 15</strong><p>正文义务通过，机械结构6/6仍不能替代语义完整。</p></article>
-            <article><span>STAGE 11</span><strong>2 PATHS</strong><p>真实LLM已进入本地QA与工单主链。</p></article>
+            <article><span>产品路径</span><strong>QA + 工单</strong><p>两条主链共用证据合同、失败关闭和人工决定。</p></article>
+            <article><span>当前公网</span><strong>Replay only</strong><p>回放与实时路径明确区分，不伪造模型生成。</p></article>
+            <article><span>自动动作</span><strong>0</strong><p>批准只记录决定，不发送回复或改变业务系统。</p></article>
+            <article><span>公开 API</span><strong>4</strong><p>运行、轮询、人工决定和健康接口保持稳定。</p></article>
           </div>
         </section>
 
-        <section className="boundary-banner shell">
-          <div><span>PUBLIC DELIVERY STATUS</span><strong>公开部署候选 · 实时能力独立开关</strong></div>
-          <p>网站与API可独立保持在线。真实调用关闭、额度耗尽或状态未知时，预设回放继续可用；自由输入不会被伪装成模型生成。</p>
-          <Link href="/app">查看诚实降级如何工作 →</Link>
+        <section className="cta-panel shell">
+          <div><span>从真实交互开始</span><h2>亲自查看一次候选如何形成、停止和等待决定。</h2></div>
+          <Link className="button button-primary" href="/app">打开在线工作台 <span>→</span></Link>
         </section>
       </main>
       <SiteFooter />

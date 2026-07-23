@@ -1,0 +1,26 @@
+name: 产品结果
+description: 登记尚未启动的面向用户结果
+title: "product: "
+labels: ["product"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 用户结果
+      description: 用户会新增看到什么，或消除哪个关键未知？
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: 边界与非目标
+      description: 哪些产品、数据、费用、Provider 或外部动作不在范围内？
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完成门
+      description: 哪些可观察证据齐全后才允许关闭？
+    validations:
+      required: true
