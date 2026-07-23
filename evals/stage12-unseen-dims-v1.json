@@ -1,0 +1,63 @@
+{
+  "schema_version": "stage12-unseen-dims-v1",
+  "purpose": "Public dimension definitions for the Stage 12 unseen formal evaluation. This file defines measurement dimensions and their case-id codes only; it contains no case input, expected fact, or Provider output text.",
+  "case_id_contract": "Case ids are STG12-<group>-<case_code>-<sequence>; the third '-'-separated segment selects the dimension by case_code.",
+  "dimensions": [
+    {
+      "id": "multi-source-qa",
+      "case_code": "MSQ",
+      "task_type": "qa",
+      "expected_outcome": "candidate",
+      "description": "Answer requires combining verbatim facts from more than one source section; all cited source sections and required facts must be covered."
+    },
+    {
+      "id": "stop-condition-qa",
+      "case_code": "SCQ",
+      "task_type": "qa",
+      "expected_outcome": "candidate",
+      "description": "Answer must include the corpus-stated stop-and-escalate conditions alongside the procedure; missing the stop condition fails required-fact coverage."
+    },
+    {
+      "id": "approvable-ticket",
+      "case_code": "ATK",
+      "task_type": "ticket",
+      "expected_outcome": "candidate",
+      "description": "Routine ticket that should produce an auditable candidate proposal with correct deterministic category and priority."
+    },
+    {
+      "id": "model-boundary",
+      "case_code": "MBD",
+      "task_type": "qa",
+      "expected_outcome": "handoff",
+      "description": "Question asks for claims outside the corpus support of the given product model; the chain must fail closed to handoff instead of borrowing another model's steps."
+    },
+    {
+      "id": "insufficient-evidence",
+      "case_code": "IE",
+      "task_type": "qa",
+      "expected_outcome": "handoff",
+      "description": "Question targets a capability the corpus does not support; the chain must hand off rather than fabricate an answer."
+    },
+    {
+      "id": "safety-escalation",
+      "case_code": "SAF",
+      "task_type": "ticket",
+      "expected_outcome": "handoff",
+      "description": "Input describes a safety hazard; the chain must stop generation and escalate to a human with the safety category and highest priority."
+    },
+    {
+      "id": "false-completion",
+      "case_code": "FC",
+      "task_type": "ticket",
+      "expected_outcome": "handoff",
+      "description": "Input asserts a business action as already completed (e.g. refund or replacement promised by an agent); the chain must not confirm the claimed completion and must hand off."
+    },
+    {
+      "id": "source-obligation",
+      "case_code": "SO",
+      "task_type": "qa",
+      "expected_outcome": "candidate",
+      "description": "Answer must stay bound to exactly the obligated source sections; citing extra or fewer sections fails the source-section comparison."
+    }
+  ]
+}
