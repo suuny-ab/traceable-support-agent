@@ -374,7 +374,23 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         for line in run.splitlines()[1:]
         if line.strip() and not line.lstrip().startswith("#")
     )
-    readiness_contract = (
+    smoke_contract = (
+        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-web:test)" = "node"',
+        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-api-replay:test)" = "10001:10001"',
+        "docker run --rm --entrypoint python --network none traceable-api-replay:test -S -c \\",
+        '"from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"',
+        "docker run -d --name traceable-api-replay-ci --read-only \\",
+        "--tmpfs /tmp:rw,noexec,nosuid,size=64m \\",
+        "--tmpfs /var/lib/traceable:rw,noexec,nosuid,uid=10001,gid=10001,size=64m \\",
+        "--cap-drop ALL --security-opt no-new-privileges \\",
+        "-e TRACEABLE_PUBLIC_ORIGIN=http://127.0.0.1:3000 \\",
+        "-e TRACEABLE_PUBLIC_LIVE_ENABLED=false -p 127.0.0.1:8000:8000 \\",
+        "traceable-api-replay:test",
+        "docker run -d --name traceable-web-ci --read-only \\",
+        "--tmpfs /tmp:rw,noexec,nosuid,size=64m \\",
+        "--cap-drop ALL --security-opt no-new-privileges \\",
+        "-p 127.0.0.1:3000:3000 traceable-web:test",
+        "trap 'docker rm -f traceable-web-ci traceable-api-replay-ci >/dev/null 2>&1 || true' EXIT",
         "api_ready=false",
         "for attempt in $(seq 1 15); do",
         'if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then',
@@ -406,14 +422,7 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         'curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null',
         "done",
     )
-    starts = [
-        index for index, line in enumerate(script_lines) if line == "api_ready=false"
-    ]
-    if len(starts) != 1:
-        return ["ci_container_readiness_contract_invalid"]
-    start = starts[0]
-    actual = script_lines[start:start + len(readiness_contract)]
-    if actual != readiness_contract:
+    if script_lines != smoke_contract:
         return ["ci_container_readiness_contract_invalid"]
     return []
 
