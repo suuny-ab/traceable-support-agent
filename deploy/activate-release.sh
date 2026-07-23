@@ -28,6 +28,7 @@ test -n "$old_release" || release_fail "current_release_anchor_missing"
 
 restore_old() {
   release_compose "$release_dir" down --remove-orphans >/dev/null 2>&1 || true
+  release_wait_project_stopped
   if test -n "$old_release"; then
     release_compose "$old_release" up -d
     release_wait_local "$(release_public_origin "$old_release")"
@@ -39,6 +40,10 @@ if test -n "$old_release"; then
     restore_old
     release_fail "current_release_stop_failed"
   }
+  if ! release_wait_project_stopped; then
+    restore_old
+    release_fail "current_release_stop_not_settled"
+  fi
 fi
 if ! release_compose "$release_dir" up -d; then
   restore_old

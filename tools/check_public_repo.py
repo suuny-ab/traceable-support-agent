@@ -654,7 +654,7 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         errors.append("production_deploy_controller_not_trusted")
 
     validator_sha256 = "6a1af83611a5164e53a8697fe654725a867fe8bc8a8e1b81af01d34cc2b70e52"
-    transport_sha256 = "04672e995d5283ffc10fa3d069cf1510f7180e74f6296bfb21584e7586bd0203"
+    transport_sha256 = "322d19bc4c29e529da51b2d419a16da3532a4e9836bd851a077ffe373e884545"
     integrity_lines = (
         (10, 'controller_dir="$RUNNER_TEMP/traceable-deploy-controller"'),
         (10, "printf '%s  %s\\n' \\"),

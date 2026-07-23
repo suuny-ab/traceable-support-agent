@@ -22,11 +22,13 @@ from tools.check_public_repo import (
 from tools.deploy_ssh_transport import (
     DeployInputError,
     DeployInputs,
+    DeployTransportError,
     PreparedSsh,
     SCP_PATH,
     SSH_PATH,
     _subprocess_environment,
     _known_host_match_is_exact,
+    _run_transport,
     deploy_release,
     load_deploy_inputs,
     normalize_deploy_host,
@@ -248,7 +250,7 @@ jobs:
           controller_dir="$RUNNER_TEMP/traceable-deploy-controller"
           printf '%s  %s\\n' \\
             '6a1af83611a5164e53a8697fe654725a867fe8bc8a8e1b81af01d34cc2b70e52' "$controller_dir/validate_deploy_port.py" \\
-            '04672e995d5283ffc10fa3d069cf1510f7180e74f6296bfb21584e7586bd0203' "$controller_dir/deploy_ssh_transport.py" \\
+            '322d19bc4c29e529da51b2d419a16da3532a4e9836bd851a077ffe373e884545' "$controller_dir/deploy_ssh_transport.py" \\
             | /usr/bin/sha256sum --check --strict
       - name: Upload and activate with strict host verification
         env:
@@ -336,7 +338,7 @@ jobs:
                 '/usr/bin/python3 -E "$RUNNER_TEMP/traceable-deploy-controller/'
                 'deploy_ssh_transport.py" \\'
             ): "production_deploy_transport_preflight_invalid",
-            "04672e995d5283ffc10fa3d069cf1510f7180e74f6296bfb21584e7586bd0203": (
+            "322d19bc4c29e529da51b2d419a16da3532a4e9836bd851a077ffe373e884545": (
                 "production_deploy_controller_integrity_missing"
             ),
             "DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}": (
@@ -548,7 +550,6 @@ jobs:
             "production_deploy_transport_preflight_invalid",
             _deployment_workflow_errors(secret_in_build_step),
         )
-
     def test_trusted_controller_hashes_match_worktree_bytes(self) -> None:
         root = Path(__file__).resolve().parents[2]
         workflow = (root / ".github/workflows/deploy-production.yml").read_text(
@@ -814,6 +815,42 @@ class DeploySshTransportTest(unittest.TestCase):
                 [call.args[1] for call in run_transport.call_args_list],
                 ["prepare_remote", "upload", "activate"],
             )
+
+    def test_activate_failure_only_surfaces_stable_remote_detail(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=("ssh",),
+            returncode=70,
+            stdout=b"",
+            stderr=b"private path omitted\ndeploy_install_failed:previous_release_start_failed\n",
+        )
+        with mock.patch(
+            "tools.deploy_ssh_transport.subprocess.run",
+            return_value=completed,
+        ):
+            with self.assertRaisesRegex(
+                DeployTransportError,
+                (
+                    "deploy_ssh_transport_failed:activate:"
+                    "deploy_install_failed:previous_release_start_failed"
+                ),
+            ):
+                _run_transport(("ssh", "example"), "activate")
+
+        unsafe = subprocess.CompletedProcess(
+            args=("ssh",),
+            returncode=70,
+            stdout=b"",
+            stderr=b"deploy_install_failed:public_secret_value\nprivate/server/path\n",
+        )
+        with mock.patch(
+            "tools.deploy_ssh_transport.subprocess.run",
+            return_value=unsafe,
+        ):
+            with self.assertRaisesRegex(
+                DeployTransportError,
+                r"^deploy_ssh_transport_failed:activate$",
+            ):
+                _run_transport(("ssh", "example"), "activate")
 
     def test_invalid_secret_returns_stable_code_without_echo(self) -> None:
         secret_value = "unique invalid host value"

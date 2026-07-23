@@ -17,6 +17,7 @@ test "$current_release" != "$previous_release" || release_fail "rollback_target_
 
 restore_current() {
   release_compose "$previous_release" down --remove-orphans >/dev/null 2>&1 || true
+  release_wait_project_stopped
   release_compose "$current_release" up -d
   release_wait_local "$(release_public_origin "$current_release")"
 }
@@ -25,6 +26,10 @@ release_compose "$current_release" down --remove-orphans || {
   restore_current
   release_fail "current_release_stop_failed"
 }
+if ! release_wait_project_stopped; then
+  restore_current
+  release_fail "current_release_stop_not_settled"
+fi
 if ! release_compose "$previous_release" up -d; then
   restore_current
   release_fail "previous_release_start_failed"
