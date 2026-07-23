@@ -352,6 +352,73 @@ def _folded_yaml_scalar(value: str | None, key: str, indent: int) -> str | None:
     return " ".join(line.strip() for line in lines[1:] if line.strip())
 
 
+def _container_smoke_workflow_errors(workflow: str) -> list[str]:
+    errors: list[str] = []
+    jobs = _yaml_block(workflow, "jobs", 0)
+    containers = _yaml_block(jobs or "", "containers", 2)
+    steps = _yaml_block(containers or "", "steps", 4)
+    step_blocks = _yaml_list_item_blocks(steps, 6)
+    smoke_step = next(
+        (
+            block
+            for block in step_blocks
+            if block.splitlines()[0].strip()
+            == "- name: Smoke replay images without model or credential"
+        ),
+        None,
+    )
+    run = _yaml_block(smoke_step or "", "run", 8)
+    if run is None:
+        return ["ci_container_smoke_step_missing"]
+
+    api_contract = (
+        "api_ready=false",
+        "http://127.0.0.1:8000/api/v1/health",
+        "api_ready=true",
+        'if [[ "$api_ready" != true ]]; then',
+        'echo "api_container_not_ready" >&2',
+        "docker logs traceable-api-replay-ci >&2 || true",
+    )
+    api_timeout = re.search(
+        r'if \[\[ "\$api_ready" != true \]\]; then(?P<body>.*?)^\s*fi\s*$',
+        run,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if (
+        any(value not in run for value in api_contract)
+        or api_timeout is None
+        or "exit 1" not in api_timeout.group("body")
+    ):
+        errors.append("ci_container_api_readiness_missing")
+
+    web_contract = (
+        "web_ready=false",
+        "http://127.0.0.1:3000/",
+        "web_ready=true",
+        'if [[ "$web_ready" != true ]]; then',
+        'echo "web_container_not_ready" >&2',
+        "docker logs traceable-web-ci >&2 || true",
+    )
+    web_timeout = re.search(
+        r'if \[\[ "\$web_ready" != true \]\]; then(?P<body>.*?)^\s*fi\s*$',
+        run,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    route_check = "for route in / /design /app /privacy; do"
+    if (
+        any(value not in run for value in web_contract)
+        or web_timeout is None
+        or "exit 1" not in web_timeout.group("body")
+        or route_check not in run
+        or run.find(route_check) < run.find('if [[ "$web_ready" != true ]]; then')
+    ):
+        errors.append("ci_container_web_readiness_missing")
+
+    if run.count("for attempt in $(seq 1 30); do") != 2:
+        errors.append("ci_container_readiness_bound_invalid")
+    return errors
+
+
 def _deployment_workflow_errors(workflow: str) -> list[str]:
     errors: list[str] = []
     on_block = _yaml_block(workflow, "on", 0)
@@ -868,6 +935,8 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
         if "deploy/switch_release_state.py" not in deploy_workflow:
             errors.append("release_state_switcher_not_packaged")
         errors.extend(_deployment_workflow_errors(deploy_workflow))
+        ci_workflow = _read(mapped, ".github/workflows/ci-release.yml")
+        errors.extend(_container_smoke_workflow_errors(ci_workflow))
     except (UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         errors.append(str(exc))
     try:

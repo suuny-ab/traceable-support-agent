@@ -14,6 +14,7 @@ from unittest import mock
 
 from tools.check_public_repo import (
     Entry,
+    _container_smoke_workflow_errors,
     _content_errors,
     _deployment_workflow_errors,
     _path_errors,
@@ -61,6 +62,66 @@ class PublicScannerTest(unittest.TestCase):
     def test_unapproved_binary_and_symlink_are_rejected(self) -> None:
         self.assertIn("unapproved_binary_file", _content_errors(Entry("data/blob.bin", b"\x00\xff")))
         self.assertIn("symlink_or_submodule_not_allowed", _path_errors(Entry("x", b"target", "120000")))
+
+    def test_container_smoke_requires_bounded_api_and_web_readiness(self) -> None:
+        workflow = """
+jobs:
+  containers:
+    steps:
+      - name: Smoke replay images without model or credential
+        run: |
+          api_ready=false
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8000/api/v1/health >"$RUNNER_TEMP/health.json"; then
+              api_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$api_ready" != true ]]; then
+            echo "api_container_not_ready" >&2
+            docker logs traceable-api-replay-ci >&2 || true
+            exit 1
+          fi
+          web_ready=false
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/ >/dev/null; then
+              web_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$web_ready" != true ]]; then
+            echo "web_container_not_ready" >&2
+            docker logs traceable-web-ci >&2 || true
+            exit 1
+          fi
+          for route in / /design /app /privacy; do
+            curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null
+          done
+"""
+        self.assertEqual(_container_smoke_workflow_errors(workflow), [])
+
+        without_web_wait = workflow.replace("web_ready=true", "web_started=true")
+        self.assertIn(
+            "ci_container_web_readiness_missing",
+            _container_smoke_workflow_errors(without_web_wait),
+        )
+
+        without_api_timeout = workflow.replace(
+            'echo "api_container_not_ready" >&2',
+            'echo "api wait failed" >&2',
+        )
+        self.assertIn(
+            "ci_container_api_readiness_missing",
+            _container_smoke_workflow_errors(without_api_timeout),
+        )
+
+        unbounded = workflow.replace("for attempt in $(seq 1 30); do", "while true; do", 1)
+        self.assertIn(
+            "ci_container_readiness_bound_invalid",
+            _container_smoke_workflow_errors(unbounded),
+        )
 
     def test_production_deploy_requires_trusted_unified_ssh_preflight(self) -> None:
         workflow = """
