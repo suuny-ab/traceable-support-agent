@@ -37,6 +37,8 @@
 - 生产部署候选现支持在 `ci-release` 的 `main` 推送成功后自动进入 `production` environment 队列；来源仓库、事件类型、分支和结论均失败关闭，手动 run ID 入口只保留为恢复路径。自动入口把发布 run ID、head SHA 和 run attempt 与发布清单三元绑定，先使用受保护 `main` 上的控制器验证清单，再检出清单提交并验证其仍属于 `main`。
 - 自动排队代码通过 14 项工具测试、工作树公开扫描、YAML 解析、发布清单命令行往返和空白检查，其中 3 项 Windows 符号链接测试按预期跳过。两项第二轮独立复核均关闭了同仓来源和制品身份的原阻断，没有发现新的代码阻断。
 - GitHub API 在线回执确认 `production` environment 的 required reviewer 为 `suuny-ab`、`prevent_self_review=false`，部署分支只接受受保护分支；五个 production secret 名称完整，值未读取或修改。该候选仍未合并或触发部署，现网保持不变。
+- PR #2 squash merge 后，`main` 运行 `29986738719` 的治理、Web、API、容器和发布全部通过，生产运行 `29986846110` 按预期停在人工批准页。用户批准后，该运行在第一次 SSH 调用的本地端口解析阶段以 `Bad port` 失败；服务器未被连接、上传或切换，公网健康仍为 `status=ok`、`replay_only`。
+- 根因是 `DEPLOY_PORT` 格式错误，同时旧的 Bash `[[ regex ]] && test` 校验会因 `set -e` 对 AND 列表左侧失败的豁免而继续执行。production secret 已精确重设为 `22`；修复候选改用不回显原值的标准库校验器，在 SSH 前只接受并规范化 `1..65535` 的 ASCII 十进制端口。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
 公开远端、GitHub 来源构建、分支保护、GHCR 发布和本机 canonical 开发路径已经通过。生产部署、强制回滚演练和用户验收尚未完成，当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。
