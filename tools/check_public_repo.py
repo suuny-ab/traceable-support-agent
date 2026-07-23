@@ -321,6 +321,25 @@ def _has_exact_yaml_line(value: str | None, indent: int, line: str) -> bool:
     return any(candidate.rstrip() == expected for candidate in value.splitlines())
 
 
+def _count_exact_yaml_lines(value: str | None, indent: int, line: str) -> int:
+    if value is None:
+        return 0
+    expected = " " * indent + line
+    return sum(candidate.rstrip() == expected for candidate in value.splitlines())
+
+
+def _yaml_list_item_blocks(value: str | None, indent: int) -> list[str]:
+    if value is None:
+        return []
+    lines = value.splitlines()
+    prefix = " " * indent + "- "
+    starts = [index for index, line in enumerate(lines) if line.startswith(prefix)]
+    return [
+        "\n".join(lines[start:(starts[position + 1] if position + 1 < len(starts) else len(lines))])
+        for position, start in enumerate(starts)
+    ]
+
+
 def _folded_yaml_scalar(value: str | None, key: str, indent: int) -> str | None:
     if value is None:
         return None
@@ -342,6 +361,8 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     jobs = _yaml_block(workflow, "jobs", 0)
     deploy = _yaml_block(jobs or "", "deploy", 2)
     deploy_env = _yaml_block(deploy or "", "env", 4)
+    steps = _yaml_block(deploy or "", "steps", 4)
+    step_blocks = _yaml_list_item_blocks(steps, 6)
 
     if not _has_exact_yaml_line(
         workflow,
@@ -421,6 +442,80 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     ):
         if not _has_exact_yaml_line(deploy, 12, line):
             errors.append(error)
+
+    step_names = {
+        "trusted": "- name: Check out the trusted deployment controller",
+        "stage": "- name: Stage trusted deployment input validator",
+        "manifest": "- name: Check out the manifest commit",
+        "upload": "- name: Upload and activate with strict host verification",
+    }
+    named_steps: dict[str, tuple[int, str]] = {}
+    for key, name in step_names.items():
+        matches = [
+            (index, block)
+            for index, block in enumerate(step_blocks)
+            if block.splitlines()[0].strip() == name
+        ]
+        if len(matches) == 1:
+            named_steps[key] = matches[0]
+
+    staged_validator = (
+        'run: install -m 600 tools/validate_deploy_port.py '
+        '"$RUNNER_TEMP/traceable-validate-deploy-port.py"'
+    )
+    trusted_block = named_steps.get("trusted", (-1, ""))[1]
+    trusted_with = _yaml_block(trusted_block, "with", 8)
+    trusted_order = tuple(
+        named_steps[key][0] for key in ("trusted", "stage", "manifest", "upload") if key in named_steps
+    )
+    if (
+        len(named_steps) != len(step_names)
+        or trusted_order != tuple(sorted(trusted_order))
+        or not _has_exact_yaml_line(
+            trusted_block,
+            8,
+            "uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+        )
+        or not _has_exact_yaml_line(trusted_with, 10, "ref: main")
+        or not _has_exact_yaml_line(trusted_with, 10, "persist-credentials: false")
+        or any(line.startswith(" " * 10 + "repository:") for line in (trusted_with or "").splitlines())
+        or not _has_exact_yaml_line(named_steps.get("stage", (-1, ""))[1], 8, staged_validator)
+        or _count_exact_yaml_lines(deploy, 8, staged_validator) != 1
+    ):
+        errors.append("production_deploy_port_validator_not_trusted")
+
+    validation_line = (
+        'port="$(python "$RUNNER_TEMP/traceable-validate-deploy-port.py" '
+        '"${DEPLOY_PORT:-22}")" || exit 64'
+    )
+    upload_block = named_steps.get("upload", (-1, ""))[1]
+    upload_lines = upload_block.splitlines()
+    validation_indices = [
+        index
+        for index, line in enumerate(upload_lines)
+        if line.rstrip() == " " * 10 + validation_line
+    ]
+    deploy_lines = (deploy or "").splitlines()
+    deploy_validation_indices = [
+        index
+        for index, line in enumerate(deploy_lines)
+        if line.rstrip() == " " * 10 + validation_line
+    ]
+    transport_command = re.compile(r"(?<![A-Za-z0-9_])(?:ssh|scp)(?![A-Za-z0-9_])")
+    transport_indices = []
+    for index, line in enumerate(deploy_lines):
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and transport_command.search(stripped):
+            transport_indices.append(index)
+    unsafe_guard = '[[ "$port" =~ ^[0-9]{1,5}$ ]] && test "$port"'
+    if (
+        len(validation_indices) != 1
+        or len(deploy_validation_indices) != 1
+        or not transport_indices
+        or deploy_validation_indices[0] >= min(transport_indices)
+        or unsafe_guard in (deploy or "")
+    ):
+        errors.append("production_deploy_port_validation_invalid")
 
     if not _has_exact_yaml_line(concurrency, 2, "group: traceable-support-production"):
         errors.append("production_deploy_concurrency_missing")
