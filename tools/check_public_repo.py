@@ -851,27 +851,54 @@ def _product_import_errors(entries: dict[str, Entry]) -> list[str]:
     return errors
 
 
-def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
+def _active_increment_errors(entries: list[Entry]) -> list[str]:
     mapped = _entry_map(entries)
     errors: list[str] = []
     active_prefix = "docs/work/active/"
+    active_paths = {
+        PurePosixPath(path)
+        for path in mapped
+        if path.startswith(active_prefix)
+    }
     active_slugs = {
         PurePosixPath(path).parts[3]
-        for path in mapped
-        if path.startswith(active_prefix) and len(PurePosixPath(path).parts) >= 5
+        for path in active_paths
+        if len(path.parts) == 5
     }
-    if len(active_slugs) != 1:
-        errors.append(f"active_increment_count:{len(active_slugs)}")
-    elif {
-        PurePosixPath(path).name
-        for path in mapped
-        if path.startswith(f"docs/work/active/{next(iter(active_slugs))}/")
-    } != {"spec.md", "plan.md", "result.md", "review.md"}:
+    malformed_layout = any(len(path.parts) != 5 for path in active_paths)
+    if malformed_layout:
+        errors.append("active_increment_layout_invalid")
+    if active_paths and not active_slugs:
         errors.append("active_increment_file_set_invalid")
+    elif len(active_slugs) > 1:
+        errors.append(f"active_increment_count:{len(active_slugs)}")
+    elif len(active_slugs) == 1:
+        slug = next(iter(active_slugs))
+        expected = {
+            PurePosixPath(f"docs/work/active/{slug}/{name}")
+            for name in ("spec.md", "plan.md", "result.md", "review.md")
+        }
+        if active_paths != expected:
+            errors.append("active_increment_file_set_invalid")
     try:
         status = _read(mapped, "docs/status.md")
         if active_slugs and f"docs/work/active/{next(iter(active_slugs))}/" not in status:
             errors.append("status_does_not_link_active_increment")
+        if not active_paths and not (
+            "| `state` | `ready` |" in status
+            and "| 活动工作 | 无 |" in status
+        ):
+            errors.append("active_increment_count:0")
+    except (UnicodeDecodeError, ValueError) as exc:
+        errors.append(str(exc))
+    return errors
+
+
+def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
+    mapped = _entry_map(entries)
+    errors = _active_increment_errors(entries)
+    try:
+        status = _read(mapped, "docs/status.md")
         project = _read(mapped, "PROJECT.md")
         readme = _read(mapped, "README.md")
         public = _read(mapped, "PUBLIC_CONTEXT.md")
