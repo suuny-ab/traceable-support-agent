@@ -43,6 +43,9 @@
 - `DEPLOY_HOST` 已按公开服务器地址精确重设。新的修复不再逐项追加 Bash guard，而是从受保护 `main` 暂存统一控制器，并在 secret step 前按固定 SHA-256 复核其字节；控制器在任何网络前规范化五项 SSH 输入，并用 `ssh-keygen` 本地验证私钥和精确目标 `known_hosts` 条目。工作流本身不再直接展开 secret、写密钥文件或调用 SSH / SCP。
 - 第二次失败后，公网 `/api/v1/health` 再次返回 `status=ok`、`live_experience=replay_only`，证明旧服务继续在线；这不证明新部署可用。统一预检候选仍须通过 PR CI、合并后的生产批准、真实切换、强制回滚演练和用户验收。
 - PR #4 的同一提交在容器任务的一次运行中以 `curl` 56 失败，手动重试失败任务后又通过。日志和工作流对照确认 API 已有等待循环，但 Web 容器启动后立即访问四个路由；失败是 runner 时序触发的 Web 就绪竞态，不是镜像构建、产品测试或 SSH 预检失败。修复候选为 API 和 Web 分别增加 15 次探测、单次连接和总请求各 1 秒上限、失败后间隔 1 秒的就绪门；超时输出对应容器日志并失败，四路由检查只在 Web 就绪后执行，不增加 CI 或部署自动重试。
+- PR #4 最终合并为 `71e4754c1b77f90e1b06fcf21e7d7230cac7d5fb`；主线运行 `29994730093` 的治理、Web、API、容器和 GHCR 发布全部成功。自动生产运行 `29994891860` 经用户批准后成功完成发布清单绑定、可信控制器校验、服务器登录、远程目录创建和上传，但服务器端安装/激活返回 `deploy_ssh_transport_failed:activate`。
+- 随后的服务器只读调查确认：`current` 指向 `71e4754c1b77f90e1b06fcf21e7d7230cac7d5fb`，`previous` 指向 `legacy-ab2c4b8-b1bcc94`；两个新容器均为 `healthy`，公网健康为 `status=ok`、`replay_only`，但 `deployment-receipt.json` 不存在。Docker 事件显示新容器在 17:21:24 启动，17:21:26 被回滚演练主动停止，且没有任何旧容器 create/start 事件；17:21:27 恢复逻辑重新创建并启动新容器。因此失败精确位于旧版 `docker compose up`，不是锚点缺失、新版本启动或健康检查失败。
+- 旧版 Compose `config --quiet` 和只读 `--dry-run up -d` 均通过，旧镜像、外部数据卷、磁盘和可用内存均存在；服务器普通部署账号无权读取 Docker system journal，而既有控制器丢弃远端 stderr，因此本次原始 Compose 错误不可追溯。剩余最高概率是同一 Compose project 在 `down → up` 之间的短暂资源清理竞态，保留 `待验证`。修复候选加入有界停止完成屏障，并只把白名单稳定阶段码带回 Actions；不增加部署自动重试。
 - 实施和验证本增量期间的 Provider 调用：`0`；Provider 费用：`0 CNY`。
 
 公开远端、GitHub 来源构建、分支保护、GHCR 发布和本机 canonical 开发路径已经通过。生产部署、强制回滚演练和用户验收尚未完成，当前公网部署保持不变，因此活动工作继续位于 `docs/work/active/`。

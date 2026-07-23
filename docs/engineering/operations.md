@@ -36,13 +36,15 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
 6. 原子更新 `current`，重启回环生产容器对，再通过 Caddy 重复公开冒烟检查。
 7. 任一环节失败时，恢复原符号链接和 root 环境文件，重新激活 `previous`，并报告失败检查门。
 
-公开源站与首次迁移演练标志经过复核后固定在 `deploy/production-target.json`，不接受自由输入的调度参数。首次生产迁移执行受控的 `old → new → old → new` 演练。如果不存在经过验证的旧版回滚锚点，就会在激活唯一权威版本前失败，而不是假装已经测试回滚。三个发布元数据路径使用补偿事务；普通写入失败会先恢复原状态，再重新激活旧容器。激活前读取 Caddy 回执证据；最终回执持久化本身也是检查门，失败时回滚至经过验证的旧版本。旧版本会一直保留到下一次成功的生产部署之后。
+公开源站与首次迁移演练标志经过复核后固定在 `deploy/production-target.json`，不接受自由输入的调度参数。首次生产迁移执行受控的 `old → new → old → new` 演练。如果不存在经过验证的旧版回滚锚点，就会在激活唯一权威版本前失败，而不是假装已经测试回滚。版本切换在 `docker compose down` 后显式等待该项目的容器和网络清理完成，再启动目标版本；这是一道有界状态屏障，不是部署重试。三个发布元数据路径使用补偿事务；普通写入失败会先恢复原状态，再重新激活旧容器。激活前读取 Caddy 回执证据；最终回执持久化本身也是检查门，失败时回滚至经过验证的旧版本。旧版本会一直保留到下一次成功的生产部署之后。
 
 部署使用受限服务器用户与 GitHub production environment。服务器主机、用户和私钥作为 Actions secrets 保存；服务器匿名拉取公开 GHCR 镜像。
 
 `main` 的 `ci-release` 全部成功后，GitHub 自动把该次运行的不可变发布清单送入生产队列；PR、失败运行、非 `main` push 和其他仓库来源均不得进入该队列。自动路径把清单精确绑定到触发运行的 ID、Git SHA 和运行尝试号；手动恢复路径至少把清单绑定到用户选择的运行 ID。`production` environment 必须在任何自动队列生效前配置人工审批，部署在用户点击 `Approve and deploy` 前不会读取生产 secrets 或连接服务器。手动 `workflow_dispatch` 入口只作为有界恢复通道保留，仍必须经过同一个 environment 审批门。
 
 受保护 `main` 会在检出待发布提交前，把统一 SSH 控制器和端口校验器暂存到 runner 私有临时目录，并在 secret 步骤之前按固定 SHA-256 重新验证两份文件。部署 step 顺序、默认 shell、job 环境和 secret step 环境都由公开扫描器精确约束，不能插入额外 step、覆盖 shell 或附加环境变量。控制器在任何网络连接前一次性读取 `DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_PORT`、`DEPLOY_SSH_KEY` 和 `DEPLOY_KNOWN_HOSTS`：每项只允许移除一个开头的 UTF-8 BOM，多行内容统一为 LF；主机、受限用户和端口执行精确格式校验，私钥通过 `ssh-keygen -y` 验证为无口令可用密钥，`known_hosts` 同时验证文件语法和目标主机条目。标准端口只接受普通主机条目，非标准端口只接受 `[host]:port`；明文通配模式失败关闭，经过 `ssh-keygen -F` 匹配的哈希主机条目可以使用。任一失败只输出 `deploy_*_invalid` 稳定错误码，不回显原始 secret，也不会运行 SSH / SCP。
+
+服务器端失败只允许通过白名单格式返回稳定阶段码；任意路径、命令原文、环境值和未分类 stdout/stderr 均不进入 Actions 日志。没有安全阶段码时只报告 `deploy_ssh_transport_failed:activate`。该边界用于区分首次引导、镜像、权限、候选健康和回滚失败，不把增强可观察性变成服务器信息泄漏。
 
 `DEPLOY_PORT` 可省略并默认使用 `22`；提供时必须是 `1..65535` 的 ASCII 十进制整数。换行、空格、引号、非 ASCII 数字和越界值均以 `deploy_port_invalid` 失败关闭。所有三次传输动作只能由统一控制器使用参数数组执行，工作流不得直接展开 secret、写私钥文件或调用 SSH / SCP；子进程不会继承五项部署 secret 或 SSH agent，控制器创建的私有临时目录和 `0600` 文件在退出时删除。
 

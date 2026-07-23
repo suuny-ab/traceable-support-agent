@@ -112,7 +112,7 @@ jobs:
           controller_dir="$RUNNER_TEMP/traceable-deploy-controller"
           printf '%s  %s\n' \
             '6a1af83611a5164e53a8697fe654725a867fe8bc8a8e1b81af01d34cc2b70e52' "$controller_dir/validate_deploy_port.py" \
-            '04672e995d5283ffc10fa3d069cf1510f7180e74f6296bfb21584e7586bd0203' "$controller_dir/deploy_ssh_transport.py" \
+            '322d19bc4c29e529da51b2d419a16da3532a4e9836bd851a077ffe373e884545' "$controller_dir/deploy_ssh_transport.py" \
             | /usr/bin/sha256sum --check --strict
       - name: Upload and activate with strict host verification
         env:

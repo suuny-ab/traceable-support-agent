@@ -38,6 +38,38 @@ SENSITIVE_ENVIRONMENT_KEYS = {
     "SSH_AUTH_SOCK",
     "SSH_ASKPASS",
 }
+SAFE_INSTALL_ERROR_CODES = frozenset(
+    {
+        "candidate_release_health_failed",
+        "candidate_release_start_failed",
+        "candidate_release_state_commit_failed",
+        "current_release_anchor_missing",
+        "current_release_stop_failed",
+        "current_release_stop_not_settled",
+        "deployment_input_invalid",
+        "deployment_input_version_invalid",
+        "deployment_public_origin_invalid",
+        "deployment_rehearsal_required",
+        "existing_release_identity_conflict",
+        "filesystem_permission_denied",
+        "image_preflight_failed",
+        "image_user_invalid",
+        "previous_release_health_failed",
+        "previous_release_start_failed",
+        "public_health_contract_invalid",
+        "release_stop_not_settled",
+        "release_stop_state_query_failed",
+        "required_receipt_input_missing",
+        "rollback_rehearsal_anchor_missing",
+        "rollback_rehearsal_anchor_not_committed",
+        "rollback_release_state_commit_failed",
+        "subprocess_failed",
+        "unexpected_failure",
+    }
+)
+SAFE_REMOTE_DETAILS = frozenset(
+    f"deploy_install_failed:{code}" for code in SAFE_INSTALL_ERROR_CODES
+)
 
 
 class DeployInputError(ValueError):
@@ -266,7 +298,16 @@ def _run_transport(command: Sequence[str], stage: str) -> None:
         env=_subprocess_environment(),
     )
     if completed.returncode != 0:
-        raise DeployTransportError(f"deploy_ssh_transport_failed:{stage}")
+        detail = None
+        if stage == "activate":
+            combined = completed.stderr + b"\n" + completed.stdout
+            for line in reversed(combined.decode("utf-8", "replace").splitlines()):
+                candidate = line.strip()
+                if candidate in SAFE_REMOTE_DETAILS:
+                    detail = candidate
+                    break
+        suffix = f":{detail}" if detail is not None else ""
+        raise DeployTransportError(f"deploy_ssh_transport_failed:{stage}{suffix}")
 
 
 def deploy_release(

@@ -108,6 +108,27 @@ release_wait_local() {
   release_fail "release_health_timeout"
 }
 
+release_wait_project_stopped() {
+  local attempt containers networks
+  for attempt in $(seq 1 20); do
+    if ! containers="$(docker ps -a \
+      --filter label=com.docker.compose.project=traceable-support -q)"; then
+      release_fail "release_stop_state_query_failed"
+      return 1
+    fi
+    if ! networks="$(docker network ls \
+      --filter label=com.docker.compose.project=traceable-support -q)"; then
+      release_fail "release_stop_state_query_failed"
+      return 1
+    fi
+    if test -z "$containers" && test -z "$networks"; then
+      return 0
+    fi
+    sleep 0.25
+  done
+  release_fail "release_stop_not_settled"
+}
+
 release_switch_state() {
   local release_root="$1"
   local current_release="$2"

@@ -1,17 +1,67 @@
 from __future__ import annotations
 
 import os
+import shlex
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from deploy.install_release import (
     _commit_receipt_or_restore,
     _rehearsal_anchor,
     _required_sha,
+    _run as _install_run,
+    _stable_error_code,
     _validated_input,
 )
 from deploy.switch_release_state import switch_release_state
+
+
+@unittest.skipIf(os.name == "nt", "release shell tests run on the Linux CI runner")
+class ReleaseShellTest(unittest.TestCase):
+    def _run_release_lib(self, body: str) -> subprocess.CompletedProcess[str]:
+        release_lib = Path(__file__).resolve().parents[2] / "deploy" / "release-lib.sh"
+        script = f"source {shlex.quote(str(release_lib))}\n{body}"
+        return subprocess.run(
+            ("bash", "-c", script),
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+    def test_project_stop_barrier_accepts_absent_resources(self) -> None:
+        completed = self._run_release_lib(
+            "docker() { :; }\n"
+            "sleep() { :; }\n"
+            "release_wait_project_stopped\n"
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_project_stop_barrier_fails_closed_with_stable_code(self) -> None:
+        completed = self._run_release_lib(
+            "docker() { printf '%s\\n' busy; }\n"
+            "sleep() { :; }\n"
+            "release_wait_project_stopped\n"
+        )
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("release_stop_not_settled", completed.stderr)
+
+    def test_project_stop_barrier_fails_closed_when_docker_query_fails(self) -> None:
+        completed = self._run_release_lib(
+            "docker() { return 1; }\n"
+            "sleep() { :; }\n"
+            "if release_wait_project_stopped; then\n"
+            "  printf '%s\\n' false_success\n"
+            "  exit 0\n"
+            "fi\n"
+            "exit 23\n"
+        )
+        self.assertEqual(completed.returncode, 23)
+        self.assertNotIn("false_success", completed.stdout)
+        self.assertIn("release_stop_state_query_failed", completed.stderr)
 
 
 class ReleaseStateTransactionTest(unittest.TestCase):
@@ -102,6 +152,40 @@ class ReleaseStateTransactionTest(unittest.TestCase):
 
 
 class DeploymentInputTest(unittest.TestCase):
+    def test_remote_failures_are_reduced_to_stable_codes(self) -> None:
+        self.assertEqual(
+            _stable_error_code(RuntimeError("rollback_rehearsal_anchor_missing")),
+            "rollback_rehearsal_anchor_missing",
+        )
+        self.assertEqual(
+            _stable_error_code(PermissionError("private path")),
+            "filesystem_permission_denied",
+        )
+        self.assertEqual(
+            _stable_error_code(RuntimeError("unsafe detail /opt/private")),
+            "unexpected_failure",
+        )
+
+    def test_installer_preserves_only_stable_child_error(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=("python3",),
+            returncode=70,
+            stdout="",
+            stderr=(
+                "private detail omitted\n"
+                "previous_release_start_failed\n"
+            ),
+        )
+        with mock.patch(
+            "deploy.install_release.subprocess.run",
+            return_value=completed,
+        ):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "^previous_release_start_failed$",
+            ):
+                _install_run("bash", "rollback")
+
     def test_rehearsal_and_existing_anchor_are_mandatory(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             staging = Path(temporary) / "staging"

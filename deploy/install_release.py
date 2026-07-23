@@ -6,9 +6,11 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import ssl
 import subprocess
+import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -25,10 +27,32 @@ COPY_FILES = {
     "deploy/switch_release_state.py": "deploy/switch_release_state.py",
     "tools/release_manifest.py": "tools/release_manifest.py",
 }
+STABLE_ERROR_PATTERN = re.compile(r"[a-z][a-z0-9_]*(?::[a-z][a-z0-9_]*){0,2}")
 
 
 def _run(*args: str) -> None:
-    subprocess.run(args, check=True)
+    completed = subprocess.run(
+        args,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if completed.returncode != 0:
+        for line in reversed((completed.stderr + "\n" + completed.stdout).splitlines()):
+            detail = line.strip()
+            if STABLE_ERROR_PATTERN.fullmatch(detail):
+                raise RuntimeError(detail)
+        raise RuntimeError("subprocess_failed")
+
+
+def _stable_error_code(error: BaseException) -> str:
+    detail = str(error).strip()
+    if STABLE_ERROR_PATTERN.fullmatch(detail):
+        return detail
+    if isinstance(error, PermissionError):
+        return "filesystem_permission_denied"
+    return "unexpected_failure"
 
 
 def _required_sha(path: Path) -> str:
@@ -207,4 +231,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        exit_code = main()
+    except Exception as error:
+        print(f"deploy_install_failed:{_stable_error_code(error)}", file=sys.stderr)
+        exit_code = 70
+    raise SystemExit(exit_code)
