@@ -811,3 +811,20 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - 不允许结论：稳定成功率、开放域质量、Stage 12、生产、发布或用户验收。
 - restart：本 attempt 执行一次即关闭；不自动重跑；无论结果如何不再扩大付费调参。
 - `last_verified_checkpoint`：`v14_image_offline_verified`。
+
+### v14 执行结果
+
+- 固定 QA003 执行 `1/1`、调用 `2/2`、自动重试 `0`；两阶段均 HTTP 200、
+  `response_received=true`，延迟 `76,115ms` / `56,855ms`。
+- checklist v4、QA v4 和 16K 第二阶段全部通过，形成 `candidate`；
+  `generation_failure=null`、`stop_code=null`。
+- 公开评分为 `required_fact_missing`，probe `passed=false`；使用来源为
+  `COMMON-FAQ/map-recovery`、`CZ-R1-MANUAL/reset`、
+  `FAULT-CODES/e101-wheel-blocked`。
+- 两次 usage 均可计价；估算 `¥0.080325`、预留 `¥0.287007`，实际账单未知。
+- 公开 / 私有 SHA-256：
+  `24387a028cc20073c9aa90a8e1ef2281173889b86289753db464fb0172e633c4` /
+  `63d81d47c9ca83bfe94befec0ebca713fc19b3cf67471a635005881053824a87`。
+
+本卡已消费并关闭。结果允许声明固定样本形成合同合法 candidate，不允许声明公开回归
+通过或质量改善；按卡片不再扩大付费调参。

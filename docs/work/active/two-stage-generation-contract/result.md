@@ -380,22 +380,20 @@ v6 与 v7 的一失败一通过证明同一候选存在输出波动；两次样�
 
 ## 最终本地候选检查
 
-- API `95` 项通过、1 项环境门跳过，20 个子测试通过。
-- 工具 `77` 项通过、7 项环境门跳过。
+- API `97` 项通过。
+- 工具 `78` 项通过、7 项环境门跳过。
 - 公开仓扫描通过：`187` 个文件、8 个公开案例；`git diff --check` 通过。
-- 最终检查未产生额外产品改动；生产保持 `replay_only`，本地最终检查没有 Provider
-  调用。
+- Web lint、typecheck、生产构建和 18 项协议 / 页面测试通过。
+- 冻结 v14 live 镜像无网络检索 8/8，Provider 调用 0；生产保持 `replay_only`。
 
 ## 当前允许的结论
 
 Issue #22 的 R0 合同候选通过公开合成与注入式回归，机械投影已从模型输出移到宿主且
-未放松已声明硬门；真实 API 已分别证明 QA-003、QA-006 和 TK-001 可以形成完整候选，
-且 `16384` 消除了 TK-001 一次可复现的第一阶段 `length`。这些结果来自不同冻结
-attempt，不能合并成同一次成功率；TK-006 已完成两阶段但在 completeness gate 转人工。
-同一 TK-006 候选随后也完整通过，说明逐字 completeness 存在模型波动，而不是稳定
-失败。v8 在本地证明 LLM 语义声明 / 宿主硬门分工可接受合法改写并拒绝伪造跨度；
-v9 证明 ticket v3 在固定 TK-006 上与真实模型兼容。尚不能声称 QA v4 兼容、全部合同
-兼容、开放域成功率改善、生产就绪、发布或用户验收。
+未放松已声明硬门。v9 证明 ticket v3 在固定 TK006 上兼容；v14 证明 checklist v4、
+QA v4 和 16K 第二阶段在固定 QA003 上可通过并形成 candidate，且没有 generation
+failure。不同冻结 attempt 不能合并成成功率；v14 仍有 `required_fact_missing`，因此
+Issue #22 的公开回归完成门未满足。尚不能声称全部合同兼容、开放域成功率改善、生产
+就绪、发布或用户验收。
 
 ## checklist v4 本地候选
 
@@ -495,3 +493,25 @@ v9 证明 ticket v3 在固定 TK-006 上与真实模型兼容。尚不能声称 
   `ef5397c33e38718cd8ad007db36ec055644da994aa61db275460c7bb1890fd62`。
 
 本地证据证明 prompt 与宿主数量边界一致，不证明真实模型遵守或 QA v4 通过。
+
+## 第十四次外部 API 候选回执
+
+- 使用代码 `61d6bb176c72ff9d11c4a9500fd61f8c0fb7d4fc`、镜像
+  `sha256:de6cd31fecd65ceb8e373340245869f75541dfbd5fed80c465253d072bd2f1e7`
+  执行 `issue22-public-synthetic-checklist-count-alignment-14`。
+- 固定 QA003 执行 `1/1`、调用 `2/2`、自动重试 `0`；两阶段均 HTTP 200 且
+  `response_received=true`，延迟 `76,115ms` / `56,855ms`。
+- checklist v4、QA v4、16K 第二阶段和全部运行时合同通过，形成 `candidate`；
+  `generation_failure=null`，无停止码。
+- 公开评分仍为 `required_fact_missing`，所以 probe 总结果 `passed=false`；使用来源
+  包含 `COMMON-FAQ/map-recovery`、`CZ-R1-MANUAL/reset` 和
+  `FAULT-CODES/e101-wheel-blocked`。
+- 两次调用均获得 usage；估算费用 `¥0.080325`、预留 `¥0.287007`，未越过
+  `¥0.70` 上限。估算不是账号账单。
+- 公开 / 私有 SHA-256：
+  `24387a028cc20073c9aa90a8e1ef2281173889b86289753db464fb0172e633c4` /
+  `63d81d47c9ca83bfe94befec0ebca713fc19b3cf67471a635005881053824a87`；
+  未读取私有正文。
+
+该结果证明新两阶段合同能在真实 QA003 上形成候选，但没有达到预声明的公开事实观测
+水平。按冻结卡停止付费调参，Issue #22 保持开放。

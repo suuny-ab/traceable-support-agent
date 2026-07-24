@@ -181,3 +181,15 @@ v13 第一阶段以 `two_step_checklist_obligation_count_exceeded` 转人工，�
 4. 建立 `checklist-count-alignment-v14`，仍只执行 QA003、最多 2 次调用、`¥0.70`、
    重试 0；这是本轮最后一次付费调参验证。
 5. 无论 v14 成功或形成安全分类失败，都停止扩大付费样本，转入事实收敛与 Draft PR。
+
+## v14 后的收敛
+
+v14 两阶段合同通过并形成 candidate，但公开评分仍为 `required_fact_missing`。后续：
+
+1. 不读取私有正文、不继续付费调参，不把 candidate 等同于完整事实通过。
+2. 保留 Issue #25 的语义评估边界，不在 Issue #22 内把逐字评分临时改成 LLM 裁判。
+3. 更新稳定事实、活动结果、失败统计和路线；Issue #22 保持开放。
+4. 运行最终 Fast / Candidate / Product / 公开扫描与 diff 检查，推送同一 Draft PR #27。
+5. 等待最终 `governance`、`web`、`api`、`containers` 全绿，冻结 head SHA 后主 Agent
+   停止写入并进行一次正式只读复核。
+6. 复核通过也不自动合并、部署或关闭 Issue；这些仍需要后续明确决定。
