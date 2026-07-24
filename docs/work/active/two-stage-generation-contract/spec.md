@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：前三次 `R1` 按硬停止结束；逐字 completeness 波动已形成 R0 语义跨度候选；v9 待执行
+> 外部风险：语义跨度 ticket v3 单例通过；QA v4 单例 v10 待执行
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -547,7 +547,7 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 语义跨度工单验证说明卡 v9
 
-> 状态：`ready_under_external_standing_authorization`
+> 状态：`executed_passed`
 >
 > 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
 
@@ -579,5 +579,55 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - 不允许结论：QA 兼容、稳定成功率、开放域质量、Stage 12、生产或发布。
 - restart：本 attempt 执行一次即关闭；不自动重跑。
 - `last_verified_checkpoint`：`v9_semantic_ticket_image_offline_verified`。
+
+### v9 执行结果
+
+- 固定 TK-006 执行 `1/1`、调用 `2/2`、自动重试 `0`；两次 HTTP 200，
+  `response_received=true`，延迟 `53,755ms` 和 `59,758ms`。
+- ticket v3 的来源跨度、客户可见跨度、义务绑定和 completeness 全部通过并形成
+  candidate；没有停止码。
+- 两次调用均获得 usage；估算费用 `¥0.061045`，预留 `¥0.225795`，未越过
+  `¥0.70` 上限。估算不是账号账单。
+- 公开报告 SHA-256：
+  `3c84041d8f212dd9084173d1d897585096ca3a10992095c5818a71889bb855df`。
+- 私有记录 SHA-256：
+  `7f0bfd62e56f37246907c53cb83cbfb84cd54592f30e2d9048a816c9e498bace`。
+
+本卡已经消费并关闭；该结果不外推到 QA 或稳定成功率。
+
+## 外部 API 语义跨度 QA 验证说明卡 v10
+
+> 状态：`ready_under_external_standing_authorization`
+>
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只在 `GEN-DEV-QA-003` 验证真实模型是否遵守 QA v4
+  `customer_visible_span_text` 合同，并形成合法 candidate 或安全分类失败。
+- `content_identity`：
+  `4e71fdaecf858e900831d1223857eb8ca574f97d`。
+- `execution_identity`：
+  `sha256:99a02f11b6d33c0c0c9605996c4871525c3f57d21b5b60ccbe5013e998b036ff`。
+- `content_version`：`two-stage-generation-contract/v10-semantic-qa`。
+- `attempt_id`：`issue22-public-synthetic-semantic-qa-10`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-QA-003`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt SHA-256：checklist
+  `21752f7455c7c1f073db9b23bb92d9ea68aaa7a54d64ae052076b2aa8a49448c`，QA
+  `574a7fb3e5490656fe4c71b37645df800aacd2b9d3f5300a52e303d2b8acbfed`，集合
+  `a52d2777acfdc6a3fdd5b37992aa84aaf214317e109bc0c4ba2271b7c1c0db2e`。
+- 请求：第一阶段 `16384`、第二阶段 `8192`、两阶段超时 `180,000ms`。
+- 调用 / 费用：固定 `semantic-qa-v10` profile，最多 1 例、每例最多 2 次、总调用
+  最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于当前仓外常设授权的每 attempt
+  `¥1` 上限。
+- 执行：任一非 `stop`、Provider / transport、身份、预算、安全、来源跨度、客户跨度
+  或义务覆盖失败立即硬停止或形成类型明确的合同 handoff；不读取原始正文调优。
+- 公开记录：只保存安全请求配置、稳定失败码、HTTP 状态、响应接收、延迟、来源、调用
+  和费用覆盖；不公开正文、推理、凭据或原始信封。
+- 允许结论：QA v4 合同在该冻结 QA-003 样本上兼容或暴露具体安全失败码。
+- 不允许结论：稳定成功率、开放域质量、Stage 12、生产或发布。
+- restart：本 attempt 执行一次即关闭；不自动重跑。
+- `last_verified_checkpoint`：`v10_semantic_qa_image_offline_verified`。
 
 本卡只有在当前仓外常设授权仍有效、执行前身份完全匹配时才可执行；Git 内容本身不授权。

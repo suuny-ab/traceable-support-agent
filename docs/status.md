@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | 前三次 `R1` 按硬停止结束；逐字 completeness 波动已形成 R0 语义跨度候选；v9 在仓外常设授权下待执行；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | 语义跨度 ticket v3 单例通过；QA v4 单例 v10 在仓外常设授权下待执行；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | QA / 工单 v8 语义跨度合同与 ADR-0006 已通过 R0；冻结 TK-006 外部 v9 |
-| 阻碍 | 新 schema / prompt 是否被真实模型遵守仍待一次有界验证 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；七次验证分别调用 4 / 3 / 1 / 1 / 2 / 2 / 2 次、均重试 0；v5 / v6 / v7 分别估算 ¥0.0792522 / ¥0.0731974 / ¥0.0623356，未获得 usage 的历史调用实际账单待账号侧确认 |
-| 下一检查点 | 直接执行 TK-006 的 v9，最多 2 次、最坏 ¥0.70、重试 0 |
+| 当前动作 | v9 的 TK-006 在 ticket v3 下通过；冻结独立 QA-003 v10 |
+| 阻碍 | QA 使用独立 prompt / schema，不能从 ticket 结果外推 |
+| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；八次验证分别调用 4 / 3 / 1 / 1 / 2 / 2 / 2 / 2 次、均重试 0；v9 估算 ¥0.061045，未获得 usage 的历史调用实际账单待账号侧确认 |
+| 下一检查点 | 直接执行 QA-003 的 v10，最多 2 次、最坏 ¥0.70、重试 0 |
 
 ## 当前产品事实
 

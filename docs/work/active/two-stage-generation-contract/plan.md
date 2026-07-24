@@ -119,3 +119,12 @@ v8 已在 QA 与工单采用 `customer_visible_span_text`，并通过公开合�
 3. 若模型遵守新 schema，宿主验证来源跨度、客户跨度、义务与来源后形成 candidate；
    任一伪造跨度、错误来源、漏义务或执行完整性问题继续失败关闭。
 4. v9 之后再决定是否需要独立 QA 单例；不得把单个 ticket 成功写成 QA 或开放域结论。
+
+## v9 外部通过后的续行
+
+v9 证明真实模型在 TK-006 上遵守 ticket v3 语义跨度合同并形成 candidate。后续：
+
+1. QA 使用独立的 `retrieved-top10-qa-result-v4` 和 QA prompt，必须单独验证。
+2. 新增只选择既有代表案例 QA-003 的 `semantic-qa-v10` profile，不改变产品行为。
+3. v10 固定当前代码、镜像、prompt、QA-003、最多 2 次调用、`¥0.70`、重试 0。
+4. v10 完成后停止扩大外部样本；结果无论成功或分类失败，都进入增量收敛与 Draft PR 门。
