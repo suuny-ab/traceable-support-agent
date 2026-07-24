@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | checklist v4 已通过真实 QA 第一阶段；QA 第二阶段在 8K 上限以 `length` 失败关闭，16K 恢复候选已冻结；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | checklist v4 曾通过真实 QA 第一阶段；v13 因模型输出超过宿主未告知的 8 项上限转人工，v14 已对齐 prompt 与硬门；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | 执行冻结的 v13 QA003 16K 长度恢复单例；v12 工单因 v11 硬停止未执行 |
-| 阻碍 | QA v4 第二阶段真实兼容性仍待验证 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；最新 v11 两次调用均 HTTP 200、重试 0，估算 `¥0.042246`、其中一次未计价；历史实际账单仍待账号侧确认 |
-| 下一检查点 | v13 形成安全回执后决定是否恢复独立工单单例，再更新 Draft PR |
+| 当前动作 | 执行冻结的 v14 QA003 数量合同对齐单例；v12 工单保持未执行 |
+| 阻碍 | QA v4 第二阶段 16K 真实兼容性仍未触达 |
+| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v11 两次调用估算 `¥0.042246`，v13 一次调用未计价，全部重试 0；历史实际账单仍待账号侧确认 |
+| 下一检查点 | v14 形成安全回执后停止付费调参，更新 Draft PR 或记录仍未通过 |
 
 ## 当前产品事实
 

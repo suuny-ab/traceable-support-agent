@@ -763,3 +763,51 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - 不允许结论：稳定成功率、开放域质量、Stage 12、生产、发布或用户验收。
 - restart：本 attempt 执行一次即关闭；不自动重跑。
 - `last_verified_checkpoint`：`v13_image_offline_verified`。
+
+### v13 执行结果
+
+- 固定 QA003 执行 `1/1`、调用 `1/2`、自动重试 `0`；第一阶段 HTTP 200、
+  `response_received=true`，延迟 `115,265ms`。
+- 第一阶段以
+  `enumeration_contract_failure:two_step_checklist_obligation_count_exceeded`
+  转人工；`stop_code=null`，第二阶段未调用。
+- usage 未计价；预留 `¥0.139089`，实际账单未知。
+- 公开 / 私有 SHA-256：
+  `52e36ebf0d4294229d8a15a438c5f29be4405b2642cf1469375dc5712ccecd2e` /
+  `61f1d17dbeb972ba64da390557d5ee910f89b5e04b00f86beed2076c60bf6f0f`。
+
+本卡已消费并关闭。它没有触达 16K 第二阶段，不允许恢复或复用额度。
+
+## checklist 数量合同对齐验证说明卡
+
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只在 `GEN-DEV-QA-003` 验证模型在 prompt 明示 1–8 项后是否遵守既有宿主
+  上限，并在通过时继续验证 16K QA v4 第二阶段。
+- `content_identity`：`61d6bb176c72ff9d11c4a9500fd61f8c0fb7d4fc`。
+- `execution_identity`：
+  `sha256:de6cd31fecd65ceb8e373340245869f75541dfbd5fed80c465253d072bd2f1e7`。
+- `content_version`：`two-stage-generation-contract/v14-checklist-count-alignment`。
+- `attempt_id`：`issue22-public-synthetic-checklist-count-alignment-14`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-QA-003`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt SHA-256：checklist
+  `10a18c4e452a14b481958df0077c4df6e14653c9b98088b18708d404b29b5bca`，QA
+  `df7200de0fdcb5ed25ec094ae7873397a4da22e1d186b9d23b7511789f913878`，集合
+  `ef5397c33e38718cd8ad007db36ec055644da994aa61db275460c7bb1890fd62`。
+- 请求：第一 / 第二阶段均 `16384`、超时 `180,000ms`；相对 v13 只改变第一阶段
+  prompt 的数量边界说明。
+- 调用 / 费用：固定 `checklist-count-alignment-v14` profile，最多 1 例、每例最多
+  2 次、总调用最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于仓外常设授权
+  的每 attempt `¥1` 上限。
+- 执行：任一授权、transport、身份、预算、包完整性、安全或 Provider 信封失败立即
+  硬停止；合同 / 候选质量失败形成类型明确的 handoff，不读取原始正文调优。
+- 公开记录：只保存安全请求配置、稳定失败码、HTTP 状态、响应接收、延迟、来源、调用
+  和费用覆盖；不公开正文、推理、凭据或原始信封。
+- 允许结论：模型是否遵守该冻结样本的 1–8 项合同，以及随后 QA v4 16K 是否兼容或
+  暴露具体安全失败码。
+- 不允许结论：稳定成功率、开放域质量、Stage 12、生产、发布或用户验收。
+- restart：本 attempt 执行一次即关闭；不自动重跑；无论结果如何不再扩大付费调参。
+- `last_verified_checkpoint`：`v14_image_offline_verified`。

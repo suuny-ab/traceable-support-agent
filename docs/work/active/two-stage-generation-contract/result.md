@@ -458,3 +458,40 @@ v9 证明 ticket v3 在固定 TK-006 上与真实模型兼容。尚不能声称 
 
 本地证据只证明 16K 请求和最坏预算包络可被产品与探针接受，不证明真实 Provider 会以
 `stop` 完成。
+
+## 第十三次外部 API 候选失败回执
+
+- 使用代码 `4c3879076133cfe177924ef4604f9cff1c53907a`、镜像
+  `sha256:6686211b190228c3cabff7abf99b19cb7b48866d0c67a39ea245b149bb8d69f4`
+  执行 `issue22-public-synthetic-qa-length-recovery-13`。
+- 固定 QA003 执行 `1/1`、调用 `1/2`、自动重试 `0`；第一阶段 HTTP 200、
+  `response_received=true`，延迟 `115,265ms`。
+- 第一阶段以
+  `enumeration_contract_failure:two_step_checklist_obligation_count_exceeded`
+  转人工；没有执行完整性停止，第二阶段 16K 未触达。
+- 调用 usage 未计价；估算 `0` 不代表免费，预留 `¥0.139089`，实际账单未知。
+- 公开 / 私有 SHA-256：
+  `52e36ebf0d4294229d8a15a438c5f29be4405b2642cf1469375dc5712ccecd2e` /
+  `61f1d17dbeb972ba64da390557d5ee910f89b5e04b00f86beed2076c60bf6f0f`；
+  未读取私有正文。
+
+同一 QA003 在 v11 第一阶段通过、v13 超过 8 项，说明存在数量波动；本回执不证明
+16K 是否消除第二阶段 `length`。
+
+## v14 checklist 数量合同对齐候选
+
+- 宿主仍限制 1–8 项和 3KB；第一阶段 prompt 新增同一 1–8 项限制，要求紧密相关分支
+  可在同一义务中完整表达、不得按证据句子机械拆分，独立分支仍不得遗漏。
+- 代码：
+  `61d6bb176c72ff9d11c4a9500fd61f8c0fb7d4fc`；镜像：
+  `sha256:de6cd31fecd65ceb8e373340245869f75541dfbd5fed80c465253d072bd2f1e7`，
+  revision 精确匹配，运行用户 `10001:10001`。
+- 完整 API `97` 项、工具 `78` 项通过（7 项环境门跳过），公开扫描 `187` 文件 /
+  8 案例；镜像无网络检索 8/8，Provider 调用 `0`。
+- prompt SHA-256：checklist
+  `10a18c4e452a14b481958df0077c4df6e14653c9b98088b18708d404b29b5bca`，QA
+  `df7200de0fdcb5ed25ec094ae7873397a4da22e1d186b9d23b7511789f913878`，ticket
+  `52510b64bf924338e88beb1a1c561143206d85189ae2f5a363d903f060868f21`，集合
+  `ef5397c33e38718cd8ad007db36ec055644da994aa61db275460c7bb1890fd62`。
+
+本地证据证明 prompt 与宿主数量边界一致，不证明真实模型遵守或 QA v4 通过。
