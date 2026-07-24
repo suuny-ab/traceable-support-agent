@@ -193,3 +193,19 @@ v14 两阶段合同通过并形成 candidate，但公开评分仍为 `required_f
 5. 等待最终 `governance`、`web`、`api`、`containers` 全绿，冻结 head SHA 后主 Agent
    停止写入并进行一次正式只读复核。
 6. 复核通过也不自动合并、部署或关闭 Issue；这些仍需要后续明确决定。
+
+## 首次正式复核 finding 后的修正
+
+冻结 head `83511d4b71c649689295a7bd88720b1bf4fd4b78` 四项 Checks 全绿后的正式只读
+复核结论为 `changes_required`：
+
+1. 第一阶段按 clause 选择 / 忽略，但第二阶段只按 evidence 校验，允许同一 evidence
+   中被忽略的 clause 冒充所选义务来源；该问题改变结论真实性，属于 P1。
+2. 宿主为每项义务机械派生 `approved_source_spans` 并下传第二阶段；QA / 工单 claim
+   的 `exact_span_text` 必须位于其绑定每项义务、每个 evidence 的允许 clause 范围。
+3. 新增 QA / 工单同 evidence 选中与忽略 clause 交叉引用攻击回归；失败码分别为
+   `top10_v8_clause_binding_invalid` / `ticket_v4_clause_binding_invalid`。
+4. 运行完整 R0、公开扫描和无网络镜像检查，不调用 Provider；v14 外部回执不迁移为
+   v15 真实兼容证据。
+5. 推送新 head、等待四项 Checks 全绿后，只针对 finding 与覆盖 diff 复核；旧正式
+   回执随候选变化失效。

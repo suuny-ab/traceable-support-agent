@@ -391,9 +391,10 @@ v6 与 v7 的一失败一通过证明同一候选存在输出波动；两次样�
 Issue #22 的 R0 合同候选通过公开合成与注入式回归，机械投影已从模型输出移到宿主且
 未放松已声明硬门。v9 证明 ticket v3 在固定 TK006 上兼容；v14 证明 checklist v4、
 QA v4 和 16K 第二阶段在固定 QA003 上可通过并形成 candidate，且没有 generation
-failure。不同冻结 attempt 不能合并成成功率；v14 仍有 `required_fact_missing`，因此
-Issue #22 的公开回归完成门未满足。尚不能声称全部合同兼容、开放域成功率改善、生产
-就绪、发布或用户验收。
+failure，但其后正式复核发现 clause 约束降级并由 v15 修正。不同冻结 attempt 不能
+合并成成功率；v14 仍有 `required_fact_missing`，v15 真实兼容性待验证，因此 Issue
+#22 的公开回归完成门未满足。尚不能声称全部合同兼容、开放域成功率改善、生产就绪、
+发布或用户验收。
 
 ## checklist v4 本地候选
 
@@ -515,3 +516,29 @@ Issue #22 的公开回归完成门未满足。尚不能声称全部合同兼容�
 
 该结果证明新两阶段合同能在真实 QA003 上形成候选，但没有达到预声明的公开事实观测
 水平。按冻结卡停止付费调参，Issue #22 保持开放。
+
+## 首次正式复核与 v15 clause 级来源修正
+
+- 冻结 head `83511d4b71c649689295a7bd88720b1bf4fd4b78` 的四项 Checks 全绿；正式只读
+  复核结论 `changes_required`。
+- P1：第一阶段已选 / 忽略 clause，但第二阶段只保留 evidence 约束；纯本地构造证明
+  同一 evidence 中已忽略 clause 可作为 claim 来源并通过 completeness。
+- v15 为每项义务机械派生 `approved_source_spans`；第二阶段 prompt 获得允许范围，
+  QA / 工单宿主验证 `exact_span_text` 必须逐字位于绑定义务所选 clause 内。
+- 新攻击回归覆盖 QA 与工单的同 evidence 交叉引用，并以
+  `top10_v8_clause_binding_invalid` / `ticket_v4_clause_binding_invalid` 失败关闭；
+  归类为 `obligation_binding`。
+- 定向合同 / 产品 / 探针 57 项通过；完整 API 无失败，工具 `78` 项通过（7 项环境门
+  跳过），公开扫描 `187` 文件 / 8 案例，`git diff --check` 通过。
+- 代码：
+  `23b60d8bfe6fc3d1a85fe0719d17069f25dad628`；镜像：
+  `sha256:ff71ff8eda02f6488aafe14046c3a828e9202bb173ab9788598f645b16e364a9`，
+  revision 精确匹配，运行用户 `10001:10001`；无网络检索 8/8、Provider 调用 0。
+- prompt SHA-256：checklist
+  `10a18c4e452a14b481958df0077c4df6e14653c9b98088b18708d404b29b5bca`，QA
+  `dd9170540061d19b1105d4815e2898e325b405d7122e1da8cb98f62e7f4edbb3`，ticket
+  `edf637b4cc18144caae51f44fd48d26ee458b825ffda24c654c90cb7a07988fa`，集合
+  `df1d2c33e6b6b17688d0c7396843b7e07af9722f5c02aeaaf2fc16a242c38d86`。
+
+v15 R0 证明已关闭正式 finding 的构造路径，不证明真实 Provider 兼容。v14 真实候选
+使用旧 prompt / 约束，只能作为历史前驱证据，不能迁移到 v15。

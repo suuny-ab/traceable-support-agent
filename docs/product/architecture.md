@@ -26,7 +26,8 @@ ProductRunner
 - `traceable_support.retrieval`：负责合成语料、混合检索和模型清单。
 - `traceable_support.generation`：负责义务清单、QA/工单合同；LLM 选择义务与 clause，
   宿主验证完整互斥分区并派生 evidence，再对 LLM 声明的客户可见语义跨度执行来源、
-  存在性、义务集合和结构硬门。
+  存在性、义务集合和结构硬门；第二阶段来源跨度必须位于该义务已选 clause 的宿主
+  派生允许范围，不能只凭相同 evidence 通过。
 - `traceable_support.provider`：负责传输合同、DeepSeek 适配、用量与原子预算。
 - `evals`：承载公开回归和未来评测适配器；它依赖产品层，产品层不得反向依赖它。
 

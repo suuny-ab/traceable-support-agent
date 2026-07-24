@@ -1,6 +1,6 @@
 # 复核记录
 
-> 状态：`pending`
+> 状态：`changes_required_addressed_pending_targeted_rereview`
 
 正式复核只能在 Draft PR 的 `governance`、`web`、`api`、`containers` 全绿、head SHA
 冻结且主 Agent 停止写入后进行。复核范围至少包括：
@@ -21,3 +21,16 @@
   `passed=false`，没有冒充公开回归通过或成功率证据；
 - Provider、费用、凭据、HOLDOUT、生产和公开主张是否越权；
 - 外部 API 回执是否绑定固定候选、模型、调用、费用和停止条件。
+
+## 首次正式复核
+
+- 冻结 head：`83511d4b71c649689295a7bd88720b1bf4fd4b78`。
+- CI：`governance`、`web`、`api`、`containers` 全绿；Draft `publish` 按设计跳过。
+- 结论：`changes_required`。
+- 阻断：P1 clause 约束在第二阶段降级为 evidence 约束；同一 evidence 中明确忽略的
+  clause 可被 claim 重新引用并通过义务 / completeness。
+- 修正：v15 增加宿主派生 `approved_source_spans`、QA / 工单 clause 级来源门和同
+  evidence 攻击回归。
+- 旧回执：候选变化后失效。
+- 下一门：新 head 四项 Checks 全绿后，只读复核 finding 与覆盖 diff；在此之前不得
+  声称正式复核通过。
