@@ -334,6 +334,23 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 700_000_000)
         self.assertEqual(report["totals"]["provider_calls"], 2)
 
+    def test_semantic_qa_profile_is_fixed_to_representative_case(self) -> None:
+        code, report, _ = self._run(
+            "semantic-qa",
+            profile="semantic-qa-v10",
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(report["profile"], "semantic-qa-v10")
+        self.assertEqual(
+            report["envelope"]["case_ids"],
+            list(generation_contract_probe.SEMANTIC_QA_CASE_IDS),
+        )
+        self.assertEqual(report["envelope"]["max_cases"], 1)
+        self.assertEqual(report["envelope"]["max_calls"], 2)
+        self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 700_000_000)
+        self.assertEqual(report["totals"]["provider_calls"], 2)
+
     def test_scoring_allows_bound_extra_sources_but_requires_expected_sources(
         self,
     ) -> None:
