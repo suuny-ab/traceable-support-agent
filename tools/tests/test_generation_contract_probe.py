@@ -316,6 +316,23 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 700_000_000)
         self.assertEqual(report["totals"]["provider_calls"], 2)
 
+    def test_remaining_ticket_profile_is_fixed_to_unexecuted_case(self) -> None:
+        code, report, _ = self._run(
+            "remaining-ticket",
+            profile="remaining-ticket-v6",
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(report["profile"], "remaining-ticket-v6")
+        self.assertEqual(
+            report["envelope"]["case_ids"],
+            list(generation_contract_probe.REMAINING_TICKET_CASE_IDS),
+        )
+        self.assertEqual(report["envelope"]["max_cases"], 1)
+        self.assertEqual(report["envelope"]["max_calls"], 2)
+        self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 700_000_000)
+        self.assertEqual(report["totals"]["provider_calls"], 2)
+
     def test_scoring_allows_bound_extra_sources_but_requires_expected_sources(
         self,
     ) -> None:
