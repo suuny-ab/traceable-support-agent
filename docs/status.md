@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | `R1` 固定外部 API 验证已执行并按硬停止结束；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | 第一次 `R1` 已硬停止；当前 v2 诊断候选为 `R0`，新的 `R1` 待独立授权；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | 保存 `issue22-public-synthetic-api-1` 停止回执，只做隐私安全的失败分类与下一最便宜证伪设计 |
-| 阻碍 | 候选未通过固定探针：第一阶段清单形状失败 1 例、QA candidate 缺公开必需事实 1 例、Provider 信封失败 1 例；第 4 例未执行 |
+| 当前动作 | v2 诊断候选已细分隐私安全失败码、修正 NFKC 评分并冻结两例最便宜证伪 |
+| 阻碍 | 真实 checklist 子合同和 Provider 信封子码仍未知；只可通过新的两例有界 API 诊断确认 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；本次获准验证另行执行 4 次、重试 0，成功解析 usage 的估算费用 ¥0.075783，三例最坏预留 ¥0.359697，实际账单待账号侧确认 |
-| 下一检查点 | 不消费剩余授权；基于稳定失败码和官方合同提出本地修正 / 诊断候选，重新冻结后再请求新 attempt 授权 |
+| 下一检查点 | 未授权时保持停止；若获新授权，执行 2 例、最多 4 次、最坏 ¥1.40、重试 0 的 `diagnostic-v2` |
 
 ## 当前产品事实
 

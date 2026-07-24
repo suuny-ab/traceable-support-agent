@@ -90,6 +90,30 @@ API。
 - 全部实际费用和逐调用延迟。
 - Draft PR 四项 Checks、冻结 head SHA 的正式独立复核和用户实际体验。
 
+## 停止后的本地诊断候选
+
+- 只读复核 `GEN-DEV-QA-006` 的私有 candidate 后确认：两条公开必需事实、正确来源和
+  三项义务均已覆盖；失败只来自检索文本已执行 NFKC（中文逗号变半角），评分器却直接
+  比较原始全角标点。
+- v2 评分器与检索层统一执行 NFKC。使用第一次 attempt 的既有产品包离线重评分，该例
+  从 `required_fact_missing` 变为通过；未调用 Provider，也没有把语义判断交给规则。
+- checklist 原来的聚合 `two_step_checklist_invalid` 已细分为结果形状、身份、义务数量 /
+  形状 / 身份、子句 ID 和关键片段子码。
+- Provider 信封在冻结 value parser 前增加只看字段 / 类型的子码，可区分 fingerprint、
+  choice、`finish_reason`、`logprobs`、message 和空正文；不持久化推理或正文。
+- 探针报告升级为 `generation-contract-probe-report-v2`，公开每次安全 transport 状态和
+  延迟，并区分有 usage 的计价调用与没有 usage 的调用。
+- 新增固定 `diagnostic-v2`：只运行 `GEN-DEV-QA-003` 与 `GEN-DEV-TK-001`，最多
+  2 例 / 4 次调用 / `¥1.40` / 重试 0。
+- v2 候选代码：
+  `221c2df07736f0b8add23203295b8e1912deb462`；执行镜像：
+  `sha256:f923ebc9546de7b90c782d30ba33112add981f4313a62e93f2c876bc02b4db68`。
+- v2 证据：API `90` 项无失败（1 项环境门跳过）；工具 `71` 项通过、7 项环境门跳过；
+  公开扫描通过；新镜像无网络检索 8/8、Provider 调用 0，revision 和非 root 用户正确。
+
+这些本地证据只证明评分缺陷已修复、下一次失败会获得更具体且不含正文的子码。它不证明
+checklist 或 Provider 信封已经兼容，不能恢复第一次授权。
+
 ## 当前允许的结论
 
 Issue #22 的 R0 合同候选通过公开合成与注入式回归，机械投影已从模型输出移到宿主且

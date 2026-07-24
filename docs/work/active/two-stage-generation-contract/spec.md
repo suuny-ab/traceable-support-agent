@@ -185,3 +185,43 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 本卡和用户授权已经消费完毕。剩余 4 次上限不是可恢复额度；任何后续 Provider 调用都
 必须使用新卡和新授权。
+
+## 外部 API 诊断说明卡 v2
+
+> 状态：`ready_for_independent_authorization`
+>
+> 执行权限：无
+
+- 目的：仅获得 `GEN-DEV-QA-003` checklist 子合同和 `GEN-DEV-TK-001` Provider
+  信封的隐私安全细分原因码，并验证 NFKC 评分修正没有影响来源 / 预算硬门。
+- `content_identity`：
+  `221c2df07736f0b8add23203295b8e1912deb462`。
+- `execution_identity`：
+  `sha256:f923ebc9546de7b90c782d30ba33112add981f4313a62e93f2c876bc02b4db68`。
+- `content_version`：`two-stage-generation-contract/v2-diagnostic`。
+- `attempt_id`：`issue22-public-synthetic-diagnostic-2`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`；沿用 `2026-07-24` 已复核的官方 CNY
+  价格合同。
+- 数据：只使用公开套件中 `GEN-DEV-QA-003`、`GEN-DEV-TK-001`；套件 SHA-256
+  保持
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt 与 response schema：三组 prompt 哈希保持第一次卡片不变；报告升级为
+  `generation-contract-probe-report-v2`，只新增安全原因码、transport 观察与计价覆盖
+  统计。
+- 调用 / 费用：最多 2 例、每例最多 2 次、总调用最多 4；每例最坏预留 `¥0.70`，
+  总最坏费用 `¥1.40 CNY`；自动重试 0。
+- 执行顺序：先 QA checklist 失败例，后工单 Provider 信封失败例。普通候选合同失败继续
+  到第二例；任一 Provider / transport 执行完整性失败立即停止。
+- 公开记录：案例 ID、稳定子码、来源章节、调用数、HTTP 状态、响应是否收到、每次延迟、
+  成功解析 usage 的调用数、未计价调用数、预留与 usage 估算。正文、推理、凭据和原始
+  Provider 信封不得进入公开报告或 Git。
+- 允许结论：具体失败属于哪个已定义的 checklist / Provider 信封子合同；NFKC 评分在
+  固定公开事实上是否通过。
+- 不允许结论：两阶段质量已经改善、四例全通过、Stage 12 改变、生产实时就绪、发布或
+  用户验收。
+- 硬停止与 restart：沿用第一次卡片；本 attempt 失败后不得使用剩余额度，必须建立新
+  候选、新 attempt 和新授权。
+- `last_verified_checkpoint`：`v2_candidate_image_offline_verified`。
+
+用户独立批准本卡前，不得执行任何 Provider 调用。第一次卡片的未用额度不能转移到本卡。
