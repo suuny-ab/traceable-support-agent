@@ -79,6 +79,7 @@ PROFILES = {
     "semantic-qa-v11": SEMANTIC_QA_CASE_IDS,
     "semantic-ticket-v12": REMAINING_TICKET_CASE_IDS,
     "qa-length-recovery-v13": SEMANTIC_QA_CASE_IDS,
+    "checklist-count-alignment-v14": SEMANTIC_QA_CASE_IDS,
 }
 MAX_CASES = len(CASE_IDS)
 MAX_CALLS = MAX_CASES * 2

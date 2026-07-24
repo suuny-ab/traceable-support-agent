@@ -5,6 +5,7 @@ import copy
 import pytest
 
 from traceable_support.generation.checklist import (
+    CHECKLIST_SYSTEM_PROMPT,
     TwoStepError,
     build_clause_inventory,
     checklist_model_projection,
@@ -188,6 +189,10 @@ def test_v4_checklist_reports_safe_obligation_count_codes(
 
     with pytest.raises(TwoStepError, match=code):
         validate_step1_result({"evidence": EVIDENCE}, value)
+
+
+def test_v4_prompt_and_host_share_the_eight_obligation_limit() -> None:
+    assert "义务总数必须为1到8项" in CHECKLIST_SYSTEM_PROMPT
 
 
 def test_v4_checklist_accepts_semantic_description_without_source_substring() -> None:

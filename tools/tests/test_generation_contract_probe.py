@@ -358,6 +358,10 @@ class GenerationContractProbeTest(unittest.TestCase):
                 generation_contract_probe.SEMANTIC_QA_CASE_IDS,
             ),
             (
+                "checklist-count-alignment-v14",
+                generation_contract_probe.SEMANTIC_QA_CASE_IDS,
+            ),
+            (
                 "semantic-ticket-v12",
                 generation_contract_probe.REMAINING_TICKET_CASE_IDS,
             ),

@@ -18,7 +18,7 @@ STEP1_TIMEOUT_MS = 30_000
 STEP2_MAX_OUTPUT_TOKENS = 16384
 STEP2_TIMEOUT_MS = 180_000
 STEP1_V2_PROMPT_VERSION = "obligation-checklist-prompt-v2"
-STEP1_PROMPT_VERSION = "obligation-checklist-prompt-v4"
+STEP1_PROMPT_VERSION = "obligation-checklist-prompt-v5"
 STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v7"
 CHECKLIST_SYSTEM_PROMPT_V2 = """你是客服问答的义务分析器。输入包含问题、型号和按顺序排列的10条候选证据。只输出JSON，不输出解释。
 任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，各为一项。并列出现的适用对象、条件或步骤（如\"A或B\"）必须每个分支都纳入义务，不得合并或遗漏。义务只来自证据，不得引入证据外义务。
@@ -27,7 +27,7 @@ CHECKLIST_SYSTEM_PROMPT_V2 = """你是客服问答的义务分析器。输入包
 分区合同：你所绑定证据中的每一个子句都必须被显式记账——要么被某项义务的key_elements覆盖，要么列入acknowledged_context（从证据中逐字复制的、你判定为与当前问题义务无关的子句）。不允许静默跳过任何子句。
 输出格式（占位值必须替换；evidence_ids必须逐字使用输入证据中的实际evidence_id值，不得照抄示例中的\"E1\"）：{\"schema_version\":\"obligation-checklist-v2\",\"obligations\":[{\"obligation_id\":\"o1\",\"description\":\"义务描述\",\"evidence_ids\":[\"E1\"],\"key_elements\":[\"逐字片段\"]}],\"acknowledged_context\":[\"逐字复制的非义务子句\"]}"""
 CHECKLIST_SYSTEM_PROMPT = """你是客服问答的义务分析器。输入包含问题、型号和按检索顺序排列的证据子句。只输出JSON，不输出解释。
-任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，各为一项。并列出现的适用对象、条件或步骤必须每个分支都纳入义务，不得合并或遗漏。义务只来自证据，不得引入证据外义务。
+任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，都必须被义务覆盖。每个独立的适用对象、条件或步骤分支都必须能在某项义务中辨认，不得遗漏；紧密相关的分支可以在同一项描述中完整表达，不要按证据句子机械拆分。义务总数必须为1到8项，只来自证据，不得引入证据外义务，也不得为ignored_clause_ids中的内容建立义务。
 每项义务给出：obligation_id（简短且唯一）、description（准确概括这项义务的一句话）、clause_ids（语义上支撑该义务的证据子句ID，至少一个）。description允许自然概括，不要复制用于机械匹配的关键字片段。
 分区合同：输入中的每个clause_id都必须被显式记账。与问题义务有关的子句放入至少一项义务的clause_ids；与当前问题无关的子句只放入ignored_clause_ids。不得把同一子句同时列为义务和忽略，不得漏掉任何clause_id。宿主会从clause_ids推导evidence_ids和被忽略的原文，不要重复这些机械字段。
 输出格式（占位值必须替换，clause_ids必须逐字使用输入中的实际值）：{\"schema_version\":\"obligation-checklist-v4\",\"obligations\":[{\"obligation_id\":\"o1\",\"description\":\"义务描述\",\"clause_ids\":[\"c001\"]}],\"ignored_clause_ids\":[\"c002\"]}"""
