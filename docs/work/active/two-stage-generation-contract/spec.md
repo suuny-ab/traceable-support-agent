@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：三次 `R1` 固定验证均已执行并按硬停止结束；v4 为待授权 `R0` 候选
+> 外部风险：前三次 `R1` 按硬停止结束，第四次为候选质量失败；v5 为待执行 `R0` 候选
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -312,9 +312,9 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 长度修复验证说明卡 v4
 
-> 状态：`ready_for_independent_authorization`
+> 状态：`executed_candidate_failed`
 >
-> 执行权限：无
+> 执行权限：已消费并关闭；不得恢复或使用剩余额度
 
 - 目的：仅验证提高第一阶段输出额度后，`GEN-DEV-TK-001` 是否不再因
   `finish_reason=length` 停止，并能形成合法 checklist / ticket candidate 或暴露下一项
@@ -350,4 +350,56 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - restart：本 attempt 一经执行即关闭；任何剩余额度不得复用。
 - `last_verified_checkpoint`：`v4_candidate_image_offline_verified`。
 
-用户独立批准本卡前不得执行任何 Provider 调用；v3 剩余 1 次上限不能转入本卡。
+### v4 执行结果
+
+- 用户独立授权后执行固定 `1/1` 例、调用 `1/2`、自动重试 `0`；第一阶段自然结束，
+  `stop_code=null`，未触发执行完整性硬停止，剩余 1 次仍随 attempt 关闭。
+- 响应为 HTTP 200、`response_received=true`、`timeout_ms=180000`、延迟
+  `78,906ms`。`finish_reason=length` 已消失，证明本次 `16384` 足以完成第一阶段响应。
+- 第一阶段随后以
+  `enumeration_contract_failure:two_step_checklist_obligation_count_invalid`
+  转人工，没有进入第二阶段。该聚合码仍不能区分义务字段类型错误、空列表或超过 8 项。
+- 本次未获得可解析 usage；费用估算 `0` 不代表免费，调用前预留 `¥0.139569`，实际
+  账单待账号侧确认。
+- 公开报告 SHA-256：
+  `33fa1ed07dac12709db1a0150aa190ae3c9651f32056b688e2522b206fa1e611`。
+- 私有记录 SHA-256：
+  `07609d4d112a48ceff6f11d0aa9773ae7a0152a1444b995b37f4c96a1e1b4d2f`。
+
+本卡和授权已经消费完毕。任何后续调用必须使用新候选和新 attempt。
+
+## 外部 API 义务数量诊断说明卡 v5
+
+> 状态：`ready_under_external_standing_authorization`
+>
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只对 `GEN-DEV-TK-001` 复现一次，把 v4 的义务数量聚合失败区分为
+  `obligations_type_invalid`、`obligation_count_empty` 或
+  `obligation_count_exceeded`，不保存或公开模型正文。
+- `content_identity`：
+  `7997c7474360b0fbc62f555676600689097913d7`。
+- `execution_identity`：
+  `sha256:2fc6f4274c7557e679944e1e7c7b8a97a0f019aedea3c093bda4d69f1531b479`。
+- `content_version`：`two-stage-generation-contract/v5-obligation-count`。
+- `attempt_id`：`issue22-public-synthetic-obligation-count-5`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-TK-001`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt、thinking、response schema 和请求配置均与 v4 相同：第一阶段 `16384`、
+  第二阶段 `8192`、两阶段超时 `180,000ms`；只改变隐私安全失败子码。
+- 调用 / 费用：固定 profile `obligation-count-v5`，最多 1 例、每例最多 2 次、总调用
+  最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于用户对本增量每个新 attempt
+  `¥1` 的仓外常设上限。
+- 执行：任一非 `stop`、Provider / transport、身份、预算、安全或来源完整性失败立即
+  硬停止；第一阶段合法且 checklist 通过时才允许第二次调用。
+- 公开记录：`generation-contract-probe-report-v4` 的安全请求配置、子码、HTTP 状态、
+  响应接收、延迟、来源、调用和费用覆盖；不含正文、推理、凭据或原始信封。
+- 允许结论：v4 聚合失败属于哪一个数量子合同，或模型本次形成合法 checklist 后进入
+  第二阶段。
+- 不允许结论：义务上限应该放宽、prompt 已修复、开放域成功率、Stage 12、生产或发布。
+- restart：本 attempt 执行一次即关闭；不自动重跑。
+- `last_verified_checkpoint`：`v5_candidate_image_offline_verified`。
+
+本卡只有在当前仓外常设授权仍有效、执行前身份完全匹配时才可执行；Git 内容本身不授权。
