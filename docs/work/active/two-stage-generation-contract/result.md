@@ -39,6 +39,11 @@
   `provider_calls=0`；镜像内三组 prompt 哈希与验证卡一致。
 - 使用初始化数据卷、只读根文件系统、无网络和 `live=false` 启动候选镜像，健康回执为
   `status=ok`、`live_experience=replay_only`。临时容器和验证卷已精确删除。
+- `2026-07-24` 重新核对 DeepSeek 当前中文官方模型 / 价格页和 Chat Completion /
+  JSON Output 文档：`deepseek-v4-pro`、`https://api.deepseek.com/chat/completions`、
+  JSON Object、非流式响应、思考内容和 usage 字段均与当前适配边界一致；中文页价格仍为
+  缓存命中 `¥0.025`、未命中 `¥3`、输出 `¥6` / 百万 tokens。英文页显示的是同一价格
+  的美元展示，不构成计价合同变化。
 
 这些证据证明公开合成与注入式路径能接受省略冗余投影的合法输出，并继续拒绝缺失 /
 冲突子句分区、跨子句逐字片段、错误来源和错误义务绑定。它不证明指定外部模型实际遵守
@@ -50,7 +55,6 @@ API。
 
 ## 仍待验证
 
-- 当前 Provider / model / endpoint / 价格合同在执行当日是否仍有效。
 - 外部 API 的实际信封和结构化输出兼容性。
 - 真实模型候选成功率、延迟与费用。
 - Draft PR 四项 Checks、冻结 head SHA 的正式独立复核和用户实际体验。

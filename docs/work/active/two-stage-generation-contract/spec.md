@@ -102,7 +102,7 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 验证说明卡
 
-> 状态：`fixed_pending_provider_recheck_and_authorization`
+> 状态：`ready_for_independent_authorization`
 >
 > 执行权限：无
 
@@ -115,9 +115,13 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - `attempt_id`：`issue22-public-synthetic-api-1`。
 - Provider / model / endpoint：仓库当前合同固定的 `deepseek` /
   `deepseek-v4-pro` / `https://api.deepseek.com/chat/completions`。
-- 当前价格快照：仓库记录的 `deepseek-official-cny-2026-07-15-v1`；执行前必须通过
-  Provider 当前正式文档和账号可用性重新确认。型号、端点或价格任一变化都使本卡失效，
-  必须修订并重新取得授权。
+- 当前价格快照：仓库记录的 `deepseek-official-cny-2026-07-15-v1`，已于
+  `2026-07-24` 通过 DeepSeek 当前中文官方
+  [模型与价格](https://api-docs.deepseek.com/zh-cn/quick_start/pricing/)、
+  [Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/) 和
+  [JSON Output](https://api-docs.deepseek.com/zh-cn/guides/json_mode/) 文档复核。
+  当前价格仍为缓存命中 `¥0.025`、未命中 `¥3`、输出 `¥6` / 百万 tokens；型号、
+  端点或价格任一变化都使本卡失效，必须修订并重新取得授权。
 - 数据边界：只允许公开合成知识与本增量的公开合成开发 / 回归案例。
 - 固定案例：`GEN-DEV-QA-003`、`GEN-DEV-QA-006`、`GEN-DEV-TK-001`、
   `GEN-DEV-TK-006`；公开套件 SHA-256：
@@ -152,9 +156,9 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
   可发布或用户验收通过。
 - `execution_identity`：
   `sha256:01b1ad5f43918a23d66dd14a022d03b329f0e54d0ccd7e5988640abee1c2bbe9`。
-- `last_verified_checkpoint`：`candidate_image_offline_verified`。
-- `resume_preconditions`：当前 Provider 正式合同与价格复核通过；用户对本卡给出独立
-  授权；凭据只在 transport send 时从当前进程读取。
+- `last_verified_checkpoint`：`provider_contract_reverified`。
+- `resume_preconditions`：用户对本卡给出独立授权；凭据只在 transport send 时从当前
+  进程读取。若凭据或账号模型不可用，记录失败回执并停止，不扩大调用或重试。
 - `restart_scope`：任何硬停止后不消费剩余额度；保留失败回执，修复并重新冻结候选、
   建立新 `attempt_id`、重新授权后从第 1 例开始。
 

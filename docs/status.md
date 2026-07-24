@@ -12,10 +12,10 @@
 | 风险 / 成熟度 | 当前本地诊断为 `R0`；真实外部 API 验证为待独立授权的 `R1`；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | 候选代码、API 验证合同和执行镜像已冻结并通过无网络装配验证 |
-| 阻碍 | 外部 API 验证仍缺当前 Provider 正式合同 / 价格只读复核和用户对最多 8 次调用、最坏 ¥2.80 的独立授权 |
+| 当前动作 | 候选代码、执行镜像、Provider 合同和有界 API 验证卡均已冻结 |
+| 阻碍 | 外部 API 验证只缺用户对 DeepSeek `deepseek-v4-pro` 最多 8 次调用、最坏 ¥2.80 的独立授权；凭据仅在获准执行的 transport send 时检查 |
 | Provider | 公网已禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；任何后续 API 调用仍需独立授权 |
-| 下一检查点 | 经许可只读核对 Provider 当前正式文档与账号型号可用性；合同未漂移时提交完整 API 授权请求 |
+| 下一检查点 | 取得精确 API 授权后执行一次固定公开合成探针；未授权时保持停止 |
 
 ## 当前产品事实
 
