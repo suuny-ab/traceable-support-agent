@@ -102,13 +102,15 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 验证说明卡
 
-> 状态：`fixed_pending_candidate_identity_and_authorization`
+> 状态：`fixed_pending_execution_identity_and_authorization`
 >
 > 执行权限：无
 
 固定执行合同：
 
 - 目的：验证 Issue #22 两阶段生成合同候选与指定外部模型 API 的兼容性和候选可用性。
+- `content_identity`：
+  `f67099f871a31b6cf00b6881422744a8240519f0`。
 - `content_version`：`two-stage-generation-contract/v1`。
 - `attempt_id`：`issue22-public-synthetic-api-1`。
 - Provider / model / endpoint：仓库当前合同固定的 `deepseek` /
@@ -155,10 +157,12 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - `restart_scope`：任何硬停止后不消费剩余额度；保留失败回执，修复并重新冻结候选、
   建立新 `attempt_id`、重新授权后从第 1 例开始。
 
-候选提交后只允许补齐：
-
-- `content_identity`：冻结 head SHA；
-- `execution_identity`：由该 SHA 构建并实际执行的不可变镜像摘要。
+仍待补齐的 `execution_identity` 必须是由上述代码 SHA 构建并实际执行的不可变镜像
+摘要。锁定依赖文件 SHA-256 为
+`c23979d95c9429e098d13a8ac5f8cdd807eb2c1d9fb956c0a162013bfe44bb0d`；BGE 检索资产
+清单 SHA-256 为
+`c25626d58149bd63c8081f11ca7876f18a2b4a8b3d13ee278cc5ac9ea1d5326e`，声明解包后
+总字节数 `95,332,206`。该 BGE 只用于既有检索，不执行生成或语义分类。
 
 两项身份、执行当日 Provider 合同复核和用户独立批准齐全前，不得执行任何 Provider
 调用。任何代码、prompt、schema、案例、模型、价格、调用或停止条件变化都使已有授权

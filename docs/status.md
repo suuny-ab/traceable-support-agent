@@ -12,10 +12,10 @@
 | 风险 / 成熟度 | 当前本地诊断为 `R0`；真实外部 API 验证为待独立授权的 `R1`；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | R0 合同候选和固定公开合成探针已通过本地回归；正在冻结候选身份与外部 API 验证卡 |
-| 阻碍 | 外部 API 验证仍缺当前 Provider 合同复核、冻结候选身份 / 执行镜像和用户独立授权 |
+| 当前动作 | R0 合同候选和固定公开合成探针已通过本地回归；候选代码与 API 验证合同已冻结 |
+| 阻碍 | 候选代码已冻结；执行镜像的无网络构建因 BGE 资产缓存缺失而停止。外部 API 验证仍缺受控公开依赖下载、当前 Provider 合同复核和用户独立授权 |
 | Provider | 公网已禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；任何后续 API 调用仍需独立授权 |
-| 下一检查点 | 提交 R0 候选，补齐不可变 SHA / 镜像摘要后停在外部 API 独立授权门前 |
+| 下一检查点 | 获得公开依赖下载授权后构建不可变执行镜像；再以完整 SHA / 摘要 / Provider / ¥2.80 上限请求独立 API 授权 |
 
 ## 当前产品事实
 
