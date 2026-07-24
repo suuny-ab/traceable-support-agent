@@ -19,11 +19,12 @@
 
 ## 当前
 
-- 暂无活动增量；下一项需从公开 Issue 显式启动。
+- [ ] [Issue #22：修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
+  当前先执行零 Provider 调用的失败分类、合同候选与公开合成回归；真实外部 API 验证需
+  独立授权。
 
 ## 下一步
 
-- [ ] [修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
 - [ ] [评估外部 API 语义分类器与确定性硬门的混合边界](https://github.com/suuny-ab/traceable-support-agent/issues/25)。
 - [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
 - [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。

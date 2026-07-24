@@ -29,6 +29,7 @@ USAGE = {
 
 def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> OfflineInjectedTransport:
     from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
+    from traceable_support.generation.checklist import build_clause_inventory
 
     result = ModelAwareRrfPipeline(unit_strategy="native_section", delivery_k=5).retrieve(
         BusinessRetrievalRequest(
@@ -36,32 +37,33 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
             candidate_pool_limit=10, delivery_limit=5,
         )
     )
-    hit = result.candidate_hits[0].unit
-    evidence_id = hit.unit_id
-    text = hit.text
+    evidence = [
+        {"evidence_id": candidate.unit.unit_id, "text": candidate.unit.text}
+        for candidate in result.candidate_hits
+    ]
+    inventory = build_clause_inventory(evidence)
+    selected = inventory[0]
+    evidence_id = selected["evidence_id"]
+    text = evidence[0]["text"]
     if valid:
-        from traceable_support.generation.checklist import _clauses
-        clauses = _clauses(text)
-        first = clauses[0] if len(clauses[0]) <= 60 else clauses[0][:60]
+        first = selected["text"] if len(selected["text"]) <= 60 else selected["text"][:60]
         checklist = {
-            "schema_version": "obligation-checklist-v2",
+            "schema_version": "obligation-checklist-v3",
             "obligations": [
                 {"obligation_id": "o1", "description": "义务",
-                 "evidence_ids": [evidence_id], "key_elements": [first]}
+                 "clause_ids": [selected["clause_id"]], "key_elements": [first]}
             ],
-            "acknowledged_context": clauses[1:],
+            "ignored_clause_ids": [
+                entry["clause_id"] for entry in inventory[1:]
+            ],
         }
         answer_text = f"回答。{first}" if gate_pass else "回答。不含要素"
         result_obj = {
-            "schema_version": "retrieved-top10-qa-result-v2",
+            "schema_version": "retrieved-top10-qa-result-v3",
             "task_type": "qa",
-            "obligation_plan": [
-                {"obligation_id": "o1", "description": "义务", "evidence_ids": [evidence_id]}
-            ],
-            "used_evidence_ids": [evidence_id],
             "content": {
                 "kind": "qa_answer",
-                "answer": {"text": answer_text, "claim_ids": ["c1"]},
+                "answer": {"text": answer_text},
                 "claims": [
                     {"claim_id": "c1", "exact_span_text": text,
                      "evidence_ids": [evidence_id], "obligation_ids": ["o1"]}
@@ -91,8 +93,13 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
         worst_cost_limit_cny_nanos=500_000_000,
     )
     assert package["outcome"] == "candidate"
-    assert package["checklist"]["schema_version"] == "obligation-checklist-v2"
+    assert package["checklist"]["schema_version"] == "obligation-checklist-v3"
     assert package["gates"]["completeness_gate"]["pass"] is True
+    assert package["answer"]["obligation_plan"][0]["obligation_id"] == "o1"
+    assert package["answer"]["used_evidence_ids"] == [
+        package["answer"]["content"]["claims"][0]["evidence_ids"][0]
+    ]
+    assert package["answer"]["content"]["answer"]["claim_ids"] == ["c1"]
     assert len(package["evidence"]) == 10
     assert len(package["usage"]) == 2
 
@@ -121,6 +128,7 @@ def test_run_qa_completeness_gate_failure_handoffs_with_answer():
     )
     assert package["outcome"] == "handoff"
     assert package["handoff_reason"] == "completeness_gate_failed"
+    assert package["failure_classification"]["family"] == "completeness"
     assert package["answer"] is not None
 
     connection = sqlite3.connect(":memory:")
@@ -141,6 +149,7 @@ def test_run_qa_enumeration_contract_failure_handoffs_without_answer():
     )
     assert package["outcome"] == "handoff"
     assert package["handoff_reason"].startswith("enumeration_contract_failure")
+    assert package["failure_classification"]["phase"] == "enumeration_contract"
     assert package["answer"] is None
 
 

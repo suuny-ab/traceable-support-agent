@@ -32,6 +32,8 @@
 `evals/migration-equivalence-v1.json` 冻结 API、prompt、Provider 和知识身份。`evals/fixtures/migration-retrieval-equivalence-v1.json` 只包含有序单元 ID、逻辑文档/章节标识和正文哈希。由旧包与新包生成的 fixture 字节完全一致，SHA-256 为 `81c9a483f541a452c49d4d6f5bbae26582b95c27b829d5f35c81f4afdd335ef7`。
 
 这只证明冻结案例的抽取等价；不能证明 Stage 12 质量，也不能据此发布 `product/0.1.0`。
+该文件保存迁移时的历史身份，后续经过活动增量审查的 prompt 演进不得回写这份迁移基线。
+发布清单直接记录当前源码的 prompt 哈希；它不再要求活动 prompt 与历史迁移哈希相等。
 
 ## 精选公开资产哈希
 

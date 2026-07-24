@@ -69,43 +69,61 @@ def _top_hit(channel: str):
     return result.candidate_hits[0].unit
 
 
-def _checklist(evidence_id: str, key_element: str, rest: list[str]) -> dict:
+def _retrieved_evidence() -> list[dict]:
+    from traceable_support.retrieval.hybrid import (
+        BusinessRetrievalRequest,
+        ModelAwareRrfPipeline,
+    )
+
+    result = ModelAwareRrfPipeline(unit_strategy="native_section", delivery_k=5).retrieve(
+        BusinessRetrievalRequest(
+            query_text=QUESTION,
+            known_product_model="CZ-R1",
+            channel="qa",
+            candidate_pool_limit=10,
+            delivery_limit=5,
+        )
+    )
+    return [
+        {"evidence_id": candidate.unit.unit_id, "text": candidate.unit.text}
+        for candidate in result.candidate_hits
+    ]
+
+
+def _checklist(selected: dict, key_element: str, ignored: list[str]) -> dict:
     return {
-        "schema_version": "obligation-checklist-v2",
+        "schema_version": "obligation-checklist-v3",
         "obligations": [
             {
                 "obligation_id": "o1",
                 "description": "义务",
-                "evidence_ids": [evidence_id],
+                "clause_ids": [selected["clause_id"]],
                 "key_elements": [key_element],
             }
         ],
-        "acknowledged_context": rest,
+        "ignored_clause_ids": ignored,
     }
 
 
 def _qa_steps(hit, *, valid: bool = True) -> list[dict]:
-    from traceable_support.generation.checklist import _clauses
+    from traceable_support.generation.checklist import build_clause_inventory
 
     if not valid:
         return [{"kind": "response", "json": {"schema_version": "wrong"}, "usage": USAGE}]
-    clauses = _clauses(hit.text)
-    first = clauses[0][:60]
+    inventory = build_clause_inventory(_retrieved_evidence())
+    selected = inventory[0]
+    first = selected["text"][:60]
     answer = {
-        "schema_version": "retrieved-top10-qa-result-v2",
+        "schema_version": "retrieved-top10-qa-result-v3",
         "task_type": "qa",
-        "obligation_plan": [
-            {"obligation_id": "o1", "description": "义务", "evidence_ids": [hit.unit_id]}
-        ],
-        "used_evidence_ids": [hit.unit_id],
         "content": {
             "kind": "qa_answer",
-            "answer": {"text": f"回答。{first}", "claim_ids": ["c1"]},
+            "answer": {"text": f"回答。{first}"},
             "claims": [
                 {
                     "claim_id": "c1",
                     "exact_span_text": hit.text,
-                    "evidence_ids": [hit.unit_id],
+                    "evidence_ids": [selected["evidence_id"]],
                     "obligation_ids": ["o1"],
                 }
             ],
@@ -113,25 +131,30 @@ def _qa_steps(hit, *, valid: bool = True) -> list[dict]:
         },
     }
     return [
-        {"kind": "response", "json": _checklist(hit.unit_id, first, clauses[1:]), "usage": USAGE},
+        {
+            "kind": "response",
+            "json": _checklist(
+                selected,
+                first,
+                [entry["clause_id"] for entry in inventory[1:]],
+            ),
+            "usage": USAGE,
+        },
         {"kind": "response", "json": answer, "usage": USAGE},
     ]
 
 
 def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
-    from traceable_support.generation.checklist import _clauses
+    from traceable_support.generation.checklist import build_clause_inventory
 
     if not valid:
         return [{"kind": "response", "json": {"schema_version": "wrong"}, "usage": USAGE}]
-    clauses = _clauses(hit.text)
-    first = clauses[0][:60]
+    inventory = build_clause_inventory(_retrieved_evidence())
+    selected = inventory[0]
+    first = selected["text"][:60]
     proposal = {
-        "schema_version": "ticket-proposal-result-v1",
+        "schema_version": "ticket-proposal-result-v2",
         "task_type": "ticket",
-        "obligation_plan": [
-            {"obligation_id": "o1", "description": "义务", "evidence_ids": [hit.unit_id]}
-        ],
-        "used_evidence_ids": [hit.unit_id],
         "content": {
             "kind": "ticket_proposal",
             "action_steps": ["步骤一"],
@@ -140,7 +163,7 @@ def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
                 {
                     "claim_id": "c1",
                     "exact_span_text": hit.text,
-                    "evidence_ids": [hit.unit_id],
+                    "evidence_ids": [selected["evidence_id"]],
                     "obligation_ids": ["o1"],
                 }
             ],
@@ -148,7 +171,15 @@ def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
         },
     }
     return [
-        {"kind": "response", "json": _checklist(hit.unit_id, first, clauses[1:]), "usage": USAGE},
+        {
+            "kind": "response",
+            "json": _checklist(
+                selected,
+                first,
+                [entry["clause_id"] for entry in inventory[1:]],
+            ),
+            "usage": USAGE,
+        },
         {"kind": "response", "json": proposal, "usage": USAGE},
     ]
 
@@ -253,6 +284,7 @@ class Stage12EvalTest(unittest.TestCase):
         self.assertEqual(report["totals"]["cases_executed"], 2)
         self.assertEqual(report["totals"]["provider_calls"], 4)
         self.assertFalse(report["totals"]["stopped_early"])
+        self.assertEqual(report["generation_failures"]["failures"], 0)
         self.assertTrue(all(case["passed"] for case in report["cases"]))
         self.assertEqual(report["cases"][0]["dimension"], "multi-source-qa")
         self.assertEqual(report["cases"][1]["dimension"], "approvable-ticket")
@@ -328,6 +360,14 @@ class Stage12EvalTest(unittest.TestCase):
         ticket_case = report["cases"][1]
         self.assertIn("outcome_mismatch", ticket_case["failure_codes"])
         self.assertEqual(ticket_case["observed_outcome"], "handoff")
+        self.assertEqual(
+            ticket_case["generation_failure"]["phase"],
+            "enumeration_contract",
+        )
+        self.assertEqual(
+            report["generation_failures"]["families"],
+            {"checklist_shape": 1},
+        )
         self.assertTrue(
             raw["cases"][1]["package"]["handoff_reason"].startswith(
                 "enumeration_contract_failure"

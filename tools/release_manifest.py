@@ -31,7 +31,7 @@ def _prompt_hashes() -> dict[str, str]:
     sys.path.insert(0, str(ROOT / "api" / "src"))
     try:
         from traceable_support.generation.checklist import (  # noqa: PLC0415
-            CHECKLIST_SYSTEM_PROMPT_V2,
+            CHECKLIST_SYSTEM_PROMPT,
             STEP2_SYSTEM_PROMPT,
         )
         from traceable_support.generation.ticket_contract import (  # noqa: PLC0415
@@ -40,7 +40,7 @@ def _prompt_hashes() -> dict[str, str]:
     finally:
         sys.path.pop(0)
     return {
-        "checklist_sha256": _sha256(CHECKLIST_SYSTEM_PROMPT_V2.encode("utf-8")),
+        "checklist_sha256": _sha256(CHECKLIST_SYSTEM_PROMPT.encode("utf-8")),
         "qa_step2_sha256": _sha256(STEP2_SYSTEM_PROMPT.encode("utf-8")),
         "ticket_step2_sha256": _sha256(TICKET_SYSTEM_PROMPT.encode("utf-8")),
     }
@@ -78,8 +78,6 @@ def build_manifest(
 
     identity = json.loads((ROOT / "evals/migration-equivalence-v1.json").read_text(encoding="utf-8"))
     prompts = _prompt_hashes()
-    if prompts != identity["prompts"]:
-        raise ValueError("prompt_identity_mismatch")
     prompt_set_hash = _sha256(
         json.dumps(prompts, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     )
