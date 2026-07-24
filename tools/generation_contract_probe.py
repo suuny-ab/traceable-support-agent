@@ -56,6 +56,14 @@ CASE_IDS = (
     "GEN-DEV-TK-001",
     "GEN-DEV-TK-006",
 )
+DIAGNOSTIC_CASE_IDS = (
+    "GEN-DEV-QA-003",
+    "GEN-DEV-TK-001",
+)
+PROFILES = {
+    "full": CASE_IDS,
+    "diagnostic-v2": DIAGNOSTIC_CASE_IDS,
+}
 MAX_CASES = len(CASE_IDS)
 MAX_CALLS = MAX_CASES * 2
 MAX_COST_CNY_NANOS = MAX_CASES * SESSION_MAX_WORST_COST_CNY_NANOS
@@ -90,7 +98,7 @@ def _load_json(path: Path, code: str) -> Any:
         _fail(code)
 
 
-def load_cases() -> list[dict[str, Any]]:
+def load_cases(case_ids: tuple[str, ...] = CASE_IDS) -> list[dict[str, Any]]:
     suite = _load_json(PUBLIC_SUITE, "generation_probe_suite_unreadable")
     if (
         type(suite) is not dict
@@ -103,9 +111,9 @@ def load_cases() -> list[dict[str, Any]]:
         for case in suite["cases"]
         if type(case) is dict
     }
-    if any(case_id not in by_id for case_id in CASE_IDS):
+    if any(case_id not in by_id for case_id in case_ids):
         _fail("generation_probe_case_missing")
-    cases = [by_id[case_id] for case_id in CASE_IDS]
+    cases = [by_id[case_id] for case_id in case_ids]
     if any(case.get("expected", {}).get("outcome") != "candidate" for case in cases):
         _fail("generation_probe_case_contract_invalid")
     return cases
@@ -293,7 +301,10 @@ def _prompt_identity() -> dict[str, Any]:
 
 
 def run_probe(args: argparse.Namespace) -> dict[str, Any]:
-    cases = load_cases()
+    case_ids = PROFILES[args.profile]
+    max_cases = len(case_ids)
+    max_calls = max_cases * 2
+    cases = load_cases(case_ids)
     offline_factories = (
         load_offline_factories(args.offline_responses)
         if args.mode == "offline"
@@ -310,7 +321,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
     public_cases: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases):
-        if total_calls + 2 > MAX_CALLS:
+        if total_calls + 2 > max_calls:
             stop_code = "call_envelope_exceeded"
             break
         if (
@@ -450,7 +461,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         **_prompt_identity(),
     }
     totals = {
-        "cases_planned": MAX_CASES,
+        "cases_planned": max_cases,
         "cases_executed": len(public_cases),
         "provider_calls": total_calls,
         "reserved_cost_cny_nanos": total_reserved_cost,
@@ -462,7 +473,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         "stopped_early": stop_code is not None,
         "stop_code": stop_code,
         "passed": (
-            len(public_cases) == MAX_CASES
+            len(public_cases) == max_cases
             and all(case["passed"] for case in public_cases)
         ),
     }
@@ -471,10 +482,11 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version": REPORT_SCHEMA_VERSION,
         "identity": identity,
         "mode": args.mode,
+        "profile": args.profile,
         "envelope": {
-            "case_ids": list(CASE_IDS),
-            "max_cases": MAX_CASES,
-            "max_calls": MAX_CALLS,
+            "case_ids": list(case_ids),
+            "max_cases": max_cases,
+            "max_calls": max_calls,
             "max_cost_cny_nanos": args.max_cost_cny_nanos,
             "automatic_retry_count": 0,
         },
@@ -486,6 +498,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         "schema_version": RAW_SCHEMA_VERSION,
         "identity": identity,
         "mode": args.mode,
+        "profile": args.profile,
         "totals": totals,
         "generation_failures": failure_summary,
         "cases": raw_cases,
@@ -507,6 +520,7 @@ def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run the fixed Issue #22 public-synthetic contract probe"
     )
+    parser.add_argument("--profile", choices=tuple(PROFILES), default="full")
     parser.add_argument("--mode", choices=("offline", "real"), default="offline")
     parser.add_argument("--offline-responses", type=Path)
     parser.add_argument("--out", type=Path, required=True)
@@ -516,7 +530,7 @@ def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--max-cost-cny",
         type=float,
-        default=MAX_COST_CNY_NANOS / 1_000_000_000,
+        default=None,
     )
     args = parser.parse_args(argv)
     if not SHA_RE.fullmatch(args.git_sha):
@@ -528,11 +542,20 @@ def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
         or not DIGEST_RE.fullmatch(args.image_digest)
     ):
         parser.error("--image-digest is required in real mode")
+    profile_max_cost = (
+        len(PROFILES[args.profile])
+        * SESSION_MAX_WORST_COST_CNY_NANOS
+        / 1_000_000_000
+    )
+    if args.max_cost_cny is None:
+        args.max_cost_cny = profile_max_cost
     if (
         type(args.max_cost_cny) is not float
-        or not 0 < args.max_cost_cny <= MAX_COST_CNY_NANOS / 1_000_000_000
+        or not 0 < args.max_cost_cny <= profile_max_cost
     ):
-        parser.error("--max-cost-cny must be within (0, 2.8]")
+        parser.error(
+            f"--max-cost-cny must be within (0, {profile_max_cost:g}]"
+        )
     args.max_cost_cny_nanos = int(round(args.max_cost_cny * 1_000_000_000))
     return args
 
@@ -547,8 +570,11 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "generation_contract_probe=done "
         f"mode={report['mode']} "
-        f"cases={report['totals']['cases_executed']}/{MAX_CASES} "
-        f"calls={report['totals']['provider_calls']}/{MAX_CALLS} "
+        f"profile={report['profile']} "
+        f"cases={report['totals']['cases_executed']}/"
+        f"{report['envelope']['max_cases']} "
+        f"calls={report['totals']['provider_calls']}/"
+        f"{report['envelope']['max_calls']} "
         f"passed={str(report['totals']['passed']).lower()} "
         f"stop={report['totals']['stop_code']}"
     )

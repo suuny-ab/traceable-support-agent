@@ -158,7 +158,13 @@ class GenerationContractProbeTest(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def _run(self, name: str, *, break_first: bool = False) -> tuple[int, dict, dict]:
+    def _run(
+        self,
+        name: str,
+        *,
+        break_first: bool = False,
+        profile: str = "full",
+    ) -> tuple[int, dict, dict]:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             responses = root / "responses.json"
@@ -171,6 +177,8 @@ class GenerationContractProbeTest(unittest.TestCase):
                     [
                         "--mode",
                         "offline",
+                        "--profile",
+                        profile,
                         "--offline-responses",
                         str(responses),
                         "--out",
@@ -219,6 +227,20 @@ class GenerationContractProbeTest(unittest.TestCase):
             generation_contract_probe._score_text("断电，检查。"),
             generation_contract_probe._score_text("断电,检查。"),
         )
+
+    def test_diagnostic_profile_is_fixed_to_two_failed_cases(self) -> None:
+        code, report, _ = self._run("diagnostic", profile="diagnostic-v2")
+
+        self.assertEqual(code, 0)
+        self.assertEqual(report["profile"], "diagnostic-v2")
+        self.assertEqual(
+            report["envelope"]["case_ids"],
+            list(generation_contract_probe.DIAGNOSTIC_CASE_IDS),
+        )
+        self.assertEqual(report["envelope"]["max_cases"], 2)
+        self.assertEqual(report["envelope"]["max_calls"], 4)
+        self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 1_400_000_000)
+        self.assertEqual(report["totals"]["provider_calls"], 4)
 
     def test_contract_failure_is_classified_without_false_success(self) -> None:
         code, report, _ = self._run("failure", break_first=True)
