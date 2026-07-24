@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：两次 `R1` 固定验证均已执行并按硬停止结束；v3 为待授权 `R0` 候选
+> 外部风险：三次 `R1` 固定验证均已执行并按硬停止结束；v4 为待授权 `R0` 候选
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -131,8 +131,10 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - 调用方式：直接调用外部 API，不使用本地小模型；自动重试 `0`。
 - 调用 / 费用：案例最多 `4`、每例最多 `2` 次、总调用最多 `8`；每例预留最坏费用
   `¥0.70`，精确总最坏费用 `¥2.80 CNY`。任何较低运行上限按预留费用在调用前停止。
-- 超时：第一阶段每次 `30s`、第二阶段每次 `180s`；四例顺序执行的理论总超时上界
-  `840s`，记录各次实际延迟。
+- 超时（事后更正）：执行镜像的两阶段运行时实际均使用 `180s`，四例顺序执行的理论
+  总超时上界为 `1,440s`。原卡误把 `generation.checklist` 中当时未被产品调用的
+  `30s` 常量写成第一阶段运行时超时；这未扩大调用 / 费用上限，但使时限记录不准确，
+  后续卡片必须直接冻结并公开运行时请求配置。
 - prompt SHA-256：
   - 第一阶段：
     `21752f7455c7c1f073db9b23bb92d9ea68aaa7a54d64ae052076b2aa8a49448c`
@@ -251,9 +253,9 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 诊断说明卡 v3
 
-> 状态：`ready_for_independent_authorization`
+> 状态：`executed_hard_stopped`
 >
-> 执行权限：无
+> 执行权限：已消费并关闭；不得恢复或使用剩余额度
 
 - 目的：只对 `GEN-DEV-TK-001` 复现一次，区分官方允许的 `length`、
   `content_filter`、`tool_calls`、`insufficient_system_resource` 与未知
@@ -288,4 +290,64 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
   attempt 和授权。
 - `last_verified_checkpoint`：`v3_candidate_image_offline_verified`。
 
-用户独立批准本卡前不得执行任何 Provider 调用；v2 剩余 1 次上限不能转入本卡。
+### v3 执行结果
+
+- 用户独立授权后执行固定 `1/1` 例、调用 `1/2`、自动重试 `0`；第一次响应触发
+  `execution_integrity_failure_stop`，剩余 1 次上限作废。
+- 响应为 HTTP 200、`response_received=true`、延迟 `113,708ms`，在正文解析前以
+  `provider_response_finish_reason_length` 失败关闭。这证明第一阶段达到请求的
+  `max_tokens=8192` 或上下文上限；当前请求体受 `65,536` 字节硬上限约束，远低于
+  `deepseek-v4-pro` 的 1M 上下文，因此当前可证伪原因是输出 token 上限不足。
+- 本次未获得可解析 usage，费用估算记录为 `0` 而非免费；调用前预留 `¥0.090414`，
+  实际账单待账号侧确认。
+- 公开报告 SHA-256：
+  `8b9d4c2a0d5b7f80d4694c979f149e9b15396e3b598cb13648930478aac98951`。
+- 私有记录 SHA-256：
+  `6af095fc3ab83607f712648bb15ea600f510dd1e0e92748c75736747a9fca3f8`。
+- 本次 `113,708ms` 延迟也证明早期卡片的第一阶段 `30s` 说明与实际镜像不一致；
+  实际运行时为 `180s`。该记录缺口不改变 `length`、调用数或费用边界结论，但必须在
+  下一卡片显式修正。
+
+本卡和授权已经消费完毕。任何后续 Provider 调用都必须使用新候选、新 attempt 和新授权。
+
+## 外部 API 长度修复验证说明卡 v4
+
+> 状态：`ready_for_independent_authorization`
+>
+> 执行权限：无
+
+- 目的：仅验证提高第一阶段输出额度后，`GEN-DEV-TK-001` 是否不再因
+  `finish_reason=length` 停止，并能形成合法 checklist / ticket candidate 或暴露下一项
+  稳定失败；不复跑已经通过的 QA。
+- `content_identity`：
+  `aa4cf00f2d8ef178fdbf9d0eb147a0e6861acbe6`。
+- `execution_identity`：
+  `sha256:0abd3e36e59600ad5167fc2f9467db6620967479c95397ca836b4b4e1fa95a7b`。
+- `content_version`：`two-stage-generation-contract/v4-length-recovery`。
+- `attempt_id`：`issue22-public-synthetic-length-recovery-4`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`；沿用 `2026-07-24` 已复核的官方 CNY
+  价格合同。
+- 数据：只使用公开套件中的 `GEN-DEV-TK-001`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt / thinking / schema：三组 prompt SHA-256 与 prompt 集保持 v3 不变，
+  thinking 继续启用；第一阶段 `max_tokens` 从 `8192` 提高到 `16384`，第二阶段保持
+  `8192`。预算从实际请求体读取阶段 `max_tokens`，不再把第一阶段硬编码为第二阶段值。
+- 超时：两阶段每次固定 `180,000ms`；公开报告
+  `generation-contract-probe-report-v4` 明确记录 `timeout_ms` 和两阶段 token 上限。
+- 调用 / 费用：固定 profile `length-recovery-v4`，最多 1 例、每例最多 2 次、总调用
+  最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`。固定单例离线两阶段实际预留
+  `¥0.226563`，仍在上限内。
+- 执行：任一非 `stop`、Provider / transport 执行完整性、预算、来源、安全或身份失败
+  立即硬停止；第一阶段合法且 checklist 通过时才允许第二次调用。
+- 公开记录：案例 ID、稳定原因码、来源章节、调用数、HTTP 状态、响应接收、请求超时、
+  每次延迟、成功计价 / 未计价调用、预留和 usage 估算；正文、推理、凭据和原始信封
+  不得进入 Git。
+- 允许结论：在这个固定公开工单上，`16384` 是否消除第一阶段 `length`，以及后续合同
+  是否形成 candidate 或稳定失败。
+- 不允许结论：该 token 值对所有请求充分、四例成功率、Stage 12 改变、生产实时就绪、
+  发布或用户验收。
+- restart：本 attempt 一经执行即关闭；任何剩余额度不得复用。
+- `last_verified_checkpoint`：`v4_candidate_image_offline_verified`。
+
+用户独立批准本卡前不得执行任何 Provider 调用；v3 剩余 1 次上限不能转入本卡。

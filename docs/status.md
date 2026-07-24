@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | 两次 `R1` 均按硬停止结束；当前 v3 诊断候选为 `R0`，新的 `R1` 待独立授权；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | 三次 `R1` 均按硬停止结束；当前 v4 长度修复候选为 `R0`，新的 `R1` 待独立授权；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | v2 已定位 QA 来源集合误报和 TK 非 `stop` 停止；v3 已冻结官方 finish-reason 子码与单例探针 |
-| 阻碍 | TK-001 的实际非 `stop` 枚举未知；只可通过新的单例有界 API 诊断确认 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；两次仓外授权验证分别调用 4 次与 3 次、均重试 0，可解析 usage 的估算费用分别为 ¥0.075783 与 ¥0.0856242，含未计价调用，实际账单待账号侧确认 |
-| 下一检查点 | 未授权时保持停止；若获新授权，只执行 TK-001，最多 2 次、最坏 ¥0.70、重试 0 的 `finish-reason-v3` |
+| 当前动作 | v3 已确认 TK 第一阶段为 `finish_reason=length`；v4 已提高第一阶段额度并冻结请求配置 / 预算身份 |
+| 阻碍 | `16384` 是否消除真实 API 的第一阶段截断仍未知；只可通过新的单例有界验证确认 |
+| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；三次仓外授权验证分别调用 4 / 3 / 1 次、均重试 0，可解析 usage 的估算费用分别为 ¥0.075783 / ¥0.0856242 / 未计价，实际账单待账号侧确认 |
+| 下一检查点 | 未授权时保持停止；若获新授权，只执行 TK-001，最多 2 次、最坏 ¥0.70、重试 0 的 `length-recovery-v4` |
 
 ## 当前产品事实
 
