@@ -1,6 +1,6 @@
 # 独立复核
 
-> 状态：`product_candidate_approved`
+> 状态：`approved`
 
 本增量触及安全边界与公共失败关闭合同，正式独立复核必须在 Draft PR 的
 `governance`、`web`、`api`、`containers` 四项 Checks 全绿、head SHA 冻结且主 Agent
@@ -93,3 +93,17 @@ finding-only 复核。
 本回执批准的是固定产品候选 `b2d3c09`。将回执与当前状态写入 Git 会形成新的纯文档 head，
 因此该收口候选必须重新通过四项 Checks，并由同一复核者只检查文档 diff 与回执一致性。
 通过前 PR 保持 Draft；本回执不批准合并、部署、Provider 调用、Stage 12 重跑或用户验收。
+
+## 纯文档收口与生产回执
+
+- 纯文档 head `d4beeac5cbacb586d24e1efba381adabb09fc5da` 只修改当前状态与活动
+  `review.md` / `result.md`，通过 CI run `30060850423` 的四项必需 Checks。
+- 同一复核者对 `b2d3c09..d4beeac` 文档 diff 只读复核，findings 为 0；回执已写入
+  PR #24 评论。
+- PR #24 squash merge 为 `main` 提交
+  `00c375053a85b8af9841568e569748c2fdb6e122`；主线 CI run `30061205883` 和自动生产
+  部署 run `30061304155` 均成功。
+- 部署后四个公开页面为 `200`，健康接口保持 `status=ok`、
+  `live_experience=replay_only`；用户于 `2026-07-24` 验收通过。
+- 本增量批准关闭 Issue #21；不批准 Stage 12 重跑、实时 Provider、费用、新凭据、
+  `product/0.1.0` 发布或 Issue #25 的外部 API 分类调用。

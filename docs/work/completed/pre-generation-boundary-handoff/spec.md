@@ -2,7 +2,7 @@
 
 > Issue：[#21](https://github.com/suuny-ab/traceable-support-agent/issues/21)
 >
-> 状态：`active`
+> 状态：`completed`
 >
 > 复杂度：完整
 >

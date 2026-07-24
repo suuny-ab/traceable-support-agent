@@ -15,14 +15,16 @@
 - [x] 按镜像摘要完成生产切换和回滚演练，并启用绿色 `main` 的自动生产部署。
 - [x] 用 Issue #7 精简元开发治理，并通过商业 SaaS 四页重设计、冻结候选复核、自动部署和用户验收。
 - [x] 用 Issue #12 完成 Stage 12 全新未见正式评测：19/24、9 通过、2 条边界缺陷登记为 Issue #21/#22，`0.1.0` 判断留待 Issue #14。
+- [x] 用 Issue #21 建立 QA、工单与公网 API 共用的生成前确定性安全 / 型号边界，并通过固定候选复核、自动部署和用户验收。
 
 ## 当前
 
-- [ ] [修复 SAF-003 / MBD-003 边界未正确转人工](https://github.com/suuny-ab/traceable-support-agent/issues/21)：建立 QA、工单与公网 API 共用的生成前确定性边界门，本轮只做本地 `R0` 合成回归。
+- 暂无活动增量；下一项需从公开 Issue 显式启动。
 
 ## 下一步
 
 - [ ] [修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
+- [ ] [评估外部 API 语义分类器与确定性硬门的混合边界](https://github.com/suuny-ab/traceable-support-agent/issues/25)。
 - [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
 - [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
 - [ ] [独立域名作为非阻塞增强](https://github.com/suuny-ab/traceable-support-agent/issues/15)。
