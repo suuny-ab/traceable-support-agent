@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：`R1` 固定验证已执行并按硬停止结束
+> 外部风险：两次 `R1` 固定验证均已执行并按硬停止结束；v3 为待授权 `R0` 候选
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -174,8 +174,9 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 - 执行案例 `3/4`，调用 `4/8`，自动重试 `0`，硬停止：
   `execution_integrity_failure_stop`。
-- 案例结果：第一例 checklist shape handoff；第二例 candidate 但缺 2 条公开必需事实；
-  第三例 Provider envelope handoff 并停止；第四例未执行。
+- 案例结果：第一例 checklist shape handoff；第二例形成 candidate，但当时的评分器将
+  NFKC 标点差异误报为缺少 2 条公开事实；第三例 Provider envelope handoff 并停止；
+  第四例未执行。
 - 成功解析 usage 的估算费用 `¥0.075783`；三例最坏预留 `¥0.359697`。失败调用的
   实际账单未知，不能把 usage 估算当作全部费用或发票。
 - 公开报告 SHA-256：
@@ -188,9 +189,9 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 诊断说明卡 v2
 
-> 状态：`ready_for_independent_authorization`
+> 状态：`executed_hard_stopped`
 >
-> 执行权限：无
+> 执行权限：已消费并关闭；不得恢复或使用剩余额度
 
 - 目的：仅获得 `GEN-DEV-QA-003` checklist 子合同和 `GEN-DEV-TK-001` Provider
   信封的隐私安全细分原因码，并验证 NFKC 评分修正没有影响来源 / 预算硬门。
@@ -224,4 +225,67 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
   候选、新 attempt 和新授权。
 - `last_verified_checkpoint`：`v2_candidate_image_offline_verified`。
 
-用户独立批准本卡前，不得执行任何 Provider 调用。第一次卡片的未用额度不能转移到本卡。
+### v2 执行结果
+
+- 用户独立授权后执行固定 `2/2` 例、调用 `3/4`、自动重试 `0`；第 2 例的第 1 次响应
+  触发 `execution_integrity_failure_stop`，剩余 1 次上限作废。
+- `GEN-DEV-QA-003` 两次响应均为 HTTP 200，形成 candidate，公开必需事实完整；候选使用
+  `COMMON-FAQ/map-recovery`、`CZ-R1-MANUAL/reset`，并额外使用直接支持轮组检查的
+  `FAULT-CODES/e101-wheel-blocked`。v2 精确集合评分因此误报
+  `source_sections_mismatch`；v3 只读离线重评分通过。
+- `GEN-DEV-TK-001` 第一次响应为 HTTP 200，但在内容解析前以
+  `provider_response_finish_reason_invalid` 失败关闭；v2 仍不能区分官方列出的 4 种
+  非 `stop` 原因。
+- 三次 Provider 延迟分别为 `88,966ms`、`69,672ms`、`120,146ms`，合计
+  `278,784ms`。成功解析 usage 的 2 次调用估算 `¥0.0856242`，1 次未获得 usage；
+  两例预留合计 `¥0.279288`，实际账单仍待账号侧确认。
+- v2 报告把 transport 的 `provider_response_received` 错投影为不存在的
+  `response_received` 字段，因此公开值为 `null`；HTTP 200 和私有安全观察仍证明响应
+  已收到。v3 已修正字段投影，但不改写既有回执。
+- 公开报告 SHA-256：
+  `27d5966a5eec74cdedc47e94ae5f4e650fa2df19d015eb94337fda13f70421ff`。
+- 私有记录 SHA-256：
+  `2396b0ed8367a07f10c0f408be943675ede3d8962c2d108aaf914e2d975fc841`。
+
+本卡和授权已经消费完毕。任何后续 Provider 调用都必须使用新候选、新 attempt 和新授权。
+
+## 外部 API 诊断说明卡 v3
+
+> 状态：`ready_for_independent_authorization`
+>
+> 执行权限：无
+
+- 目的：只对 `GEN-DEV-TK-001` 复现一次，区分官方允许的 `length`、
+  `content_filter`、`tool_calls`、`insufficient_system_resource` 与未知
+  `finish_reason`，同时验证安全 transport 的响应接收字段投影；所有非 `stop` 结果继续
+  失败关闭。
+- `content_identity`：
+  `47f9fa35243b81f293f69ff39abbb063bc5c75a8`。
+- `execution_identity`：
+  `sha256:76f7a3f979b328d30e125bce4ed698c418532780072f114ec98f698596483bb6`。
+- `content_version`：`two-stage-generation-contract/v3-finish-diagnostic`。
+- `attempt_id`：`issue22-public-synthetic-finish-reason-3`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`；价格沿用 `2026-07-24` 已复核的官方 CNY
+  合同。官方 Chat Completion 明确列出上述 4 种非成功停止原因；`length` 的正文可能被
+  截断，本候选不会接受或解析为成功。
+- 数据：只使用公开套件中的 `GEN-DEV-TK-001`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt：三组 SHA-256 和 prompt 集保持 v2 不变；不调整 prompt、thinking 或
+  `max_tokens`，避免把原因识别和行为修复混在一次 attempt。
+- 报告：`generation-contract-probe-report-v3`；公开实际使用的来源章节、
+  `response_received`、HTTP 状态、稳定原因码、调用数、延迟和计价覆盖；不公开正文、
+  推理、凭据或原始 Provider 信封。
+- 调用 / 费用：最多 1 例、每例最多 2 次、总调用最多 2；最坏预留 `¥0.70 CNY`；
+  自动重试 `0`。
+- 执行：第一阶段若为任一非 `stop` 或 Provider / transport 完整性失败，立即硬停止；
+  只有第一阶段合法 `stop` 且 checklist 合同通过时才允许第二次调用。
+- 允许结论：该固定响应属于哪个官方非成功停止原因，或工单两阶段能否在本候选下形成
+  candidate；QA-003 已由既有包离线证明，无需重复付费。
+- 不允许结论：已修复截断 / 过滤 / 资源问题、四例成功率、Stage 12 改变、生产实时就绪、
+  发布或用户验收。
+- restart：本 attempt 一经执行即关闭，剩余额度不得复用；任何行为修复必须另建候选、
+  attempt 和授权。
+- `last_verified_checkpoint`：`v3_candidate_image_offline_verified`。
+
+用户独立批准本卡前不得执行任何 Provider 调用；v2 剩余 1 次上限不能转入本卡。

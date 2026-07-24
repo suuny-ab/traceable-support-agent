@@ -83,11 +83,8 @@ API。
 
 ## 仍待验证
 
-- Provider 信封实际是哪一项官方字段差异；当前回执只保留稳定原因码，没有保存原始
-  信封或足以区分字段的安全形状投影。
-- 第一阶段 `two_step_checklist_invalid` 的具体子合同；当前原因码粒度不足。
-- QA candidate 缺失事实是生成遗漏还是公开评分与允许改写边界不一致。
-- 全部实际费用和逐调用延迟。
+- TK-001 的实际 `finish_reason` 属于官方哪一种非 `stop` 枚举；v2 只定位到该字段。
+- 两次 R1 尝试中未获得 usage 的调用实际账单。
 - Draft PR 四项 Checks、冻结 head SHA 的正式独立复核和用户实际体验。
 
 ## 停止后的本地诊断候选
@@ -114,8 +111,57 @@ API。
 这些本地证据只证明评分缺陷已修复、下一次失败会获得更具体且不含正文的子码。它不证明
 checklist 或 Provider 信封已经兼容，不能恢复第一次授权。
 
+## 第二次外部 API 停止回执
+
+- 用户独立批准后，使用代码
+  `221c2df07736f0b8add23203295b8e1912deb462`、镜像
+  `sha256:f923ebc9546de7b90c782d30ba33112add981f4313a62e93f2c876bc02b4db68`
+  执行 `issue22-public-synthetic-diagnostic-2`。
+- 固定 2 例均执行，共调用 `3/4`、自动重试 `0`；TK-001 第一次响应触发
+  `execution_integrity_failure_stop`，剩余 1 次额度关闭。
+- QA-003 两次 HTTP 200 后形成 candidate，必需事实完整、第一 / 二阶段合同和
+  completeness gate 均通过。它使用两份预期来源，并额外使用直接支持轮组检查的
+  `FAULT-CODES/e101-wheel-blocked`；v2 的精确来源集合评分因此误报。
+- TK-001 第一次 HTTP 200 响应在正文解析前以
+  `enumeration_execution_failure:provider_response_finish_reason_invalid` 失败关闭。
+  这证明问题位于 `finish_reason`，但 v2 尚不能区分 `length`、过滤、工具调用、资源
+  中断或未知值。
+- 三次延迟为 `88,966ms`、`69,672ms`、`120,146ms`；两次成功解析 usage 的费用估算
+  `¥0.0856242`，1 次未计价；两例预留合计 `¥0.279288`，未越过 `¥1.40` 授权上限。
+  实际账单仍待账号侧确认。
+- v2 报告的 `response_received` 为 `null`，原因是探针读取了错误字段名；HTTP 200 与
+  私有安全观察可确认响应收到。该报告不改写，v3 增加回归并修正投影。
+- 公开报告 SHA-256：
+  `27d5966a5eec74cdedc47e94ae5f4e650fa2df19d015eb94337fda13f70421ff`。
+- 仓库外私有记录 SHA-256：
+  `2396b0ed8367a07f10c0f408be943675ede3d8962c2d108aaf914e2d975fc841`。
+
+## v3 本地诊断候选
+
+- 探针对来源采用“必需集合包含”而非“集合精确相等”；额外来源仍必须经过产品现有的
+  逐字 claim、义务绑定和来源门。既有 QA-003 包离线重评分通过，实际使用
+  `COMMON-FAQ/map-recovery`、`CZ-R1-MANUAL/reset`、
+  `FAULT-CODES/e101-wheel-blocked`，Provider 调用 `0`。
+- Provider 解析器按官方枚举区分 `length`、`content_filter`、`tool_calls`、
+  `insufficient_system_resource`，未知值仍为 `finish_reason_invalid`；所有非 `stop`
+  继续失败关闭，不解析截断正文。
+- 公开报告升级为 `generation-contract-probe-report-v3`，修正响应接收字段并公开安全
+  来源章节；新增固定 `finish-reason-v3`，只运行 TK-001，最多 2 次、`¥0.70`、重试 0。
+- v3 代码：
+  `47f9fa35243b81f293f69ff39abbb063bc5c75a8`；镜像：
+  `sha256:76f7a3f979b328d30e125bce4ed698c418532780072f114ec98f698596483bb6`，
+  revision 精确匹配且运行用户为 `10001:10001`。
+- 本地证据：API 全量无失败（1 项环境门跳过）；工具 `73` 项无失败（7 项环境门跳过）；
+  公开扫描 `186` 个文件 / 8 个公开案例通过；镜像在 `--network none`、只读根文件系统、
+  无 capabilities 下通过 7 项探针测试，Provider 调用 `0`。
+
+这些证据证明 v3 能在不读取正文的情况下给出更具体的非成功停止原因，并消除 QA-003 的
+来源集合误报。它不证明 TK-001 的实际枚举、不证明 token / prompt 修复，也不授权新的
+Provider 调用。
+
 ## 当前允许的结论
 
 Issue #22 的 R0 合同候选通过公开合成与注入式回归，机械投影已从模型输出移到宿主且
-未放松已声明硬门；但它没有通过固定真实 API 探针，不能声称真实兼容性或成功率改善。
-失败关闭和授权停止线实际生效。尚未形成生产就绪、发布或用户验收结论。
+未放松已声明硬门；真实 API 已证明 QA-003 可以形成完整候选，也证明 TK-001 仍会因
+非 `stop` 响应失败关闭。尚不能声称全部合同兼容、成功率改善、生产就绪、发布或用户
+验收。

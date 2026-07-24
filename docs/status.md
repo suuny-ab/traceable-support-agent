@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | 第一次 `R1` 已硬停止；当前 v2 诊断候选为 `R0`，新的 `R1` 待独立授权；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | 两次 `R1` 均按硬停止结束；当前 v3 诊断候选为 `R0`，新的 `R1` 待独立授权；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | v2 诊断候选已细分隐私安全失败码、修正 NFKC 评分并冻结两例最便宜证伪 |
-| 阻碍 | 真实 checklist 子合同和 Provider 信封子码仍未知；只可通过新的两例有界 API 诊断确认 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；本次获准验证另行执行 4 次、重试 0，成功解析 usage 的估算费用 ¥0.075783，三例最坏预留 ¥0.359697，实际账单待账号侧确认 |
-| 下一检查点 | 未授权时保持停止；若获新授权，执行 2 例、最多 4 次、最坏 ¥1.40、重试 0 的 `diagnostic-v2` |
+| 当前动作 | v2 已定位 QA 来源集合误报和 TK 非 `stop` 停止；v3 已冻结官方 finish-reason 子码与单例探针 |
+| 阻碍 | TK-001 的实际非 `stop` 枚举未知；只可通过新的单例有界 API 诊断确认 |
+| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；两次仓外授权验证分别调用 4 次与 3 次、均重试 0，可解析 usage 的估算费用分别为 ¥0.075783 与 ¥0.0856242，含未计价调用，实际账单待账号侧确认 |
+| 下一检查点 | 未授权时保持停止；若获新授权，只执行 TK-001，最多 2 次、最坏 ¥0.70、重试 0 的 `finish-reason-v3` |
 
 ## 当前产品事实
 
