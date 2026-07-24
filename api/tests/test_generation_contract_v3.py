@@ -247,7 +247,7 @@ def test_failure_taxonomy_is_stable_and_content_free() -> None:
         "code": "provider_response_envelope_invalid",
     }
     assert classify_generation_failure(
-        "enumeration_execution_failure:provider_response_finish_reason_invalid"
+        "enumeration_execution_failure:provider_response_finish_reason_length"
     )["family"] == "provider_response_envelope"
 
     summary = summarize_generation_failures(

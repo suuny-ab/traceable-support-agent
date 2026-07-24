@@ -267,9 +267,29 @@ class TG07UUsageCompatibilityTests(unittest.TestCase):
             lambda: parse_chat_completion_compatible(canonical_json_bytes(envelope)),
         )
 
-    def test_legal_optional_usage_does_not_bypass_finish_reason_validation(self) -> None:
+    def test_official_non_stop_finish_reasons_have_privacy_safe_codes(self) -> None:
+        expected_codes = {
+            "length": "provider_response_finish_reason_length",
+            "content_filter": "provider_response_finish_reason_content_filter",
+            "tool_calls": "provider_response_finish_reason_tool_calls",
+            "insufficient_system_resource": (
+                "provider_response_finish_reason_insufficient_system_resource"
+            ),
+        }
+        for finish_reason, expected_code in expected_codes.items():
+            with self.subTest(finish_reason=finish_reason):
+                envelope = json.loads(extended_body())
+                envelope["choices"][0]["finish_reason"] = finish_reason
+                self.assertCode(
+                    expected_code,
+                    lambda envelope=envelope: parse_chat_completion_compatible(
+                        canonical_json_bytes(envelope)
+                    ),
+                )
+
+    def test_unknown_finish_reason_remains_invalid(self) -> None:
         envelope = json.loads(extended_body())
-        envelope["choices"][0]["finish_reason"] = "length"
+        envelope["choices"][0]["finish_reason"] = "unknown"
         self.assertCode(
             "provider_response_finish_reason_invalid",
             lambda: parse_chat_completion_compatible(canonical_json_bytes(envelope)),

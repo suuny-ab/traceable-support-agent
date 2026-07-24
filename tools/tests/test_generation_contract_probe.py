@@ -203,7 +203,7 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(
             report["schema_version"],
-            "generation-contract-probe-report-v2",
+            "generation-contract-probe-report-v3",
         )
         self.assertEqual(
             report["envelope"]["case_ids"],
@@ -216,9 +216,23 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertGreaterEqual(report["totals"]["provider_latency_ms"], 0)
         self.assertTrue(report["totals"]["passed"])
         self.assertEqual(report["generation_failures"]["failures"], 0)
-        self.assertEqual(raw["schema_version"], "generation-contract-probe-raw-v2")
+        self.assertEqual(raw["schema_version"], "generation-contract-probe-raw-v3")
         self.assertTrue(
             all(len(case["provider_observations"]) == 2 for case in report["cases"])
+        )
+        self.assertTrue(
+            all(
+                observation["response_received"] is True
+                for case in report["cases"]
+                for observation in case["provider_observations"]
+            )
+        )
+        self.assertTrue(
+            all(
+                case["used_source_sections"]
+                == raw_case["scoring"]["used_source_sections"]
+                for case, raw_case in zip(report["cases"], raw["cases"], strict=True)
+            )
         )
         self.assertTrue(all(case["passed"] for case in report["cases"]))
 
@@ -241,6 +255,73 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(report["envelope"]["max_calls"], 4)
         self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 1_400_000_000)
         self.assertEqual(report["totals"]["provider_calls"], 4)
+
+    def test_finish_reason_profile_is_fixed_to_ticket_case(self) -> None:
+        code, report, _ = self._run(
+            "finish-reason",
+            profile="finish-reason-v3",
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(report["profile"], "finish-reason-v3")
+        self.assertEqual(
+            report["envelope"]["case_ids"],
+            list(generation_contract_probe.FINISH_REASON_CASE_IDS),
+        )
+        self.assertEqual(report["envelope"]["max_cases"], 1)
+        self.assertEqual(report["envelope"]["max_calls"], 2)
+        self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 700_000_000)
+        self.assertEqual(report["totals"]["provider_calls"], 2)
+
+    def test_scoring_allows_bound_extra_sources_but_requires_expected_sources(
+        self,
+    ) -> None:
+        case = generation_contract_probe.load_cases(("GEN-DEV-QA-003",))[0]
+        expected_sections = case["expected"]["source_sections"]
+        evidence = [
+            {
+                "evidence_id": f"E{index}",
+                "document_id": section.split("/", 1)[0],
+                "section_id": section.split("/", 1)[1],
+            }
+            for index, section in enumerate(
+                [*expected_sections, "FAULT-CODES/e101-wheel-blocked"],
+                start=1,
+            )
+        ]
+        package = {
+            "outcome": "candidate",
+            "failure_classification": None,
+            "worst_cost_cny_nanos": 0,
+            "usage": [],
+            "evidence": evidence,
+            "answer": {
+                "used_evidence_ids": [entry["evidence_id"] for entry in evidence],
+                "content": {
+                    "answer": {
+                        "text": "；".join(case["expected"]["required_facts"]),
+                    },
+                },
+            },
+        }
+
+        scoring = generation_contract_probe.score_case(case, package, 2)
+        self.assertTrue(scoring["passed"])
+        self.assertIn(
+            "FAULT-CODES/e101-wheel-blocked",
+            scoring["used_source_sections"],
+        )
+
+        package["answer"]["used_evidence_ids"] = [
+            evidence[0]["evidence_id"],
+            evidence[2]["evidence_id"],
+        ]
+        scoring = generation_contract_probe.score_case(case, package, 2)
+        self.assertFalse(scoring["passed"])
+        self.assertIn(
+            "required_source_sections_missing",
+            scoring["failure_codes"],
+        )
 
     def test_contract_failure_is_classified_without_false_success(self) -> None:
         code, report, _ = self._run("failure", break_first=True)

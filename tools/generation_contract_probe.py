@@ -46,8 +46,8 @@ from traceable_support.provider.deepseek import (  # noqa: E402
 )
 from traceable_support.provider.response import json_response  # noqa: E402
 
-REPORT_SCHEMA_VERSION = "generation-contract-probe-report-v2"
-RAW_SCHEMA_VERSION = "generation-contract-probe-raw-v2"
+REPORT_SCHEMA_VERSION = "generation-contract-probe-report-v3"
+RAW_SCHEMA_VERSION = "generation-contract-probe-raw-v3"
 OFFLINE_RESPONSES_SCHEMA_VERSION = "generation-contract-probe-offline-v1"
 PUBLIC_SUITE = REPO_ROOT / "evals" / "public-regression-v1.json"
 CASE_IDS = (
@@ -60,9 +60,11 @@ DIAGNOSTIC_CASE_IDS = (
     "GEN-DEV-QA-003",
     "GEN-DEV-TK-001",
 )
+FINISH_REASON_CASE_IDS = ("GEN-DEV-TK-001",)
 PROFILES = {
     "full": CASE_IDS,
     "diagnostic-v2": DIAGNOSTIC_CASE_IDS,
+    "finish-reason-v3": FINISH_REASON_CASE_IDS,
 }
 MAX_CASES = len(CASE_IDS)
 MAX_CALLS = MAX_CASES * 2
@@ -230,7 +232,9 @@ def _safe_observation_summary(transport: Any) -> list[dict[str, Any]]:
                 "outcome": observation.get("outcome"),
                 "failure_code": observation.get("failure_code"),
                 "http_status": observation.get("http_status"),
-                "response_received": observation.get("response_received"),
+                "response_received": observation.get(
+                    "provider_response_received"
+                ),
                 "latency_ms": observation.get("latency_ms"),
             }
         )
@@ -265,8 +269,8 @@ def score_case(
     if _estimated_cost_nanos(package) > package.get("worst_cost_cny_nanos", 0):
         failures.append("usage_exceeds_reservation")
     used_sections = _used_source_sections(package, case["task_type"])
-    if used_sections != sorted(expected["source_sections"]):
-        failures.append("source_sections_mismatch")
+    if not set(expected["source_sections"]).issubset(used_sections):
+        failures.append("required_source_sections_missing")
     visible = _score_text(_visible_text(package, case["task_type"]))
     if any(
         _score_text(fact) not in visible
@@ -392,6 +396,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
                     "provider_calls": observed_calls,
                     "provider_observations": observations,
                     "generation_failure": None,
+                    "used_source_sections": [],
                     "passed": False,
                     "failure_codes": [f"execution_exception:{code}"],
                 }
@@ -440,6 +445,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
                 "provider_calls": execution.provider_call_count,
                 "provider_observations": observations,
                 "generation_failure": package.get("failure_classification"),
+                "used_source_sections": scoring["used_source_sections"],
                 "passed": scoring["passed"],
                 "failure_codes": scoring["failure_codes"],
             }

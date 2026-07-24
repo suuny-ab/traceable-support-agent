@@ -47,6 +47,25 @@ BASE_USAGE_FIELDS = frozenset(BASE_USAGE_FIELD_ORDER)
 OPTIONAL_USAGE_FIELD = "prompt_tokens_details"
 COMPLETION_OPTIONAL_USAGE_FIELD = "completion_tokens_details"
 OPTIONAL_USAGE_FIELDS = BASE_USAGE_FIELDS | {OPTIONAL_USAGE_FIELD, COMPLETION_OPTIONAL_USAGE_FIELD}
+_FINISH_REASON_FAILURE_CODES = {
+    "length": "provider_response_finish_reason_length",
+    "content_filter": "provider_response_finish_reason_content_filter",
+    "tool_calls": "provider_response_finish_reason_tool_calls",
+    "insufficient_system_resource": (
+        "provider_response_finish_reason_insufficient_system_resource"
+    ),
+}
+
+
+def _finish_reason_failure_code(value: Any) -> str | None:
+    if value == "stop":
+        return None
+    if type(value) is str:
+        return _FINISH_REASON_FAILURE_CODES.get(
+            value,
+            "provider_response_finish_reason_invalid",
+        )
+    return "provider_response_finish_reason_invalid"
 
 
 def _validate_compatible_envelope_shape(envelope: Any) -> None:
@@ -89,8 +108,9 @@ def _validate_compatible_envelope_shape(envelope: Any) -> None:
         raise Tg07aContractError("provider_response_choice_field_missing")
     if set(choice) - required_choice:
         raise Tg07aContractError("provider_response_choice_field_unexpected")
-    if choice["finish_reason"] != "stop":
-        raise Tg07aContractError("provider_response_finish_reason_invalid")
+    finish_reason_failure = _finish_reason_failure_code(choice["finish_reason"])
+    if finish_reason_failure is not None:
+        raise Tg07aContractError(finish_reason_failure)
     if choice["logprobs"] is not None:
         raise Tg07aContractError("provider_response_logprobs_unexpected")
     message = choice["message"]
