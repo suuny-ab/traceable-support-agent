@@ -12,10 +12,10 @@
 | 风险 / 成熟度 | `R0`：仅本地合成回归，Provider 调用必须为 0；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/pre-generation-boundary-handoff/` |
 | 最近完成 | `docs/work/completed/stage12-formal-eval/` |
-| 当前动作 | Issue #21 本地候选已实现；API 74 通过 / 1 环境跳过，Stage 12 runner 机制 11 通过，治理工具 64 通过 / 7 环境跳过，Web 18 通过；正在同步候选事实 |
+| 当前动作 | Draft PR #24 首轮 `containers` 缺文件失败已最小修复；本地 replay 镜像无网络导入、非 root 只读启动与 `replay_only` 健康检查通过，准备提交新 head |
 | 阻碍 | 无 |
 | Provider | 公网已禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；本增量不授权 Provider、费用或重试，验证中调用数必须保持 0 |
-| 下一检查点 | 完成候选一致性检查；随后把推送、Draft PR、四项 Checks 和冻结 SHA 独立复核作为下一外部阶段 |
+| 下一检查点 | 本地 replay 镜像无网络 / 无凭据冒烟通过后提交新 head；等待四项 Checks 重新全绿再冻结 SHA 独立复核 |
 
 ## 当前产品事实
 

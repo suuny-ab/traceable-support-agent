@@ -43,6 +43,25 @@
   `GEN-DEV-MH-001` 原因不一致；其他已知缺口保持不变。
 - 公网仍为 `replay_only`，没有部署、Provider、费用或外部业务动作变化。
 
+## CI 修复记录
+
+- Draft PR #24 首轮 CI run `30058724960` 绑定 head
+  `6331dc24a029ca38fad5d6256dd486134c78e04b`。
+- `governance`、`web`、`api` 通过；`publish` 作为 Draft PR 按设计跳过。
+- `containers` 在 replay 镜像的无 site-packages 导入冒烟中失败：
+  `ModuleNotFoundError: No module named 'traceable_support.product.boundaries'`。
+- 根因是 replay target 只选择性复制 `product/__init__.py` 与 `product/types.py`，新增的
+  API 启动依赖 `product/boundaries.py` 未进入镜像；本地源码测试因此不能证明选择性镜像
+  文件集完整。
+- 修复只为 replay target 增加该纯标准库模块，不把 retrieval、generation 或 Provider
+  模块带入 replay 镜像。`6331dc2` 已失效，不得用于正式复核。
+- 本地 replay target 构建为镜像
+  `sha256:a2935c71b17b4e3a854512795882d6fa95141a9f5564fde9ab08bfa4544ee575`；
+  `--network none` + `python -S` 导入通过，镜像用户保持 `10001:10001`。
+- 该镜像在只读文件系统、最小 tmpfs、`--cap-drop ALL`、`no-new-privileges` 和
+  `TRACEABLE_PUBLIC_LIVE_ENABLED=false` 下启动成功；健康响应为
+  `status=ok`、`live_experience=replay_only`。测试容器随后删除，Provider 调用仍为 0。
+
 ## 允许与不允许的结论
 
 - 允许：声明的公开合成边界在当前本地候选的 QA、工单、Runner 与公网 API 入口上会于
