@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from .runs import PublicApiError, PublicRunService
+from .runs import PublicApiError, PublicRunService, _parse_bool
 
 
 MAX_REQUEST_BYTES = 16 * 1024
@@ -277,7 +277,15 @@ def _arguments() -> argparse.Namespace:
 
 def main() -> int:
     args = _arguments()
-    service = PublicRunService(args.database, allowed_origin=args.origin)
+    product_runner = None
+    if _parse_bool(os.environ.get("TRACEABLE_PUBLIC_LIVE_ENABLED")):
+        # Lazy import keeps the replay-only image free of live dependencies.
+        from .live_assembly import assemble_product_runner
+
+        product_runner = assemble_product_runner()
+    service = PublicRunService(
+        args.database, allowed_origin=args.origin, product_runner=product_runner
+    )
     server = create_server(host=args.host, port=args.port, service=service)
     stop_once = threading.Event()
 

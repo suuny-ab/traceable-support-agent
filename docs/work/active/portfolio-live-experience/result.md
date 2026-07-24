@@ -174,4 +174,61 @@ v1 证明“把产品原理塞进主视觉”不可接受；v2 证明过度简�
 
 ## 下一检查点
 
-核验并集成 `codex/live-llm-workbench` @ `71104ee`，保持 Provider、推送、合并与部署边界。
+Worker 候选 `71104ee` 已由 Integrator 集成到 `codex/integrate-live-llm-workbench`；
+Provider、推送、合并与部署边界保持不变。下一步：推送集成分支并创建 Draft PR。
+
+---
+
+## 本轮结果：live 主路径工作台候选（2026-07-24 · Worker Kimi K3）
+
+### 已完成
+
+1. **确定性证据不足边界**：`product/boundaries.py` 新增 `unsupported_claim` 规则
+   （2.4GHz / 5GHz / 无线频段 / 双频等批准来源未覆盖的能力主张），经 preflight →
+   `_insert_blocked_run` 形成新 run、`provider_call_count=0`、不存原文；runner 与
+   `run_qa` / `run_ticket` 内层自动获得同一拦截。`projection.blocked_result` 新增对应
+   文案。`evals/public-regression-v1.json` 的 `GEN-DEV-IE-001` 已知差距关闭（
+   `GEN-DEV-MH-003` 仍未实现，保持登记）。
+2. **公网 live 装配点**：`api/live_assembly.py` 在 `TRACEABLE_PUBLIC_LIVE_ENABLED=true`
+   时构建 `DefaultProductRunner`；健康门要求嵌入模型清单校验、六份合成语料、检索依赖
+   可导入、凭据占位存在（只查存在性，不读值）。任一缺失则 `is_ready=False`，健康状态
+   继续 `replay_only`。装配在 `http.py main()` 中惰性导入，回放镜像无 live 依赖（
+   `python -S` 导入证明保持）。生产 compose / Dockerfile 未改，`provider_enabled=false`。
+3. **live-only 工作台**：`DemoWorkbench.tsx` 重排信息层级为 运行身份（健康检测）→
+   三个默认案例 + 一个边界挑战（每次点击创建新 run）→ 受约束自由探索（推荐问法 +
+   500 字 + 型号 + QA/工单）→ 已验证回放次要入口（显式点击，绝不自动替代 live）。
+   案例数据收敛到 `web/app/lib/live-cases.json`；路由改为 live 或 blocked 两种，
+   边界挑战因 preflight 在 live 门前持久化，live 关闭时仍可创建 0 调用 handoff run。
+4. **诚实状态**：结果视图新增 Provider 调用行（`N 次 · 零自动重试` /
+   `0 次 · 模型调用前停止` / `未知` / `回放不调用模型`）与 `handoff_reason` chip；
+   超时 / 断连 / 协议错误 / 503 的诚实 handoff 文案保留；阶段轨迹仍只来自服务端
+   状态轮询，无任何”模型思考”动画或 Chain of Thought。
+5. **本地验收工具**：`tools/local_live_workbench.py`（dev-only）用检索派生的离线注入
+   transport 启动同一 `PublicRunService`，不调 Provider、不读凭据。
+
+### 验证结果
+
+- API 全量：`pytest api/tests` 110 项全部通过（含新 `test_live_assembly.py` 5 项、
+  `test_product_boundaries.py` 新增 IE-001 期望与反例、预检新增 unsupported_claim case）；
+  首次运行前按项目脚本下载固定 BGE 模型到 gitignored `artifacts/`。
+- 工具测试：`pytest tools/tests` 71 passed、7 skipped、117 subtests passed（47.7s）。
+- Web：`npm test`（next build + node tests）23 项全部通过；`tsc --noEmit` 与
+  `eslint .` 干净。
+- 公开仓库扫描：`check_public_repo.py` passed，187 个文件。
+- 本地端到端（离线注入 transport，非真实模型）：QA 局部清扫、工单地毯、QA E310
+  均形成 candidate、clause 绑定来源正确（`CZ-R1-MANUAL · 清扫模式`、
+  `CZ-R2-MANUAL · 扫拖模式`、`FAULT-CODES · E310 CZ-R2 集尘通道`）、
+  `provider_call_count=2`；IE-001 handoff、`provider_call_count=0`、
+  `handoff_reason=unsupported_claim`；自由输入出范围被预检拦截；人工批准写入服务端。
+
+### 隐私 / 安全评估
+
+自由输入面未扩大：同一 500 字上限、同一敏感正则 + 短语预检、同一出范围词表、同一
+浏览器软限 / 队列 / 预算、同一 30 天原文保留与清理。推荐问法只是前端填充，不绕过
+任何服务端检查。不构成新的隐私 / 安全边界变化，无需停止升级。
+
+### 证据边界
+
+离线注入 transport 只证明服务端链、合同、投影与工作台行为，不证明真实模型质量；
+真实 Provider 仍需独立冻结与授权。生产保持 `replay_only`，本候选未部署、未改变任何
+公开主张。

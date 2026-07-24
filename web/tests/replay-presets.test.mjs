@@ -48,6 +48,16 @@ test("insufficient evidence replay stops before planning or generation", () => {
   assert.match(replay.result.answer, /转交人工/);
   assert.equal(replay.result.gates.find((gate) => gate.label === "批准来源").pass, false);
   assert.equal(replay.result.gates.find((gate) => gate.label === "Provider 调用前拦截").pass, true);
-  assert.equal(selectRunRoute({ availability: "available", isPreset: true, replayOnly: replay.replayOnly }), "replay");
-  assert.equal(selectRunRoute({ availability: "available", isPreset: false, replayOnly: replay.replayOnly }), "live");
+});
+
+
+test("live-first routing never auto-substitutes replay", () => {
+  assert.equal(selectRunRoute({ availability: "available" }), "live");
+  assert.equal(selectRunRoute({ availability: "unavailable" }), "blocked");
+  assert.equal(selectRunRoute({ availability: "unknown" }), "blocked");
+  assert.equal(selectRunRoute({ availability: "checking" }), "blocked");
+  // Deterministic preflight handoffs stay runnable without live: they are
+  // persisted before the live gate and never reach a Provider call.
+  assert.equal(selectRunRoute({ availability: "unavailable", preflightOnly: true }), "live");
+  assert.equal(selectRunRoute({ availability: "unknown", preflightOnly: true }), "live");
 });

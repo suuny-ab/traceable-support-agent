@@ -194,6 +194,11 @@ class PublicRunServiceTests(unittest.TestCase):
                 "model_scope_conflict",
                 "CZ-R1",
             ),
+            (
+                "CZ-R1只支持2.4GHz还是也支持5GHz无线网络？",
+                "unsupported_claim",
+                "CZ-R1",
+            ),
         ]
         service = self._service(
             live_enabled=True,

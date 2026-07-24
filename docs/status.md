@@ -5,23 +5,23 @@
 | 字段 | 内容 |
 | --- | --- |
 | `state` | `developing` |
-| 更新时间 | `2026-07-24` |
+| 更新时间 | `2026-07-25` |
 | 当前产品目标 | Issue #28：完成最终作品集视觉与三个固定示例的受控真实体验 |
-| 当前集成任务 | 核验并集成 live workbench 候选 |
+| 当前集成任务 | live workbench 候选已集成；等待 Draft PR 与 CI |
 | 复杂度 | 完整；候选涉及前端、API、持久化和受控 live 路径 |
 | 风险 / 成熟度 | 当前候选核验为 `R0`；产品保持 `S1 公开 Beta`，实时 Provider、费用、凭据、生产开关和部署仍需独立授权 |
-| 产品候选 | `codex/live-llm-workbench` @ `71104ee`，等待从 Worker 候选进入工程集成 |
+| 产品候选 | `codex/integrate-live-llm-workbench`，已集成 Worker 候选 `71104ee` |
 | 项目基线 | `codex/portfolio-experience` |
 | 活动工作 | `docs/work/active/portfolio-live-experience/` |
-| 阻碍 | 无工程阻碍；产品候选的 Worker 测试结果尚未由当前 Codex 复跑 |
+| 阻碍 | 无工程阻碍 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；历史账单事实不提供当前调用授权 |
-| 下一检查点 | 按候选依赖核验和集成 `71104ee`；不自动启用 Provider、推送、合并或部署 |
+| 下一检查点 | 推送集成分支并创建 Draft PR；不自动启用 Provider、合并或部署 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `TASK-TRACEABLE-LIVE-WORKBENCH` | `candidate_ready` | Kimi 候选 `71104ee`；Worker 报告 API 110、tools 71、Web 23 通过，当前 Codex 待核验 |
+| `TASK-TRACEABLE-LIVE-WORKBENCH` | `integrated` | Worker 候选 `71104ee` 已集成；Integrator 复跑测试结果见 result.md |
 
 Task 可以并行，进入受保护 `main`、正式复核、部署和用户验收仍按依赖串行。
 
