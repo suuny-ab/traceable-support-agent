@@ -1,6 +1,6 @@
 # 复核记录
 
-> 状态：`changes_required_addressed_pending_targeted_rereview`
+> 状态：`pass`
 
 正式复核只能在 Draft PR 的 `governance`、`web`、`api`、`containers` 全绿、head SHA
 冻结且主 Agent 停止写入后进行。复核范围至少包括：
@@ -34,3 +34,18 @@
 - 旧回执：候选变化后失效。
 - 下一门：新 head 四项 Checks 全绿后，只读复核 finding 与覆盖 diff；在此之前不得
   声称正式复核通过。
+
+## 针对性复核
+
+- 冻结 head：`f59399140f54b311f5181604bba510a62f4d87aa`。
+- CI：`governance`、`web`、`api`、`containers` 全绿；Draft `publish` 按设计跳过。
+- 范围：原 P1 finding、`approved_source_spans` 覆盖 diff、QA / 工单 clause 级来源门、
+  同 evidence 选中 / 忽略 clause 攻击回归、失败分类和相关公开主张。
+- 结论：`pass`。
+- Finding：`none`。
+- 原 P1：已关闭。攻击构造分别稳定得到
+  `top10_v8_clause_binding_invalid` 与 `ticket_v4_clause_binding_invalid`，未发现等价
+  clause 身份绕过。
+- 证据边界：复核证明原确定性构造路径已关闭，并且新 head 通过现有自动化与 CI；不证明
+  v15 真实 Provider 兼容、公开回归质量改善、稳定成功率、Stage 12 改善、发布或用户
+  实时体验验收。

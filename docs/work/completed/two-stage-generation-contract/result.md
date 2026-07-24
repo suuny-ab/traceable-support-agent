@@ -1,6 +1,6 @@
 # 结果记录
 
-> 状态：`in_progress`
+> 状态：`closed_not_planned`
 >
 > 启动日期：`2026-07-24`
 
@@ -542,3 +542,28 @@ failure，但其后正式复核发现 clause 约束降级并由 v15 修正。不
 
 v15 R0 证明已关闭正式 finding 的构造路径，不证明真实 Provider 兼容。v14 真实候选
 使用旧 prompt / 约束，只能作为历史前驱证据，不能迁移到 v15。
+
+## 最终复核、交付与停止结论
+
+- 冻结 head `f59399140f54b311f5181604bba510a62f4d87aa` 的
+  `governance`、`web`、`api`、`containers` 全绿；针对原 P1 finding 与覆盖 diff 的
+  只读复核结论为 `pass`，finding 为 `none`。
+- 原 P1 已由宿主派生 `approved_source_spans`、QA / 工单 clause 级来源门和同 evidence
+  攻击回归关闭；稳定失败码和 `obligation_binding` 分类保持。
+- PR #27 squash merge 为
+  `69ae3cc28d1b6d28abac6c71ef998eb48acefb01`。主线 `ci-release`
+  `30077476962` 和自动生产部署 `30077623108` 成功；公网 `/`、`/app`、`/design`、
+  `/privacy` 均为 `200`，健康接口为 `status=ok`、`live_experience=replay_only`。
+- 本次合并、部署和收口调用 Provider `0` 次、费用 `¥0`，没有配置凭据或开启生产实时
+  能力。
+- 用户决定不再为 Issue #22 追加真实 Provider 调用或开放域调优。v14 仍是修复前单例
+  candidate 且公开评分 `required_fact_missing`；v15 真实兼容性未知，原候选生成质量
+  完成门未满足。
+- Issue #22 因此以 `not_planned` 收口，而不是标记为完整修复。后续 Issue #28 只验证
+  两个固定求职展示样例，不能继承或扩大本增量的质量结论。
+
+允许结论：两阶段机械合同、失败分类和 clause 级来源约束已经实现、自动化、复核、合并
+并在 Provider 关闭状态下部署。
+
+不允许结论：v15 已兼容真实模型、候选成功率改善、Stage 12 分数改变、实时生产就绪、
+`product/0.1.0` 可发布或用户已验收实时体验。
