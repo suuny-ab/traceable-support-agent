@@ -4,6 +4,8 @@ import sqlite3
 import pytest
 
 from traceable_support.product.ticket import (
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     create_ticket_tables,
     efficiency_stats,
     load_ticket_run,
@@ -51,17 +53,34 @@ def _evidence():
 
 
 def _fixture(*, valid=True, gate_pass=True):
-    ev = _evidence()
-    from traceable_support.generation.checklist import _clauses
-    clauses = _clauses(ev["text"])
-    first = clauses[0] if len(clauses[0]) <= 60 else clauses[0][:60]
+    from traceable_support.generation.checklist import build_clause_inventory
+    from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
+
+    result = ModelAwareRrfPipeline(unit_strategy="native_section", delivery_k=5).retrieve(
+        BusinessRetrievalRequest(
+            query_text=QUESTION, known_product_model="CZ-R1", channel="qa",
+            candidate_pool_limit=10, delivery_limit=5,
+        )
+    )
+    evidence = [
+        {"evidence_id": candidate.unit.unit_id, "text": candidate.unit.text}
+        for candidate in result.candidate_hits
+    ]
+    inventory = build_clause_inventory(evidence)
+    selected = inventory[0]
+    ev = next(
+        entry for entry in evidence if entry["evidence_id"] == selected["evidence_id"]
+    )
+    first = selected["text"] if len(selected["text"]) <= 60 else selected["text"][:60]
     checklist = {
-        "schema_version": "obligation-checklist-v2",
+        "schema_version": "obligation-checklist-v4",
         "obligations": [
             {"obligation_id": "o1", "description": "义务",
-             "evidence_ids": [ev["evidence_id"]], "key_elements": [first]}
+             "clause_ids": [selected["clause_id"]]}
         ],
-        "acknowledged_context": clauses[1:],
+        "ignored_clause_ids": [
+            entry["clause_id"] for entry in inventory[1:]
+        ],
     }
     if not valid:
         return OfflineInjectedTransport([
@@ -69,18 +88,15 @@ def _fixture(*, valid=True, gate_pass=True):
              "body": json_response({"schema_version": "wrong"}, usage=USAGE, response_id="fx-1")},
         ])
     proposal = {
-        "schema_version": "ticket-proposal-result-v1",
+        "schema_version": "ticket-proposal-result-v3",
         "task_type": "ticket",
-        "obligation_plan": [
-            {"obligation_id": "o1", "description": "义务", "evidence_ids": [ev["evidence_id"]]}
-        ],
-        "used_evidence_ids": [ev["evidence_id"]],
         "content": {
             "kind": "ticket_proposal",
             "action_steps": ["步骤一"],
             "draft_reply": f"客户回复。{first}" if gate_pass else "客户回复。",
             "claims": [
-                {"claim_id": "c1", "exact_span_text": ev["text"],
+                {"claim_id": "c1", "exact_span_text": selected["text"],
+                 "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
                  "evidence_ids": [ev["evidence_id"]], "obligation_ids": ["o1"]}
             ],
             "insufficient_evidence": False,
@@ -130,27 +146,54 @@ def test_ticket_contract_accepts_valid_and_rejects_known_failures():
         validate_ticket_result(item, no_plan_link)
 
 
-def test_ticket_gate_detects_missing_key_elements():
+def test_ticket_gate_uses_llm_declared_customer_visible_claims():
     checklist = {"obligations": [{"obligation_id": "o1", "description": "d",
-                                  "evidence_ids": ["E1"], "key_elements": ["边缘松散", "禁区"]}]}
-    passing = {"content": {"draft_reply": "长毛地毯或边缘松散的地毯仍应设置为禁区。", "action_steps": []}}
-    failing = {"content": {"draft_reply": "长毛地毯仍应设置为禁区。", "action_steps": []}}
+                                  "evidence_ids": ["E1"]}]}
+    passing = {"content": {
+        "draft_reply": "这种地毯需要避开。",
+        "action_steps": [],
+        "claims": [{
+            "claim_id": "c1",
+            "customer_visible_span_text": "需要避开",
+            "obligation_ids": ["o1"],
+        }],
+    }}
+    failing = {"content": {
+        "draft_reply": "这种地毯需要避开。",
+        "action_steps": [],
+        "claims": [{
+            "claim_id": "c1",
+            "customer_visible_span_text": "需要避开",
+            "obligation_ids": [],
+        }],
+    }}
     assert ticket_completeness_gate(checklist, passing)["pass"] is True
     assert ticket_completeness_gate(checklist, failing)["pass"] is False
 
 
 def test_run_ticket_candidate_and_persistence_roundtrip():
+    transport = _fixture()
     package = run_ticket(
         ticket=TICKET,
-        transport=_fixture(),
+        transport=transport,
         mode="offline_injected",
         run_id="ticket-run-1",
         worst_cost_limit_cny_nanos=500_000_000,
     )
     assert package["outcome"] == "candidate"
     assert package["proposal"]["content"]["kind"] == "ticket_proposal"
+    assert package["proposal"]["obligation_plan"][0]["obligation_id"] == "o1"
+    assert package["proposal"]["used_evidence_ids"] == [
+        package["proposal"]["content"]["claims"][0]["evidence_ids"][0]
+    ]
     assert package["gates"]["completeness_gate"]["pass"] is True
     assert package["ticket_id"] == "T-001"
+    observations = transport.safe_observations()
+    assert STEP1_MAX_OUTPUT_TOKENS == 16384
+    assert package["worst_cost_cny_nanos"] == (
+        sum(observation["request_bytes"] * 3000 for observation in observations)
+        + (STEP1_MAX_OUTPUT_TOKENS + STEP2_MAX_OUTPUT_TOKENS) * 6000
+    )
 
     connection = sqlite3.connect(":memory:")
     create_ticket_tables(connection)

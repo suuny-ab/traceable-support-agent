@@ -29,6 +29,7 @@ import argparse
 import hashlib
 import json
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any, Callable
 
@@ -38,6 +39,9 @@ if str(_API_SRC) not in sys.path:
     sys.path.insert(0, str(_API_SRC))
 
 from traceable_support.generation.checklist import _squash  # noqa: E402
+from traceable_support.generation.failure_taxonomy import (  # noqa: E402
+    summarize_generation_failures,
+)
 from traceable_support.product.qa import (  # noqa: E402
     SESSION_MAX_WORST_COST_CNY_NANOS,
     default_qa_transport,
@@ -219,6 +223,10 @@ def _estimated_cost_nanos(package: dict[str, Any]) -> int:
     )
 
 
+def _score_text(value: str) -> str:
+    return _squash(unicodedata.normalize("NFKC", value))
+
+
 def score_case(
     case: dict[str, Any],
     package: dict[str, Any],
@@ -246,11 +254,11 @@ def score_case(
     if used_sections != sorted(expected["source_sections"]):
         failures.append("source_sections_mismatch")
 
-    visible = _squash(_customer_visible_text(package, task_type))
+    visible = _score_text(_customer_visible_text(package, task_type))
     missing_facts = [
         index
         for index, fact in enumerate(expected["required_facts"])
-        if _squash(fact) not in visible
+        if _score_text(fact) not in visible
     ]
     if missing_facts:
         failures.append("required_fact_missing")
@@ -313,6 +321,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
     stop_code: str | None = None
     raw_cases: list[dict[str, Any]] = []
     public_cases: list[dict[str, Any]] = []
+    completed_packages: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases):
         if (
@@ -375,6 +384,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
             stop_code = "execution_error"
             break
         package = execution.package
+        completed_packages.append(package)
         scoring = score_case(case, package, execution.provider_call_count, reserved)
         total_calls += execution.provider_call_count
         total_estimated_nanos += _estimated_cost_nanos(package)
@@ -391,6 +401,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
             "task_type": case["task_type"],
             "expected_outcome": case["expected"]["outcome"],
             "observed_outcome": package["outcome"],
+            "generation_failure": package.get("failure_classification"),
             "passed": scoring["passed"],
             "failure_codes": scoring["failure_codes"],
         })
@@ -420,6 +431,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
             "stopped_early": stop_code is not None,
             "stop_code": stop_code,
         },
+        "generation_failures": summarize_generation_failures(completed_packages),
         "cases": public_cases,
     }
     raw_record = {
@@ -428,6 +440,7 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
         "mode": args.mode,
         "cases": raw_cases,
         "totals": report["totals"],
+        "generation_failures": report["generation_failures"],
     }
 
     args.out.mkdir(parents=True, exist_ok=True)

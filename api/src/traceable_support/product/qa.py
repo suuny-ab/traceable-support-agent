@@ -21,17 +21,23 @@ from traceable_support.product.boundaries import (
 )
 from traceable_support.generation.qa_contract import (
     OUTPUT_SCHEMA_VERSION,
-    CandidateV4Error,
+    CandidateContractError,
     _contract,
-    validate_v4_result,
+    validate_result,
 )
 from traceable_support.generation.checklist import (
-    CHECKLIST_SYSTEM_PROMPT_V2,
+    CHECKLIST_SCHEMA_VERSION,
+    CHECKLIST_SYSTEM_PROMPT,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     STEP2_SYSTEM_PROMPT,
     TwoStepError,
+    build_clause_inventory,
+    checklist_model_projection,
     completeness_gate,
-    validate_step1_v2_result,
+    validate_step1_result,
 )
+from traceable_support.generation.failure_taxonomy import classify_generation_failure
 from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
 from traceable_support.provider.budget import ReservedCallBudget, attempt_call
 from traceable_support.provider.contract import (
@@ -47,8 +53,6 @@ from traceable_support.provider.deepseek import MODE_AUTHORIZED_REAL, MODE_OFFLI
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_SCHEMA_VERSION = "product-qa-package-v1"
-STEP1_MAX_OUTPUT_TOKENS = 8192
-STEP2_MAX_OUTPUT_TOKENS = 8192
 LLM_TIMEOUT_MS = 180_000
 SESSION_MAX_RUNS = 6
 SESSION_MAX_WORST_COST_CNY_NANOS = 700_000_000
@@ -127,6 +131,12 @@ def _call(transport: Any, mode: str, budget: ReservedCallBudget, *, sequence: in
           run_id: str, case_label: str) -> dict[str, Any]:
     from traceable_support.provider.budget import build_request_identity
 
+    request_body = strict_json_loads(body)
+    if (
+        type(request_body) is not dict
+        or type(request_body.get("max_tokens")) is not int
+    ):
+        _fail("product_qa_request_max_tokens_invalid")
     prepared = {
         "body": body,
         "prompt_version": "product-qa",
@@ -141,7 +151,7 @@ def _call(transport: Any, mode: str, budget: ReservedCallBudget, *, sequence: in
         run_id=run_id,
         stage=STAGE_CONTENT,
         prepared=prepared,
-        max_output_tokens=STEP2_MAX_OUTPUT_TOKENS,
+        max_output_tokens=request_body["max_tokens"],
         timeout_ms=LLM_TIMEOUT_MS,
     )
     attempt = attempt_call(transport=transport, mode=mode, budget=budget, request=request)
@@ -202,6 +212,15 @@ def _correct_context_declarations(package: dict[str, Any]) -> None:
         package["context_corrections"] = contradicted
 
 
+def _record_handoff(
+    package: dict[str, Any],
+    reason: str,
+) -> dict[str, Any]:
+    package["handoff_reason"] = reason
+    package["failure_classification"] = classify_generation_failure(reason)
+    return package
+
+
 def run_qa(
     *,
     question: str,
@@ -239,15 +258,15 @@ def run_qa(
     evidence = _retrieve_evidence(question, product_model)
     _stage("retrieval", "finished")
     stage_input_1 = {
-        "schema_version": "obligation-checklist-input-v1",
+        "schema_version": "obligation-checklist-input-v2",
         "question": question,
         "product_model": product_model,
         "channel": "qa",
-        "evidence": evidence,
+        "evidence_clauses": build_clause_inventory(evidence),
     }
     user1 = {"object_id": f"product-qa-checklist", "run_id": run_id, "input": stage_input_1}
     body1 = _request_body(
-        CHECKLIST_SYSTEM_PROMPT_V2, user1, thinking=True, max_tokens=STEP1_MAX_OUTPUT_TOKENS,
+        CHECKLIST_SYSTEM_PROMPT, user1, thinking=True, max_tokens=STEP1_MAX_OUTPUT_TOKENS,
     )
     budget = ReservedCallBudget(limit=worst_cost_limit_cny_nanos)
     budget.call_limit = 2
@@ -256,9 +275,9 @@ def run_qa(
     _stage("enumeration", "started")
     step1 = _call(
         transport, mode, budget, sequence=1, body=body1,
-        prompt_sha=sha256_bytes(CHECKLIST_SYSTEM_PROMPT_V2.encode()),
+        prompt_sha=sha256_bytes(CHECKLIST_SYSTEM_PROMPT.encode()),
         stage_input_sha=sha256_canonical(stage_input_1),
-        schema="obligation-checklist-v2", run_id=run_id, case_label="enumerate",
+        schema=CHECKLIST_SCHEMA_VERSION, run_id=run_id, case_label="enumerate",
     )
     package = {
         "schema_version": PACKAGE_SCHEMA_VERSION,
@@ -277,21 +296,26 @@ def run_qa(
         "stages": stages,
         "outcome": "handoff",
         "handoff_reason": None,
+        "failure_classification": None,
     }
     if not step1["ok"]:
         package["worst_cost_cny_nanos"] += step1["worst_cost_cny_nanos"]
-        package["handoff_reason"] = f"enumeration_execution_failure:{step1['failure_code']}"
         package["gates"]["step1_execution"] = "failed"
         _stage("enumeration", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"enumeration_execution_failure:{step1['failure_code']}",
+        )
     package["worst_cost_cny_nanos"] += step1["worst_cost_cny_nanos"]
     try:
-        checklist = validate_step1_v2_result(item1, step1["raw"])
+        checklist = validate_step1_result(item1, step1["raw"])
     except TwoStepError as exc:
-        package["handoff_reason"] = f"enumeration_contract_failure:{exc}"
         package["gates"]["step1_contract"] = "failed"
         _stage("enumeration", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"enumeration_contract_failure:{exc}",
+        )
     package["checklist"] = checklist
     package["acknowledged_context"] = deepcopy(checklist["acknowledged_context"])
     package["gates"]["step1_contract"] = "passed"
@@ -299,12 +323,12 @@ def run_qa(
     _stage("enumeration", "finished")
 
     stage_input_2 = {
-        "schema_version": "retrieved-top10-qa-input-v5",
+        "schema_version": "retrieved-top10-qa-input-v8",
         "question": question,
         "product_model": product_model,
         "channel": "qa",
         "evidence": evidence,
-        "obligation_checklist": checklist,
+        "obligation_checklist": checklist_model_projection(checklist),
         "response_contract": _contract(evidence),
     }
     user2 = {"object_id": "product-qa-generate", "run_id": run_id, "input": stage_input_2}
@@ -320,19 +344,23 @@ def run_qa(
     )
     if not step2["ok"]:
         package["worst_cost_cny_nanos"] += step2["worst_cost_cny_nanos"]
-        package["handoff_reason"] = f"generation_execution_failure:{step2['failure_code']}"
         package["gates"]["step2_execution"] = "failed"
         _stage("generation", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"generation_execution_failure:{step2['failure_code']}",
+        )
     package["worst_cost_cny_nanos"] += step2["worst_cost_cny_nanos"]
     item2 = {"case_id": "product-qa", "evidence": evidence}
     try:
-        result = validate_v4_result(item2, step2["raw"])
-    except CandidateV4Error as exc:
-        package["handoff_reason"] = f"generation_contract_failure:{exc}"
+        result = validate_result(item2, checklist, step2["raw"])
+    except CandidateContractError as exc:
         package["gates"]["step2_contract"] = "failed"
         _stage("generation", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"generation_contract_failure:{exc}",
+        )
     gate = completeness_gate(checklist, result)
     package["gates"]["step2_contract"] = "passed"
     package["gates"]["completeness_gate"] = gate
@@ -340,10 +368,9 @@ def run_qa(
     _stage("generation", "finished")
     _stage("gate", "finished" if gate["pass"] else "failed")
     if not gate["pass"]:
-        package["handoff_reason"] = "completeness_gate_failed"
         package["answer"] = deepcopy(result)
         _correct_context_declarations(package)
-        return package
+        return _record_handoff(package, "completeness_gate_failed")
     package["answer"] = deepcopy(result)
     _correct_context_declarations(package)
     package["outcome"] = "candidate"

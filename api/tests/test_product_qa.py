@@ -6,6 +6,8 @@ import pytest
 from traceable_support.product.qa import (
     LlmQaError,
     QaSessionBudget,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     create_qa_tables,
     list_qa_runs,
     load_qa_run,
@@ -29,6 +31,7 @@ USAGE = {
 
 def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> OfflineInjectedTransport:
     from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
+    from traceable_support.generation.checklist import build_clause_inventory
 
     result = ModelAwareRrfPipeline(unit_strategy="native_section", delivery_k=5).retrieve(
         BusinessRetrievalRequest(
@@ -36,34 +39,36 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
             candidate_pool_limit=10, delivery_limit=5,
         )
     )
-    hit = result.candidate_hits[0].unit
-    evidence_id = hit.unit_id
-    text = hit.text
+    evidence = [
+        {"evidence_id": candidate.unit.unit_id, "text": candidate.unit.text}
+        for candidate in result.candidate_hits
+    ]
+    inventory = build_clause_inventory(evidence)
+    selected = inventory[0]
+    evidence_id = selected["evidence_id"]
+    text = evidence[0]["text"]
     if valid:
-        from traceable_support.generation.checklist import _clauses
-        clauses = _clauses(text)
-        first = clauses[0] if len(clauses[0]) <= 60 else clauses[0][:60]
+        first = selected["text"] if len(selected["text"]) <= 60 else selected["text"][:60]
         checklist = {
-            "schema_version": "obligation-checklist-v2",
+            "schema_version": "obligation-checklist-v4",
             "obligations": [
                 {"obligation_id": "o1", "description": "义务",
-                 "evidence_ids": [evidence_id], "key_elements": [first]}
+                 "clause_ids": [selected["clause_id"]]}
             ],
-            "acknowledged_context": clauses[1:],
+            "ignored_clause_ids": [
+                entry["clause_id"] for entry in inventory[1:]
+            ],
         }
         answer_text = f"回答。{first}" if gate_pass else "回答。不含要素"
         result_obj = {
-            "schema_version": "retrieved-top10-qa-result-v2",
+            "schema_version": "retrieved-top10-qa-result-v4",
             "task_type": "qa",
-            "obligation_plan": [
-                {"obligation_id": "o1", "description": "义务", "evidence_ids": [evidence_id]}
-            ],
-            "used_evidence_ids": [evidence_id],
             "content": {
                 "kind": "qa_answer",
-                "answer": {"text": answer_text, "claim_ids": ["c1"]},
+                "answer": {"text": answer_text},
                 "claims": [
-                    {"claim_id": "c1", "exact_span_text": text,
+                    {"claim_id": "c1", "exact_span_text": selected["text"],
+                     "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
                      "evidence_ids": [evidence_id], "obligation_ids": ["o1"]}
                 ],
                 "insufficient_evidence": False,
@@ -82,19 +87,31 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
 
 
 def test_run_qa_candidate_package_and_persistence_roundtrip():
+    transport = _fixture("CZ-R1 怎么开始局部清扫？")
     package = run_qa(
         question="CZ-R1 怎么开始局部清扫？",
         product_model="CZ-R1",
-        transport=_fixture("CZ-R1 怎么开始局部清扫？"),
+        transport=transport,
         mode="offline_injected",
         run_id="test-run-1",
         worst_cost_limit_cny_nanos=500_000_000,
     )
     assert package["outcome"] == "candidate"
-    assert package["checklist"]["schema_version"] == "obligation-checklist-v2"
+    assert package["checklist"]["schema_version"] == "obligation-checklist-v4"
     assert package["gates"]["completeness_gate"]["pass"] is True
+    assert package["answer"]["obligation_plan"][0]["obligation_id"] == "o1"
+    assert package["answer"]["used_evidence_ids"] == [
+        package["answer"]["content"]["claims"][0]["evidence_ids"][0]
+    ]
+    assert package["answer"]["content"]["answer"]["claim_ids"] == ["c1"]
     assert len(package["evidence"]) == 10
     assert len(package["usage"]) == 2
+    observations = transport.safe_observations()
+    assert STEP1_MAX_OUTPUT_TOKENS == 16384
+    assert package["worst_cost_cny_nanos"] == (
+        sum(observation["request_bytes"] * 3000 for observation in observations)
+        + (STEP1_MAX_OUTPUT_TOKENS + STEP2_MAX_OUTPUT_TOKENS) * 6000
+    )
 
     connection = sqlite3.connect(":memory:")
     create_qa_tables(connection)
@@ -110,7 +127,7 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
     assert runs[0]["run_id"] == "test-run-1"
 
 
-def test_run_qa_completeness_gate_failure_handoffs_with_answer():
+def test_run_qa_rejects_forged_customer_visible_span():
     package = run_qa(
         question="CZ-R1 怎么开始局部清扫？",
         product_model="CZ-R1",
@@ -120,8 +137,11 @@ def test_run_qa_completeness_gate_failure_handoffs_with_answer():
         worst_cost_limit_cny_nanos=500_000_000,
     )
     assert package["outcome"] == "handoff"
-    assert package["handoff_reason"] == "completeness_gate_failed"
-    assert package["answer"] is not None
+    assert package["handoff_reason"] == (
+        "generation_contract_failure:top10_v7_customer_span_invalid"
+    )
+    assert package["failure_classification"]["family"] == "semantic_coverage"
+    assert package["answer"] is None
 
     connection = sqlite3.connect(":memory:")
     create_qa_tables(connection)
@@ -141,6 +161,7 @@ def test_run_qa_enumeration_contract_failure_handoffs_without_answer():
     )
     assert package["outcome"] == "handoff"
     assert package["handoff_reason"].startswith("enumeration_contract_failure")
+    assert package["failure_classification"]["phase"] == "enumeration_contract"
     assert package["answer"] is None
 
 

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from traceable_support.generation.checklist import (
-    CHECKLIST_SYSTEM_PROMPT_V2,
+    CHECKLIST_SYSTEM_PROMPT,
     STEP2_SYSTEM_PROMPT,
 )
 from traceable_support.generation.ticket_contract import TICKET_SYSTEM_PROMPT
@@ -41,19 +41,40 @@ def _sha(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def test_prompt_and_provider_identities_match_frozen_baseline() -> None:
-    assert _sha(CHECKLIST_SYSTEM_PROMPT_V2) == (
-        "c7adeb30109c4b95b66dca02bf75224aef091b9cf2401ef64baa4c13e38943f9"
+def test_historic_prompt_and_provider_identities_remain_frozen() -> None:
+    identity = json.loads(
+        (REPOSITORY / "evals/migration-equivalence-v1.json").read_text(
+            encoding="utf-8"
+        )
     )
-    assert _sha(STEP2_SYSTEM_PROMPT) == (
-        "dbb60b1970fed602b28560979205778200fa8f1bc2456263469739527a85ada2"
-    )
-    assert _sha(TICKET_SYSTEM_PROMPT) == (
-        "1c1ec10b1cb8ff2e9b1b6f0c52ee909b08eb6f969bd2ed28db48e193d149dc59"
-    )
+    assert identity["prompts"] == {
+        "checklist_sha256": (
+            "c7adeb30109c4b95b66dca02bf75224aef091b9cf2401ef64baa4c13e38943f9"
+        ),
+        "qa_step2_sha256": (
+            "dbb60b1970fed602b28560979205778200fa8f1bc2456263469739527a85ada2"
+        ),
+        "ticket_step2_sha256": (
+            "1c1ec10b1cb8ff2e9b1b6f0c52ee909b08eb6f969bd2ed28db48e193d149dc59"
+        ),
+    }
     assert build_manifest()["manifest_sha256"] == (
         "c45786f67ac6e5957a622c5a42cc7e3ca8b2412cf6279cf3c55b3396dc4773bf"
     )
+
+
+def test_active_product_prompts_are_not_the_historic_migration_identity() -> None:
+    identity = json.loads(
+        (REPOSITORY / "evals/migration-equivalence-v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    active = {
+        "checklist_sha256": _sha(CHECKLIST_SYSTEM_PROMPT),
+        "qa_step2_sha256": _sha(STEP2_SYSTEM_PROMPT),
+        "ticket_step2_sha256": _sha(TICKET_SYSTEM_PROMPT),
+    }
+    assert active != identity["prompts"]
 
 
 def test_native_section_inventory_matches_frozen_baseline() -> None:

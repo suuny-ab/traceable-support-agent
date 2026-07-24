@@ -19,11 +19,15 @@
 
 ## 当前
 
-- 暂无活动增量；下一项需从公开 Issue 显式启动。
+- [ ] [Issue #22：修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
+  已形成失败分类、宿主机械投影和 LLM 客户可见语义跨度候选；v4 进一步让 LLM 直接
+  判断义务与 clause 的语义对应，移除脆弱的 `key_elements` 复制合同。v14 QA003
+  曾通过修复前两阶段合同并形成 candidate，但公开评分仍为 `required_fact_missing`；
+  正式复核发现并已修正同 evidence 忽略 clause 可越界的问题，v15 真实兼容性与针对性
+  复核待完成。Issue 保持开放，不形成成功率或发布主张。
 
 ## 下一步
 
-- [ ] [修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
 - [ ] [评估外部 API 语义分类器与确定性硬门的混合边界](https://github.com/suuny-ab/traceable-support-agent/issues/25)。
 - [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
 - [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。

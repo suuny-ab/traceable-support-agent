@@ -47,6 +47,85 @@ BASE_USAGE_FIELDS = frozenset(BASE_USAGE_FIELD_ORDER)
 OPTIONAL_USAGE_FIELD = "prompt_tokens_details"
 COMPLETION_OPTIONAL_USAGE_FIELD = "completion_tokens_details"
 OPTIONAL_USAGE_FIELDS = BASE_USAGE_FIELDS | {OPTIONAL_USAGE_FIELD, COMPLETION_OPTIONAL_USAGE_FIELD}
+_FINISH_REASON_FAILURE_CODES = {
+    "length": "provider_response_finish_reason_length",
+    "content_filter": "provider_response_finish_reason_content_filter",
+    "tool_calls": "provider_response_finish_reason_tool_calls",
+    "insufficient_system_resource": (
+        "provider_response_finish_reason_insufficient_system_resource"
+    ),
+}
+
+
+def _finish_reason_failure_code(value: Any) -> str | None:
+    if value == "stop":
+        return None
+    if type(value) is str:
+        return _FINISH_REASON_FAILURE_CODES.get(
+            value,
+            "provider_response_finish_reason_invalid",
+        )
+    return "provider_response_finish_reason_invalid"
+
+
+def _validate_compatible_envelope_shape(envelope: Any) -> None:
+    """Return privacy-safe, field-level codes before the frozen value parser."""
+
+    if type(envelope) is not dict:
+        raise Tg07aContractError("provider_response_envelope_invalid")
+    required_top = {
+        "id",
+        "object",
+        "created",
+        "model",
+        "choices",
+        "system_fingerprint",
+    }
+    allowed_top = required_top | {"usage"}
+    missing_top = required_top - set(envelope)
+    if "system_fingerprint" in missing_top:
+        raise Tg07aContractError("provider_response_system_fingerprint_missing")
+    if missing_top:
+        raise Tg07aContractError("provider_response_top_level_field_missing")
+    if set(envelope) - allowed_top:
+        raise Tg07aContractError("provider_response_top_level_field_unexpected")
+    if (
+        type(envelope["system_fingerprint"]) is not str
+        or not envelope["system_fingerprint"]
+    ):
+        raise Tg07aContractError("provider_response_system_fingerprint_invalid")
+    choices = envelope["choices"]
+    if type(choices) is not list or len(choices) != 1:
+        raise Tg07aContractError("provider_response_choice_count_invalid")
+    choice = choices[0]
+    if type(choice) is not dict:
+        raise Tg07aContractError("provider_response_choice_shape_invalid")
+    required_choice = {"index", "message", "finish_reason", "logprobs"}
+    missing_choice = required_choice - set(choice)
+    if "logprobs" in missing_choice:
+        raise Tg07aContractError("provider_response_logprobs_missing")
+    if missing_choice:
+        raise Tg07aContractError("provider_response_choice_field_missing")
+    if set(choice) - required_choice:
+        raise Tg07aContractError("provider_response_choice_field_unexpected")
+    finish_reason_failure = _finish_reason_failure_code(choice["finish_reason"])
+    if finish_reason_failure is not None:
+        raise Tg07aContractError(finish_reason_failure)
+    if choice["logprobs"] is not None:
+        raise Tg07aContractError("provider_response_logprobs_unexpected")
+    message = choice["message"]
+    if type(message) is not dict:
+        raise Tg07aContractError("provider_response_message_shape_invalid")
+    required_message = {"role", "content"}
+    allowed_message = required_message | {"reasoning_content"}
+    if required_message - set(message):
+        raise Tg07aContractError("provider_response_message_field_missing")
+    if set(message) - allowed_message:
+        raise Tg07aContractError("provider_response_message_field_unexpected")
+    if message["role"] != "assistant":
+        raise Tg07aContractError("provider_response_message_role_invalid")
+    if type(message["content"]) is not str or not message["content"]:
+        raise Tg07aContractError("provider_response_content_invalid")
 
 
 def _compatibility_facts(*, optional_present: bool, completion_optional_present: bool) -> dict[str, Any]:
@@ -151,6 +230,7 @@ def parse_chat_completion_compatible(
     envelope = strict_json_loads(body)
     if type(envelope) is dict:
         assert_no_sensitive_material(envelope, sensitive_values=sensitive_values)
+    _validate_compatible_envelope_shape(envelope)
 
     reasoning_content_removed = False
     if type(envelope) is dict and type(envelope.get("choices")) is list:

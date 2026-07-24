@@ -15,7 +15,10 @@ from .boundaries import (
 )
 from .qa import (
     LlmQaError,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     _context_contradiction,
+    _record_handoff,
     _retrieve_evidence,
     _request_body,
 )
@@ -24,12 +27,15 @@ from traceable_support.generation.ticket_contract import (
     TICKET_SYSTEM_PROMPT,
     TicketContractError,
     ticket_completeness_gate,
-    validate_ticket_result,
+    validate_ticket_result_v2,
 )
 from traceable_support.generation.checklist import (
-    CHECKLIST_SYSTEM_PROMPT_V2,
+    CHECKLIST_SCHEMA_VERSION,
+    CHECKLIST_SYSTEM_PROMPT,
     TwoStepError,
-    validate_step1_v2_result,
+    build_clause_inventory,
+    checklist_model_projection,
+    validate_step1_result,
 )
 from traceable_support.provider.budget import ReservedCallBudget
 from traceable_support.provider.contract import (
@@ -41,8 +47,6 @@ from traceable_support.provider.contract import (
 from traceable_support.provider.deepseek import MODE_AUTHORIZED_REAL, MODE_OFFLINE
 
 PACKAGE_SCHEMA_VERSION = "product-ticket-package-v1"
-STEP1_MAX_OUTPUT_TOKENS = 8192
-STEP2_MAX_OUTPUT_TOKENS = 8192
 
 
 def _fail(code: str) -> None:
@@ -127,15 +131,15 @@ def run_ticket(
     _stage("retrieval", "finished")
 
     stage_input_1 = {
-        "schema_version": "obligation-checklist-input-v1",
+        "schema_version": "obligation-checklist-input-v2",
         "question": question,
         "product_model": ticket["product_model"],
         "channel": "ticket",
-        "evidence": evidence,
+        "evidence_clauses": build_clause_inventory(evidence),
     }
     user1 = {"object_id": "product-ticket-checklist", "run_id": run_id, "input": stage_input_1}
     body1 = _request_body(
-        CHECKLIST_SYSTEM_PROMPT_V2, user1, thinking=True, max_tokens=STEP1_MAX_OUTPUT_TOKENS,
+        CHECKLIST_SYSTEM_PROMPT, user1, thinking=True, max_tokens=STEP1_MAX_OUTPUT_TOKENS,
     )
     budget = call_budget or ReservedCallBudget(limit=worst_cost_limit_cny_nanos)
     budget.call_limit = 2
@@ -161,28 +165,33 @@ def run_ticket(
         "stages": stages,
         "outcome": "handoff",
         "handoff_reason": None,
+        "failure_classification": None,
     }
 
     _stage("enumeration", "started")
     step1 = _call(
         transport, mode, budget, sequence=1, body=body1,
-        prompt_sha=sha256_bytes(CHECKLIST_SYSTEM_PROMPT_V2.encode()),
+        prompt_sha=sha256_bytes(CHECKLIST_SYSTEM_PROMPT.encode()),
         stage_input_sha=sha256_canonical(stage_input_1),
-        schema="obligation-checklist-v2", run_id=run_id, case_label="enumerate",
+        schema=CHECKLIST_SCHEMA_VERSION, run_id=run_id, case_label="enumerate",
     )
     package["worst_cost_cny_nanos"] += step1["worst_cost_cny_nanos"]
     if not step1["ok"]:
-        package["handoff_reason"] = f"enumeration_execution_failure:{step1['failure_code']}"
         package["gates"]["step1_execution"] = "failed"
         _stage("enumeration", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"enumeration_execution_failure:{step1['failure_code']}",
+        )
     try:
-        checklist = validate_step1_v2_result(item1, step1["raw"])
+        checklist = validate_step1_result(item1, step1["raw"])
     except TwoStepError as exc:
-        package["handoff_reason"] = f"enumeration_contract_failure:{exc}"
         package["gates"]["step1_contract"] = "failed"
         _stage("enumeration", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"enumeration_contract_failure:{exc}",
+        )
     package["checklist"] = checklist
     package["acknowledged_context"] = deepcopy(checklist["acknowledged_context"])
     package["gates"]["step1_contract"] = "passed"
@@ -190,12 +199,12 @@ def run_ticket(
     _stage("enumeration", "finished")
 
     stage_input_2 = {
-        "schema_version": "ticket-proposal-input-v1",
+        "schema_version": "ticket-proposal-input-v4",
         "question": question,
         "product_model": ticket["product_model"],
         "channel": "ticket",
         "evidence": evidence,
-        "obligation_checklist": checklist,
+        "obligation_checklist": checklist_model_projection(checklist),
     }
     user2 = {"object_id": "product-ticket-generate", "run_id": run_id, "input": stage_input_2}
     body2 = _request_body(
@@ -210,18 +219,22 @@ def run_ticket(
     )
     package["worst_cost_cny_nanos"] += step2["worst_cost_cny_nanos"]
     if not step2["ok"]:
-        package["handoff_reason"] = f"generation_execution_failure:{step2['failure_code']}"
         package["gates"]["step2_execution"] = "failed"
         _stage("generation", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"generation_execution_failure:{step2['failure_code']}",
+        )
     item2 = {"case_id": "product-ticket", "evidence": evidence}
     try:
-        result = validate_ticket_result(item2, step2["raw"])
+        result = validate_ticket_result_v2(item2, checklist, step2["raw"])
     except TicketContractError as exc:
-        package["handoff_reason"] = f"generation_contract_failure:{exc}"
         package["gates"]["step2_contract"] = "failed"
         _stage("generation", "failed")
-        return package
+        return _record_handoff(
+            package,
+            f"generation_contract_failure:{exc}",
+        )
     gate = ticket_completeness_gate(checklist, result)
     package["gates"]["step2_contract"] = "passed"
     package["gates"]["completeness_gate"] = gate
@@ -230,9 +243,8 @@ def run_ticket(
     _stage("gate", "finished" if gate["pass"] else "failed")
     package["proposal"] = deepcopy(result)
     if not gate["pass"]:
-        package["handoff_reason"] = "completeness_gate_failed"
         _correct_ticket_context(package)
-        return package
+        return _record_handoff(package, "completeness_gate_failed")
     _correct_ticket_context(package)
     package["outcome"] = "candidate"
     return package
