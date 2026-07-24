@@ -63,20 +63,20 @@ class PublicScannerTest(unittest.TestCase):
             _active_increment_errors([migrating]),
         )
 
-    def test_active_increment_still_rejects_parallel_work(self) -> None:
+    def test_active_increment_allows_parallel_isolated_work(self) -> None:
         entries = [
             Entry(
                 "docs/status.md",
-                "docs/work/active/one/\n".encode(),
+                (
+                    "docs/work/active/one/\n"
+                    "docs/work/active/two/\n"
+                ).encode(),
             )
         ]
         for slug in ("one", "two"):
             for name in ("spec.md", "plan.md", "result.md", "review.md"):
                 entries.append(Entry(f"docs/work/active/{slug}/{name}", b""))
-        self.assertIn(
-            "active_increment_count:2",
-            _active_increment_errors(entries),
-        )
+        self.assertEqual(_active_increment_errors(entries), [])
 
     def test_active_increment_requires_exact_direct_file_set_and_status_link(self) -> None:
         names = ("spec.md", "plan.md", "result.md", "review.md")
@@ -96,11 +96,11 @@ class PublicScannerTest(unittest.TestCase):
 
         incomplete = valid_paths[:-1]
         self.assertIn(
-            "active_increment_file_set_invalid",
+            "active_increment_file_set_invalid:one",
             _active_increment_errors(active_entries(incomplete, linked_status)),
         )
         self.assertIn(
-            "status_does_not_link_active_increment",
+            "status_does_not_link_active_increment:one",
             _active_increment_errors(active_entries(valid_paths, "not linked\n")),
         )
 

@@ -3,16 +3,18 @@
 ## 所有权转移
 
 ```text
-未来候选：GitHub Issue
-→ 启动：docs/status.md + docs/work/active/<slug>/
+计划来源之一：GitHub Issue
+→ Task：控制注册表 + 必要的 docs/work/active/<slug>/
 → 候选：Draft PR + 固定 SHA + Checks
 → 外部结果：部署 / 验收回执
 → 稳定事实：PROJECT / engineering / decisions / completed work
 → Agent 关闭 Issue
 ```
 
-- 未启动任务在 Issue 记录动机、预期结果、优先级、边界和启动条件。
-- 进入实施后，Issue 只指向活动工作；范围、当前动作、阻碍和验证事实由仓库活动文件接管。
+- 已确认但尚未启动的未来工作在 Issue 记录动机、预期结果、优先级、边界和启动条件；
+  开发中自然产生且立即执行的 Task 不必先建立 Issue。
+- 进入实施后，控制注册表管理 Task / Run；项目结果、固定候选、阻碍和验证事实由
+  `docs/status.md` 与必要的活动工作文件接管。
 - PR 只绑定候选 diff、Checks、复核和发布回执，不成为稳定产品事实。
 - 所需部署与用户验收齐全后，Agent 回写稳定文档并关闭 Issue。
 - PR 不使用 `Closes`、`Fixes` 等自动关闭关键字。合并不是完成的充分条件。
@@ -28,7 +30,7 @@ GitHub 管：
 
 仓库管：
 
-- 唯一当前状态与活动增量；
+- 当前项目状态、活动产品结果和固定候选；
 - 稳定产品事实、工程合同和长期决定；
 - 规范化结果与复核边界。
 
