@@ -18,11 +18,10 @@
 
 ## 当前
 
-无活动增量；等待从下列结果中选择唯一下一项。
+- [ ] [修复 SAF-003 / MBD-003 边界未正确转人工](https://github.com/suuny-ab/traceable-support-agent/issues/21)：建立 QA、工单与公网 API 共用的生成前确定性边界门，本轮只做本地 `R0` 合成回归。
 
 ## 下一步
 
-- [ ] [修复 SAF-003 / MBD-003 边界未正确转人工](https://github.com/suuny-ab/traceable-support-agent/issues/21)。
 - [ ] [修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
 - [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
 - [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。

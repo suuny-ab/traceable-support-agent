@@ -268,6 +268,51 @@ class Stage12EvalTest(unittest.TestCase):
         self.assertIn("source_sections_mismatch", report["cases"][0]["failure_codes"])
         self.assertTrue(report["cases"][1]["passed"])
 
+    def test_boundary_handoff_sources_are_scored_without_a_generated_proposal(self) -> None:
+        case = {
+            "case_id": "STG12-TEST-MH-001",
+            "task_type": "ticket",
+            "product_model": "CZ-R1",
+            "input": "R1刚吸进一小滩水，我想继续开机把剩下的吸完。",
+            "expected": {
+                "outcome": "handoff",
+                "handoff_reason": "safety_risk",
+                "source_sections": [
+                    "COMMON-FAQ/wet-environment",
+                    "CUSTOMER-SERVICE-SOP/manual-escalation",
+                ],
+                "required_facts": [],
+                "category": "安全风险",
+                "priority": "P0-紧急",
+            },
+        }
+        runner = stage12_eval.DefaultProductRunner(
+            transport_factory=lambda: self.fail("transport factory must not be called"),
+            transport_mode="offline_injected",
+            dependencies_ready=True,
+        )
+        execution = runner.execute(
+            stage12_eval.RunInput(
+                case["case_id"],
+                case["task_type"],
+                case["input"],
+                case["product_model"],
+                1,
+            ),
+            lambda _stage, _status: None,
+        )
+        score = stage12_eval.score_case(
+            case,
+            execution.package,
+            execution.provider_call_count,
+            1,
+        )
+        self.assertTrue(score["passed"], score)
+        self.assertEqual(
+            score["detail"]["used_source_sections"],
+            sorted(case["expected"]["source_sections"]),
+        )
+
     def test_missing_required_fact_is_reported(self) -> None:
         cases, responses = self._passing_pair()
         cases[0]["expected"]["required_facts"] = ["正文中绝不存在的事实片段zz"]

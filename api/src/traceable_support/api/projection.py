@@ -14,6 +14,10 @@ def blocked_result(code: str) -> dict[str, Any]:
         answer = "当前体验只支持 CZ-R1 / CZ-R2 合成客服资料范围内的问题，本次未调用模型。"
         title = "问题超出体验范围"
         obligations = ["限定产品范围", "不生成无来源回答", "失败时诚实停止"]
+    elif code == "model_scope_conflict":
+        answer = "请求涉及当前型号不具备的专属能力，系统已在模型调用前转人工，避免混用另一型号的操作步骤。"
+        title = "型号边界已转人工"
+        obligations = ["不混用型号步骤", "停止模型生成", "由人工确认产品型号与能力"]
     else:
         answer = "检测到潜在安全风险，系统已在模型调用前转人工。请停止继续操作设备并联系人工支持。"
         title = "安全风险已转人工"

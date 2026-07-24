@@ -22,6 +22,7 @@ LABEL org.opencontainers.image.source="https://github.com/suuny-ab/traceable-sup
 COPY --chown=traceable:traceable api/src/traceable_support/__init__.py /app/api/src/traceable_support/__init__.py
 COPY --chown=traceable:traceable api/src/traceable_support/api /app/api/src/traceable_support/api
 COPY --chown=traceable:traceable api/src/traceable_support/product/__init__.py /app/api/src/traceable_support/product/__init__.py
+COPY --chown=traceable:traceable api/src/traceable_support/product/boundaries.py /app/api/src/traceable_support/product/boundaries.py
 COPY --chown=traceable:traceable api/src/traceable_support/product/types.py /app/api/src/traceable_support/product/types.py
 USER 10001:10001
 EXPOSE 8000

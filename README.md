@@ -6,7 +6,7 @@
 
 [在线体验](https://47.84.34.86/) · [设计说明](https://47.84.34.86/design) · [QA / 工单体验](https://47.84.34.86/app) · [公开主张证据](docs/product/evidence-map.md)
 
-> 当前版本是公开 Beta 回放版，健康状态为 `replay_only`。真实 LLM 已在本地 QA 与工单主链中完成有界验证，但尚未执行全新未见集正式评测（Stage 12），`product/0.1.0` 尚未发布。当前在线地址仍运行已部署回放基线；本仓库候选新增的 `GEN-DEV-IE-001` 证据不足转人工预设计划随迁移部署上线。
+> 当前版本是公开 Beta 回放版，健康状态为 `replay_only`。Stage 12 已执行一次（19/24 案例、9 通过），暴露候选生成合同高失败率和两条边界缺陷；`product/0.1.0` 尚未发布。本候选为公开合成安全风险和 CZ-R1 / CZ-R2 独占能力冲突增加生成前确定性转人工回归，但没有重跑或改写 Stage 12。
 
 ## 60 秒体验
 
@@ -15,15 +15,16 @@
 3. 查看阶段轨迹、来源、客户可见义务和机械质量门；
 4. 尝试批准、编辑后批准或拒绝，确认人工决定不会触发外部业务动作。
 
-候选仓部署后还会增加“证据不足转人工”预设，用于展示无批准来源时在 Provider 调用前停止。
+第三个“证据不足转人工”预设展示无批准来源时在 Provider 调用前停止；它是已验证回放，不是一次新的实时模型调用。
 
 ## 工程亮点
 
 - **混合检索**：型号边界过滤后组合 BM25、BGE 与 RRF，并冻结有序检索 fixture。
+- **生成前边界**：公开合成安全事件和明确的型号独占能力冲突在 transport 构造前转人工。
 - **两阶段生成**：先枚举客户可见义务，再生成 QA 回复或工单候选。
 - **证据与失败绑定**：机械门检查来源、义务、结构、安全和虚假完成态；证据不足时转人工。
 - **受控运行**：Provider 位于服务端边界，调用前检查预算、隐私和授权，自动重试为 0。
-- **可复现交付**：标准 Next.js `standalone`、Python API、锁定依赖和非 root 容器；生产回滚演练尚未执行。
+- **可复现交付**：标准 Next.js `standalone`、Python API、锁定依赖、非 root 容器、不可变镜像发布和生产回滚演练。
 
 ## 产品边界
 
@@ -39,6 +40,7 @@
 Browser → Next.js portfolio → Python HTTP API
                                       ├─ Run service / SQLite / budget / queue
                                       └─ ProductRunner
+                                           ├─ pre-generation boundary handoff
                                            ├─ hybrid retrieval
                                            ├─ two-stage generation
                                            └─ mechanical validation

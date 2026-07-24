@@ -15,6 +15,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from traceable_support.product.boundaries import (
+    build_boundary_handoff_package,
+    evaluate_generation_boundary,
+)
 from traceable_support.generation.qa_contract import (
     OUTPUT_SCHEMA_VERSION,
     CandidateV4Error,
@@ -212,6 +216,17 @@ def run_qa(
     validate_qa_input(question, product_model)
     if mode not in {MODE_OFFLINE, MODE_AUTHORIZED_REAL}:
         _fail("product_qa_mode_invalid")
+    boundary = evaluate_generation_boundary(question, product_model)
+    if boundary is not None:
+        if callable(on_stage):
+            on_stage("preflight", "failed")
+        return build_boundary_handoff_package(
+            task_type="qa",
+            text=question,
+            product_model=product_model,
+            run_id=run_id,
+            decision=boundary,
+        )
     stages: list[dict[str, Any]] = []
 
     def _stage(stage: str, status: str) -> None:

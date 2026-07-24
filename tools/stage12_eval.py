@@ -191,6 +191,15 @@ def _customer_visible_text(package: dict[str, Any], task_type: str) -> str:
 
 
 def _used_source_sections(package: dict[str, Any], task_type: str) -> list[str]:
+    if package.get("outcome") == "handoff" and "boundary_sources" in package:
+        boundary_sources = package["boundary_sources"]
+        if (
+            type(boundary_sources) is list
+            and all(type(source) is str and source for source in boundary_sources)
+            and len(boundary_sources) == len(set(boundary_sources))
+        ):
+            return sorted(boundary_sources)
+        return []
     result = package.get("answer") if task_type == "qa" else package.get("proposal")
     if not result:
         return []

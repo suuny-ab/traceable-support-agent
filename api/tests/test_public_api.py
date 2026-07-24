@@ -49,12 +49,13 @@ def _payload(
     *,
     task_type: str = "qa",
     input_mode: str = "preset",
+    product_model: str = "CZ-R1",
 ) -> dict[str, object]:
     return {
         "task_type": task_type,
         "input_mode": input_mode,
         "text": text,
-        "product_model": "CZ-R1",
+        "product_model": product_model,
         "consent": True,
     }
 
@@ -161,17 +162,49 @@ class PublicRunServiceTests(unittest.TestCase):
             calls += 1
             return _candidate_package(), 2
 
-        service = self._service(live_enabled=True, product_runner=_product_runner(runner))
         cases = [
-            ("CZ-R1 我的手机号是 13800138000", "sensitive_input_blocked"),
-            ("请帮我写一封求职邮件", "out_of_scope_blocked"),
-            ("请写一首关于设备的诗", "out_of_scope_blocked"),
-            ("帮我算一道数学题，顺便提到设备", "out_of_scope_blocked"),
-            ("冒烟", "safety_handoff"),
+            ("CZ-R1 我的手机号是 13800138000", "sensitive_input_blocked", "CZ-R1"),
+            ("请帮我写一封求职邮件", "out_of_scope_blocked", "CZ-R1"),
+            ("请写一首关于设备的诗", "out_of_scope_blocked", "CZ-R1"),
+            ("帮我算一道数学题，顺便提到设备", "out_of_scope_blocked", "CZ-R1"),
+            ("冒烟", "safety_risk", "CZ-R1"),
+            (
+                "R1刚吸进一小滩水，我想继续开机把剩下的吸完。",
+                "safety_risk",
+                "CZ-R1",
+            ),
+            (
+                "CZ-R1 的基站集尘袋满了，应该怎么更换？",
+                "model_scope_conflict",
+                "CZ-R1",
+            ),
+            (
+                "CZ-R1 的基站集尘袋满了，应该怎么更换？",
+                "model_scope_conflict",
+                "CZ-R2",
+            ),
+            (
+                "CZ-R1 和 CZ-R2 的集尘袋都满了，应该怎么更换？",
+                "model_scope_conflict",
+                "CZ-R2",
+            ),
+            ("CZ-R1 E310 可以重置吗？", "model_scope_conflict", "CZ-R1"),
+            (
+                "CZ-R1 集尘袋已满可以重置吗？",
+                "model_scope_conflict",
+                "CZ-R1",
+            ),
         ]
+        service = self._service(
+            live_enabled=True,
+            product_runner=_product_runner(runner),
+            browser_daily_limit=len(cases),
+        )
         token = None
-        for text, reason in cases:
-            submission = service.submit(_payload(text), browser_token=token)
+        for text, reason, model in cases:
+            submission = service.submit(
+                _payload(text, product_model=model), browser_token=token
+            )
             token = submission.browser_token
             value = service.get_run(submission.run_id)
             self.assertEqual(value["status"], "handoff")
@@ -185,6 +218,29 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertEqual(len(rows), len(cases))
         self.assertTrue(all(row[0] is None for row in rows))
         self.assertNotIn("13800138000", self.database.read_bytes().decode("latin1"))
+
+    def test_preflight_allows_explicit_model_capability_questions_to_runner(self) -> None:
+        calls = 0
+
+        def runner(_row: dict[str, object], _stage: object) -> tuple[dict[str, object], int]:
+            nonlocal calls
+            calls += 1
+            return _candidate_package(), 2
+
+        service = self._service(live_enabled=True, product_runner=_product_runner(runner))
+        token = None
+        for text in (
+            "CZ-R1 是否支持开启自动集尘功能？",
+            "CZ-R1 自动集尘可以设置吗？",
+        ):
+            submission = service.submit(
+                _payload(text, product_model="CZ-R1"), browser_token=token
+            )
+            token = submission.browser_token
+            value = _wait_for_terminal(service, submission.run_id)
+            self.assertEqual(value["status"], "completed")
+            self.assertEqual(value["result"]["provider_call_count"], 2)
+        self.assertEqual(calls, 2)
 
     def test_same_database_rejects_a_second_process_owner(self) -> None:
         self._service(live_enabled=False)

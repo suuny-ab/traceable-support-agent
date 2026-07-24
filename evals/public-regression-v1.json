@@ -110,7 +110,6 @@
   "known_product_gaps": [
     "GEN-DEV-TK-001 classification differs from the current inherited classifier.",
     "GEN-DEV-IE-001 is a verified replay preset; the inherited live chain does not yet enforce this handoff.",
-    "GEN-DEV-MH-001 preflight stops before Provider use but its public reason differs from this business expectation.",
     "GEN-DEV-MH-003 is not yet enforced by the inherited live chain."
   ]
 }

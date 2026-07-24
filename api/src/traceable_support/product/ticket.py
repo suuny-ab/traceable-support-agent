@@ -9,6 +9,10 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any
 
+from .boundaries import (
+    build_boundary_handoff_package,
+    evaluate_generation_boundary,
+)
 from .qa import (
     LlmQaError,
     _context_contradiction,
@@ -98,6 +102,19 @@ def run_ticket(
 
     if mode not in {MODE_OFFLINE, MODE_AUTHORIZED_REAL}:
         _fail("product_qa_mode_invalid")
+    question = ticket["issue_description"]
+    boundary = evaluate_generation_boundary(question, ticket["product_model"])
+    if boundary is not None:
+        if callable(on_stage):
+            on_stage("preflight", "failed")
+        return build_boundary_handoff_package(
+            task_type="ticket",
+            text=question,
+            product_model=ticket["product_model"],
+            run_id=run_id,
+            decision=boundary,
+            ticket=ticket,
+        )
     stages: list[dict[str, Any]] = []
 
     def _stage(stage: str, status: str) -> None:
@@ -105,7 +122,6 @@ def run_ticket(
         if callable(on_stage):
             on_stage(stage, status)
 
-    question = ticket["issue_description"]
     _stage("retrieval", "started")
     evidence = _retrieve_evidence(question, ticket["product_model"])
     _stage("retrieval", "finished")
