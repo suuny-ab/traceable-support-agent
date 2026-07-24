@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：前三次 `R1` 按硬停止结束；后续单例证明同一候选存在通过 / 失败波动；当前为语义覆盖合同 `R0`
+> 外部风险：前三次 `R1` 按硬停止结束；逐字 completeness 波动已形成 R0 语义跨度候选；v9 待执行
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -514,7 +514,7 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 客户可见语义跨度本地验证说明卡 v8
 
-> 状态：`planned_r0`
+> 状态：`candidate_verified_r0`
 >
 > 执行权限：无 Provider 调用
 
@@ -532,3 +532,52 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
   合法改写。
 - 允许结论：该混合合同在公开合成与注入式路径上消除逐字改写脆弱性。
 - 不允许结论：真实模型稳定性、开放域质量、Stage 12、生产或发布。
+
+### v8 候选结果
+
+- QA / ticket schema 分别升级为 `retrieved-top10-qa-result-v4` /
+  `ticket-proposal-result-v3`；新增 LLM 声明的 `customer_visible_span_text`。
+- 合法客户化改写通过；不存在的客户跨度、错误来源和漏义务继续失败关闭。
+- 代码 `62f5fe08be8889546410d87c443ebdd5908b40d4`；镜像
+  `sha256:91931aba5b0bc57bd6dab877049dffb0c8697212067aafa6f8853f844f7f7efa`，
+  revision 与非 root 用户匹配。
+- API `95` 项和 20 个子测试、工具 `76` 项及公开扫描通过；镜像无网络检索 8/8，
+  Provider 调用 `0`。
+- 长期决定：`docs/decisions/ADR-0006-llm-semantic-coverage-host-hard-gates.md`。
+
+## 外部 API 语义跨度工单验证说明卡 v9
+
+> 状态：`ready_under_external_standing_authorization`
+>
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只在 `GEN-DEV-TK-006` 验证真实模型是否遵守 ticket v3
+  `customer_visible_span_text` 合同，并形成合法 candidate 或安全分类失败。
+- `content_identity`：
+  `62f5fe08be8889546410d87c443ebdd5908b40d4`。
+- `execution_identity`：
+  `sha256:91931aba5b0bc57bd6dab877049dffb0c8697212067aafa6f8853f844f7f7efa`。
+- `content_version`：`two-stage-generation-contract/v9-semantic-ticket`。
+- `attempt_id`：`issue22-public-synthetic-semantic-ticket-9`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-TK-006`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt SHA-256：checklist
+  `21752f7455c7c1f073db9b23bb92d9ea68aaa7a54d64ae052076b2aa8a49448c`，ticket
+  `52510b64bf924338e88beb1a1c561143206d85189ae2f5a363d903f060868f21`，集合
+  `a52d2777acfdc6a3fdd5b37992aa84aaf214317e109bc0c4ba2271b7c1c0db2e`。
+- 请求：第一阶段 `16384`、第二阶段 `8192`、两阶段超时 `180,000ms`。
+- 调用 / 费用：复用只选择 TK-006 的 `remaining-ticket-v6` profile，最多 1 例、每例
+  最多 2 次、总调用最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于当前仓外
+  常设授权的每 attempt `¥1` 上限。
+- 执行：任一非 `stop`、Provider / transport、身份、预算、安全、来源跨度、客户跨度
+  或义务覆盖失败立即硬停止或形成类型明确的合同 handoff；不读取原始正文调优。
+- 公开记录：只保存安全请求配置、稳定失败码、HTTP 状态、响应接收、延迟、来源、调用
+  和费用覆盖；不公开正文、推理、凭据或原始信封。
+- 允许结论：ticket v3 合同在该冻结 TK-006 样本上兼容或暴露具体安全失败码。
+- 不允许结论：QA 兼容、稳定成功率、开放域质量、Stage 12、生产或发布。
+- restart：本 attempt 执行一次即关闭；不自动重跑。
+- `last_verified_checkpoint`：`v9_semantic_ticket_image_offline_verified`。
+
+本卡只有在当前仓外常设授权仍有效、执行前身份完全匹配时才可执行；Git 内容本身不授权。

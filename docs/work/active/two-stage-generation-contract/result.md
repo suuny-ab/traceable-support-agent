@@ -83,7 +83,7 @@ API。
 
 ## 仍待验证
 
-- 客户可见语义跨度合同能否接受语义等价改写，同时拒绝伪造跨度、错误来源和漏义务。
+- 新语义跨度 schema / prompt 是否被真实模型遵守并形成 ticket candidate。
 - 七次 R1 尝试中未获得 usage 的历史调用实际账单。
 - Draft PR 四项 Checks、冻结 head SHA 的正式独立复核和用户实际体验。
 
@@ -305,6 +305,32 @@ v5 只提高诊断分辨率，不改变候选行为；其执行依赖当前仓�
 v6 与 v7 的一失败一通过证明同一候选存在输出波动；两次样本不能形成稳定成功率，也不
 允许通过读取正文或继续重复抽样来调参。
 
+## v8 客户可见语义跨度本地候选
+
+- QA 输出升级为 `retrieved-top10-qa-result-v4`，工单输出升级为
+  `ticket-proposal-result-v3`；每条 claim 同时声明来源逐字跨度和客户文本中的连续
+  `customer_visible_span_text`。
+- LLM 负责两个跨度之间的语义对应；宿主验证来源跨度真实存在、客户跨度真实存在、
+  来源属于已审定义务、每项义务都有客户可见 claim。安全、型号、隐私、预算、Provider
+  信封和人工批准边界不变。
+- 逐字 `key_elements` 不再直接与客户文本比较；合法自然改写可以通过，不存在的客户
+  跨度以 `top10_v7_customer_span_invalid` 或 `ticket_v3_customer_span_invalid`
+  失败关闭并归入 `semantic_coverage`。
+- 长期边界记录于
+  `docs/decisions/ADR-0006-llm-semantic-coverage-host-hard-gates.md`。
+- v8 代码：
+  `62f5fe08be8889546410d87c443ebdd5908b40d4`；镜像：
+  `sha256:91931aba5b0bc57bd6dab877049dffb0c8697212067aafa6f8853f844f7f7efa`，
+  revision 精确匹配，运行用户 `10001:10001`。
+- API `95` 项和 20 个子测试通过（1 项环境门跳过）；工具 `76` 项通过（7 项环境门
+  跳过）；公开扫描 `187` 个文件 / 8 个公开案例通过；镜像在无网络、只读根文件系统和
+  无 capabilities 下完成 8 个公开检索案例，Provider 调用 `0`。
+- 新 prompt SHA-256：checklist
+  `21752f7455c7c1f073db9b23bb92d9ea68aaa7a54d64ae052076b2aa8a49448c`，QA
+  `574a7fb3e5490656fe4c71b37645df800aacd2b9d3f5300a52e303d2b8acbfed`，ticket
+  `52510b64bf924338e88beb1a1c561143206d85189ae2f5a363d903f060868f21`，集合
+  `a52d2777acfdc6a3fdd5b37992aa84aaf214317e109bc0c4ba2271b7c1c0db2e`。
+
 ## 当前允许的结论
 
 Issue #22 的 R0 合同候选通过公开合成与注入式回归，机械投影已从模型输出移到宿主且
@@ -312,4 +338,5 @@ Issue #22 的 R0 合同候选通过公开合成与注入式回归，机械投影
 且 `16384` 消除了 TK-001 一次可复现的第一阶段 `length`。这些结果来自不同冻结
 attempt，不能合并成同一次成功率；TK-006 已完成两阶段但在 completeness gate 转人工。
 同一 TK-006 候选随后也完整通过，说明逐字 completeness 存在模型波动，而不是稳定
-失败。尚不能声称全部合同兼容、开放域成功率改善、生产就绪、发布或用户验收。
+失败。v8 在本地证明 LLM 语义声明 / 宿主硬门分工可接受合法改写并拒绝伪造跨度；尚
+不能声称真实模型兼容、全部合同兼容、开放域成功率改善、生产就绪、发布或用户验收。
