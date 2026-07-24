@@ -4,6 +4,8 @@ import sqlite3
 import pytest
 
 from traceable_support.product.ticket import (
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     create_ticket_tables,
     efficiency_stats,
     load_ticket_run,
@@ -153,9 +155,10 @@ def test_ticket_gate_detects_missing_key_elements():
 
 
 def test_run_ticket_candidate_and_persistence_roundtrip():
+    transport = _fixture()
     package = run_ticket(
         ticket=TICKET,
-        transport=_fixture(),
+        transport=transport,
         mode="offline_injected",
         run_id="ticket-run-1",
         worst_cost_limit_cny_nanos=500_000_000,
@@ -168,6 +171,12 @@ def test_run_ticket_candidate_and_persistence_roundtrip():
     ]
     assert package["gates"]["completeness_gate"]["pass"] is True
     assert package["ticket_id"] == "T-001"
+    observations = transport.safe_observations()
+    assert STEP1_MAX_OUTPUT_TOKENS == 16384
+    assert package["worst_cost_cny_nanos"] == (
+        sum(observation["request_bytes"] * 3000 for observation in observations)
+        + (STEP1_MAX_OUTPUT_TOKENS + STEP2_MAX_OUTPUT_TOKENS) * 6000
+    )
 
     connection = sqlite3.connect(":memory:")
     create_ticket_tables(connection)

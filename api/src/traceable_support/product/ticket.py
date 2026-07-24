@@ -15,6 +15,8 @@ from .boundaries import (
 )
 from .qa import (
     LlmQaError,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     _context_contradiction,
     _record_handoff,
     _retrieve_evidence,
@@ -45,8 +47,6 @@ from traceable_support.provider.contract import (
 from traceable_support.provider.deepseek import MODE_AUTHORIZED_REAL, MODE_OFFLINE
 
 PACKAGE_SCHEMA_VERSION = "product-ticket-package-v1"
-STEP1_MAX_OUTPUT_TOKENS = 8192
-STEP2_MAX_OUTPUT_TOKENS = 8192
 
 
 def _fail(code: str) -> None:

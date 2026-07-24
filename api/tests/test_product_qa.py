@@ -6,6 +6,8 @@ import pytest
 from traceable_support.product.qa import (
     LlmQaError,
     QaSessionBudget,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     create_qa_tables,
     list_qa_runs,
     load_qa_run,
@@ -84,10 +86,11 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
 
 
 def test_run_qa_candidate_package_and_persistence_roundtrip():
+    transport = _fixture("CZ-R1 怎么开始局部清扫？")
     package = run_qa(
         question="CZ-R1 怎么开始局部清扫？",
         product_model="CZ-R1",
-        transport=_fixture("CZ-R1 怎么开始局部清扫？"),
+        transport=transport,
         mode="offline_injected",
         run_id="test-run-1",
         worst_cost_limit_cny_nanos=500_000_000,
@@ -102,6 +105,12 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
     assert package["answer"]["content"]["answer"]["claim_ids"] == ["c1"]
     assert len(package["evidence"]) == 10
     assert len(package["usage"]) == 2
+    observations = transport.safe_observations()
+    assert STEP1_MAX_OUTPUT_TOKENS == 16384
+    assert package["worst_cost_cny_nanos"] == (
+        sum(observation["request_bytes"] * 3000 for observation in observations)
+        + (STEP1_MAX_OUTPUT_TOKENS + STEP2_MAX_OUTPUT_TOKENS) * 6000
+    )
 
     connection = sqlite3.connect(":memory:")
     create_qa_tables(connection)

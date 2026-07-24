@@ -28,6 +28,8 @@ from traceable_support.generation.qa_contract import (
 from traceable_support.generation.checklist import (
     CHECKLIST_SCHEMA_VERSION,
     CHECKLIST_SYSTEM_PROMPT,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     STEP2_SYSTEM_PROMPT,
     TwoStepError,
     build_clause_inventory,
@@ -51,8 +53,6 @@ from traceable_support.provider.deepseek import MODE_AUTHORIZED_REAL, MODE_OFFLI
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_SCHEMA_VERSION = "product-qa-package-v1"
-STEP1_MAX_OUTPUT_TOKENS = 8192
-STEP2_MAX_OUTPUT_TOKENS = 8192
 LLM_TIMEOUT_MS = 180_000
 SESSION_MAX_RUNS = 6
 SESSION_MAX_WORST_COST_CNY_NANOS = 700_000_000
@@ -131,6 +131,12 @@ def _call(transport: Any, mode: str, budget: ReservedCallBudget, *, sequence: in
           run_id: str, case_label: str) -> dict[str, Any]:
     from traceable_support.provider.budget import build_request_identity
 
+    request_body = strict_json_loads(body)
+    if (
+        type(request_body) is not dict
+        or type(request_body.get("max_tokens")) is not int
+    ):
+        _fail("product_qa_request_max_tokens_invalid")
     prepared = {
         "body": body,
         "prompt_version": "product-qa",
@@ -145,7 +151,7 @@ def _call(transport: Any, mode: str, budget: ReservedCallBudget, *, sequence: in
         run_id=run_id,
         stage=STAGE_CONTENT,
         prepared=prepared,
-        max_output_tokens=STEP2_MAX_OUTPUT_TOKENS,
+        max_output_tokens=request_body["max_tokens"],
         timeout_ms=LLM_TIMEOUT_MS,
     )
     attempt = attempt_call(transport=transport, mode=mode, budget=budget, request=request)
