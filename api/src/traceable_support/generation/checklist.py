@@ -145,8 +145,12 @@ def validate_step1_result(
     if value["schema_version"] != CHECKLIST_SCHEMA_VERSION:
         _fail("two_step_checklist_identity_invalid")
     obligations = value["obligations"]
-    if type(obligations) is not list or not 1 <= len(obligations) <= 8:
-        _fail("two_step_checklist_obligation_count_invalid")
+    if type(obligations) is not list:
+        _fail("two_step_checklist_obligations_type_invalid")
+    if not obligations:
+        _fail("two_step_checklist_obligation_count_empty")
+    if len(obligations) > 8:
+        _fail("two_step_checklist_obligation_count_exceeded")
     evidence_order = [entry["evidence_id"] for entry in item["evidence"]]
     checked_obligations: list[dict[str, Any]] = []
     obligation_ids: list[str] = []

@@ -164,6 +164,28 @@ def test_v3_checklist_reports_privacy_safe_subcontract_codes(
         validate_step1_result({"evidence": EVIDENCE}, value)
 
 
+@pytest.mark.parametrize(
+    ("obligations", "code"),
+    [
+        ({}, "two_step_checklist_obligations_type_invalid"),
+        ([], "two_step_checklist_obligation_count_empty"),
+        (
+            [_raw_checklist()["obligations"][0]] * 9,
+            "two_step_checklist_obligation_count_exceeded",
+        ),
+    ],
+)
+def test_v3_checklist_reports_safe_obligation_count_codes(
+    obligations,
+    code: str,
+) -> None:
+    value = _raw_checklist()
+    value["obligations"] = obligations
+
+    with pytest.raises(TwoStepError, match=code):
+        validate_step1_result({"evidence": EVIDENCE}, value)
+
+
 def test_v3_checklist_rejects_key_element_crossing_clause_boundary() -> None:
     value = {
         "schema_version": "obligation-checklist-v3",
@@ -249,6 +271,10 @@ def test_failure_taxonomy_is_stable_and_content_free() -> None:
     assert classify_generation_failure(
         "enumeration_execution_failure:provider_response_finish_reason_length"
     )["family"] == "provider_response_envelope"
+    assert classify_generation_failure(
+        "enumeration_contract_failure:"
+        "two_step_checklist_obligation_count_exceeded"
+    )["family"] == "checklist_shape"
 
     summary = summarize_generation_failures(
         [
