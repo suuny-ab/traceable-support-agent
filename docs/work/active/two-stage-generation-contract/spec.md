@@ -646,3 +646,67 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 本卡已经消费并关闭。结果只说明第一阶段候选质量失败，不证明 QA v4 兼容或不兼容；
 按计划不再扩大外部样本。
+
+## checklist v4 QA 单例验证说明卡
+
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只在 `GEN-DEV-QA-003` 验证 checklist v4 的义务 / clause 语义选择能否通过
+  第一阶段，并继续验证 QA v4；形成合法 candidate 或安全分类失败。
+- `content_identity`：`cece633a6b11af3f36a116ca3a793b0f8654b94c`。
+- `execution_identity`：
+  `sha256:a8cfbede1481a38a2eb97dcf0abcbc36e9ca210de01af7cc378574db90fe4bb8`。
+- `content_version`：`two-stage-generation-contract/v11-semantic-checklist-qa`。
+- `attempt_id`：`issue22-public-synthetic-semantic-checklist-qa-11`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-QA-003`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt SHA-256：checklist
+  `bb9f58b196d67ab01aa43c59499136b5c6dd7576247c9c576c5e74be490908cf`，QA
+  `df7200de0fdcb5ed25ec094ae7873397a4da22e1d186b9d23b7511789f913878`，集合
+  `d66cd07906481faf93d9c13fa1a0b9deb262e50168e60b898c1d4f097419a7fb`。
+- 请求：第一阶段 `16384`、第二阶段 `8192`、两阶段超时 `180,000ms`。
+- 调用 / 费用：固定 `semantic-qa-v11` profile，最多 1 例、每例最多 2 次、总调用
+  最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于仓外常设授权的每 attempt
+  `¥1` 上限。
+- 执行：授权、transport、身份、预算、包完整性或安全失败立即硬停止，且不启动 v12；
+  合同 / 候选质量失败形成类型明确的 handoff，不读取原始正文调优。
+- 公开记录：只保存安全请求配置、稳定失败码、HTTP 状态、响应接收、延迟、来源、调用
+  和费用覆盖；不公开正文、推理、凭据或原始信封。
+- 允许结论：checklist v4 与 QA v4 在该冻结 QA003 样本上兼容，或暴露具体安全失败码。
+- 不允许结论：稳定成功率、开放域质量、Stage 12、生产、发布或用户验收。
+- restart：本 attempt 执行一次即关闭；不自动重跑。
+- `last_verified_checkpoint`：`v11_image_offline_verified`。
+
+## checklist v4 工单单例验证说明卡
+
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 前置：v11 没有授权、transport、身份、预算或包完整性硬停止；候选质量 handoff 不
+  阻止本独立 attempt。
+- 目的：只在 `GEN-DEV-TK-006` 验证 checklist v4 与 ticket v3 的组合；形成合法
+  candidate 或安全分类失败。
+- `content_identity`：`cece633a6b11af3f36a116ca3a793b0f8654b94c`。
+- `execution_identity`：
+  `sha256:a8cfbede1481a38a2eb97dcf0abcbc36e9ca210de01af7cc378574db90fe4bb8`。
+- `content_version`：`two-stage-generation-contract/v12-semantic-checklist-ticket`。
+- `attempt_id`：`issue22-public-synthetic-semantic-checklist-ticket-12`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-TK-006`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt SHA-256：checklist
+  `bb9f58b196d67ab01aa43c59499136b5c6dd7576247c9c576c5e74be490908cf`，ticket
+  `52510b64bf924338e88beb1a1c561143206d85189ae2f5a363d903f060868f21`，集合
+  `d66cd07906481faf93d9c13fa1a0b9deb262e50168e60b898c1d4f097419a7fb`。
+- 请求：第一阶段 `16384`、第二阶段 `8192`、两阶段超时 `180,000ms`。
+- 调用 / 费用：固定 `semantic-ticket-v12` profile，最多 1 例、每例最多 2 次、总调用
+  最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于仓外常设授权的每 attempt
+  `¥1` 上限。
+- 执行：授权、transport、身份、预算、包完整性或安全失败立即硬停止；合同 / 候选质量
+  失败形成类型明确的 handoff，不读取原始正文调优。
+- 公开记录、不允许结论与 restart：沿用 v11；本 attempt 执行一次即关闭，不自动重跑。
+- 允许结论：checklist v4 与 ticket v3 在该冻结 TK006 样本上兼容，或暴露具体安全
+  失败码。
+- `last_verified_checkpoint`：`v12_image_offline_verified`。

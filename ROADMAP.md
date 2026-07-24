@@ -20,9 +20,9 @@
 ## 当前
 
 - [ ] [Issue #22：修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
-  已形成失败分类、宿主机械投影和 LLM 客户可见语义跨度候选；有界真实 API 证明
-  ticket v3 单例兼容，QA v4 因第一阶段 checklist 失败尚未触达。Draft PR 与正式复核
-  待完成，不形成成功率或发布主张。
+  已形成失败分类、宿主机械投影和 LLM 客户可见语义跨度候选；v4 进一步让 LLM 直接
+  判断义务与 clause 的语义对应，移除脆弱的 `key_elements` 复制合同。有界 QA/工单
+  外部单例、Draft PR 最终 Checks 与正式复核待完成，不形成成功率或发布主张。
 
 ## 下一步
 

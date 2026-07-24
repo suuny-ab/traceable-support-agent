@@ -14,7 +14,7 @@ Run service / SQLite / budget / queue
 ProductRunner
     ├─ Boundary: deterministic safety / model-scope handoff
     ├─ Retrieval: model filter + BM25/BGE/RRF
-    ├─ Generation: checklist → customer-visible candidate
+    ├─ Generation: semantic obligation/clause selection → customer-visible candidate
     ├─ Provider: DeepSeek transport + usage/budget
     └─ Validation: source, LLM-declared visible span, obligation, schema and handoff gates
 ```
@@ -24,8 +24,9 @@ ProductRunner
 - `traceable_support.api`：负责 HTTP、CORS、请求限制、运行生命周期、持久化和公开结果投影。
 - `traceable_support.product`：负责生成前业务边界、QA/工单编排与分类。
 - `traceable_support.retrieval`：负责合成语料、混合检索和模型清单。
-- `traceable_support.generation`：负责义务清单、QA/工单合同，以及对 LLM 声明的客户
-  可见语义跨度执行来源、存在性、义务集合和结构硬门。
+- `traceable_support.generation`：负责义务清单、QA/工单合同；LLM 选择义务与 clause，
+  宿主验证完整互斥分区并派生 evidence，再对 LLM 声明的客户可见语义跨度执行来源、
+  存在性、义务集合和结构硬门。
 - `traceable_support.provider`：负责传输合同、DeepSeek 适配、用量与原子预算。
 - `evals`：承载公开回归和未来评测适配器；它依赖产品层，产品层不得反向依赖它。
 

@@ -138,3 +138,18 @@ v10 第一阶段以 `two_step_checklist_key_elements_invalid` 转人工，没有
 3. 运行最终 API、工具、公开扫描与 diff 检查；更新当前事实和路线，不改写 Stage 12。
 4. 停在推送 / Draft PR 独立外部动作前；获得授权后推送并创建 Draft PR，等待四项
    Checks 全绿再冻结 head SHA 和进行一次正式只读复核。
+
+## v10 后的 v4 合同修正
+
+用户确认继续同一 Issue #22 增量，不另建 Issue，并明确不要本地小生成模型。后续：
+
+1. 第一阶段 checklist v4 只让 LLM 输出义务描述与语义支撑的 clause IDs；宿主验证
+   clause 身份、完整互斥分区，并机械派生 evidence 和忽略上下文。
+2. 删除生产路径的 `key_elements` 复制、验证和第二阶段下传；保留历史 v2 兼容路径。
+3. 先通过 Fast、Candidate、Web Product、公开扫描和无网络 live 镜像检查。
+4. 冻结同一代码 / 镜像的 QA003 与 TK006 两个独立单例 attempt，各最多 2 次调用、
+   `¥0.70`、自动重试 0；QA 的候选质量失败不冒充执行完整性失败。
+5. 若 QA attempt 出现授权、transport、预算、身份或包完整性失败，则不启动 ticket；
+   否则按独立卡执行 ticket。两次都不读取 Provider 原始正文调优。
+6. 更新同一 Draft PR，等待最终四项 Checks 全绿后冻结 head，再做一次正式只读复核；
+   合并和部署仍是后续独立动作。
