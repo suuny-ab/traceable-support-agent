@@ -209,6 +209,29 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertTrue(all(row[0] is None for row in rows))
         self.assertNotIn("13800138000", self.database.read_bytes().decode("latin1"))
 
+    def test_preflight_allows_explicit_model_capability_questions_to_runner(self) -> None:
+        calls = 0
+
+        def runner(_row: dict[str, object], _stage: object) -> tuple[dict[str, object], int]:
+            nonlocal calls
+            calls += 1
+            return _candidate_package(), 2
+
+        service = self._service(live_enabled=True, product_runner=_product_runner(runner))
+        token = None
+        for text in (
+            "CZ-R1 是否支持开启自动集尘功能？",
+            "CZ-R1 自动集尘可以设置吗？",
+        ):
+            submission = service.submit(
+                _payload(text, product_model="CZ-R1"), browser_token=token
+            )
+            token = submission.browser_token
+            value = _wait_for_terminal(service, submission.run_id)
+            self.assertEqual(value["status"], "completed")
+            self.assertEqual(value["result"]["provider_call_count"], 2)
+        self.assertEqual(calls, 2)
+
     def test_same_database_rejects_a_second_process_owner(self) -> None:
         self._service(live_enabled=False)
         with self.assertRaisesRegex(RuntimeError, "single_instance"):

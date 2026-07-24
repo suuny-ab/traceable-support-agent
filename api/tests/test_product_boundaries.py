@@ -73,6 +73,8 @@ def test_explicit_text_model_must_match_selected_model_unless_comparing_models()
         "CZ-R1 可以自动集尘吗？",
         "CZ-R1 可不可以自动集尘？",
         "CZ-R1 会不会自动集尘？",
+        "CZ-R1 是否支持开启自动集尘功能？",
+        "CZ-R1 自动集尘可以设置吗？",
         "为什么 CZ-R1 没有自动集尘，而 CZ-R2 有？",
         "CZ-R1 和 CZ-R2 的自动集尘能力有什么区别？",
     )

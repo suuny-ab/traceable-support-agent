@@ -39,7 +39,26 @@ _MODEL_MENTION_PATTERNS = {
     "CZ-R1": re.compile(r"(?<![a-z0-9])(?:cz-?r1|r1)(?![a-z0-9])"),
     "CZ-R2": re.compile(r"(?<![a-z0-9])(?:cz-?r2|r2)(?![a-z0-9])"),
 }
-_DUST_STATION_HARD_OPERATION_MARKERS = (
+_DUST_STATION_OPERATION_CONTEXT_MARKERS = (
+    "怎么",
+    "怎样",
+    "如何",
+    "怎么办",
+    "故障",
+    "报错",
+    "报警",
+    "报e310",
+    "满了",
+    "堵塞",
+    "堵了",
+    "橙灯",
+    "红灯",
+    "连续",
+    "触发",
+    "失灵",
+    "坏了",
+)
+_DUST_STATION_ACTION_MARKERS = (
     "更换",
     "清理",
     "安装",
@@ -50,22 +69,10 @@ _DUST_STATION_HARD_OPERATION_MARKERS = (
     "重置",
     "维修",
     "处理",
-    "故障",
-    "报错",
-    "报警",
-    "报e310",
-    "满了",
-    "堵塞",
-    "堵了",
-    "橙灯",
-    "红灯",
     "恢复",
     "测试",
-    "连续",
-    "触发",
-    "失灵",
-    "坏了",
-    "怎么办",
+    "使用",
+    "操作",
 )
 _DUST_STATION_INFORMATION_PATTERNS = (
     re.compile(r"(?:有没有|是否有|是否支持|支不支持|能否|能不能|具备不具备|"
@@ -74,9 +81,10 @@ _DUST_STATION_INFORMATION_PATTERNS = (
     re.compile(r"(?:自动集尘|集尘袋|进尘口|e310).{0,12}"
                r"(?:有没有|是否有|是否支持|支持吗|能否|能不能|具备吗|有吗|"
                r"可以吗|可不可以|会不会|会吗)"),
+    re.compile(r"(?:自动集尘|集尘袋|进尘口|e310).{0,12}"
+               r"(?:可以|能|会).{0,6}(?:吗|么|[?？]|$)"),
     re.compile(r"(?:区别|差异|不同|为什么.{0,16}(?:没有|不支持))"),
 )
-_DUST_STATION_GENERIC_OPERATION_MARKERS = ("怎么", "怎样", "如何", "使用", "操作")
 
 
 def _compact(text: str) -> str:
@@ -101,13 +109,13 @@ def _mentioned_models(compact: str) -> set[str]:
 
 
 def _is_dust_station_information_question(compact: str) -> bool:
-    if any(marker in compact for marker in _DUST_STATION_HARD_OPERATION_MARKERS):
+    if any(marker in compact for marker in _DUST_STATION_OPERATION_CONTEXT_MARKERS):
         return False
     if any(pattern.search(compact) for pattern in _DUST_STATION_INFORMATION_PATTERNS):
         return True
-    return not any(
-        marker in compact for marker in _DUST_STATION_GENERIC_OPERATION_MARKERS
-    ) and any(marker in compact for marker in ("区别", "差异", "不同"))
+    if any(marker in compact for marker in _DUST_STATION_ACTION_MARKERS):
+        return False
+    return any(marker in compact for marker in ("区别", "差异", "不同"))
 
 
 def evaluate_generation_boundary(

@@ -25,7 +25,7 @@
 | 层级 | 命令 / 范围 | 结果 |
 | --- | --- | --- |
 | 最便宜 | `api/tests/test_product_boundaries.py` | 7/7 通过 |
-| API | `python -m pytest api/tests -q` | 76 通过，1 项按环境条件跳过 |
+| API | `python -m pytest api/tests -q` | 77 通过，1 项按环境条件跳过 |
 | Stage 12 机制 | `python -m pytest tools/tests/test_stage12_eval.py -q` | 12/12 通过 |
 | 治理工具 | `python -m unittest discover -s tools/tests -p "test_*.py"` | 65 通过，7 项按环境条件跳过 |
 | 公开扫描 | `python tools/check_public_repo.py --scope worktree` | 通过，178 个文件、8 个公开案例 |
@@ -72,7 +72,7 @@
   handoff 的 `boundary_sources`；删除当前公开来源未支持的 `起火`、`触电` 安全词。
 - 修复不修改公开合成语料、不伪造 `answer` / `proposal`、不扩展安全词或 Provider 范围。
 - 修复后 replay 镜像
-  `sha256:edbb68a84ba7781f182f3e986e62f192234afd28526a36ea98173b5c68ab561b`
+  `sha256:7dc4ef9486a525e92eeda0aceb2e2d203f1f015c97fc29df60c7eebdbf771e7a`
   的 `python -S` 无网络导入、`10001:10001` 用户、只读最小权限启动与
   `status=ok` / `live_experience=replay_only` 健康检查通过；测试容器已删除。
 - 首轮候选 `8b50618` 不得合入；修复后的新候选需重新通过四项 Checks，并由同一复核者
@@ -85,6 +85,13 @@
 - 第二轮修复后的受影响 API、治理、公开扫描和 replay 镜像检查全部通过；Provider 调用
   保持 0。
 - `46c7537` 已失效，不得合入；新候选仍需重新通过四项 Checks 与同一复核者的聚焦复核。
+- 第三轮候选 `497f10cb2236b4760ed13368373d889522dbc661` 在 CI run
+  `30059878623` 四项必需 Checks 全绿后仍因 1 项聚焦 finding 判为 `failed`：
+  `开启 / 启动 / 设置` 等歧义动作词优先于明确能力问法，造成合法知识问答误拦。
+- 第三轮修复把判定顺序固定为明确操作 / 故障上下文、明确能力问法、单独动作词；因此
+  “是否支持开启……”和“……可以设置吗”放行，而“怎么更换”、已满 / 故障请求仍阻断。
+- 第三轮修复后的完整 API、公开扫描与 replay 镜像检查通过；Provider 调用保持 0。
+- `497f10c` 已失效，不得合入；新候选仍需重新通过四项 Checks 与同一复核者聚焦复核。
 
 ## 允许与不允许的结论
 
