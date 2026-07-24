@@ -6,7 +6,7 @@
 >
 > 最后核实：`2026-07-24`
 
-本文件只保存稳定产品事实。开发进度见 `docs/status.md`，路线见 `ROADMAP.md`，历史过程见 `docs/work/completed/`。
+本文件只保存稳定产品事实。开发进度见 `docs/status.md`，路线见 `ROADMAP.md`，精选完成结果见 `docs/work/completed/`，历史过程由 Git 保存。
 
 ## 产品目的
 

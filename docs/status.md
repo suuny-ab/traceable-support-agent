@@ -8,14 +8,14 @@
 | 更新时间 | `2026-07-24` |
 | 当前目标 | Issue #28：完成最终作品集视觉与三个固定示例的受控真实体验 |
 | 活动增量 | `portfolio-live-experience` |
-| 复杂度 | 完整；当前阶段为 Codex 中心化多 CLI 协作实验，首页 v4 是真实产品载体 |
-| 风险 / 成熟度 | 当前为 `R1` 公开参考站与已明确授权的 Kimi Code CLI 视觉分析、`R0` 本地文档 / 原型 / worktree；保持 `S1 公开 Beta`，产品 Provider、Qoder、生产开关和部署仍需独立授权 |
+| 复杂度 | 完整；当前停在 Issue #28 首屏参考对齐 checkpoint，下一产品任务尚未重新确认 |
+| 风险 / 成熟度 | 当前为 `R0` 本地规则、文档与既有原型；保持 `S1 公开 Beta`，任何新 CLI 调用、产品 Provider、Qoder、生产开关和部署均需当前任务的独立状态与授权 |
 | 活动工作 | `docs/work/active/portfolio-live-experience/` |
 | 最近完成 | `docs/work/completed/two-stage-generation-contract/` |
-| 当前动作 | 用户已确认启动最小多 CLI 工作流实验；先冻结当前设计、对齐稿与 K3 视觉分析 checkpoint，再报告 CLI 状态卡，由用户选择首页 v4 的开发 Worker |
-| 阻碍 | 首个开发 Worker 尚待状态卡后由用户选择；产品 Provider、Qoder、生产开关和部署均未授权 |
+| 当前动作 | 多 CLI 正式规则与文档清理已完成；当前会话在 checkpoint 收口，等待新会话重新确定任务 |
+| 阻碍 | 无工程阻碍；首个任务、任务范围和开发 Worker均由新会话重新讨论，旧会话额度与授权不继承 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
-| 下一检查点 | 当前现场通过检查并形成 checkpoint commit；随后输出首张 CLI 状态卡，未获用户选择前不派发首页 v4 写入任务 |
+| 下一检查点 | 新会话读取 `docs/meta/multi-cli-workflow.md`；先确定任务范围，范围确认后生成新的 CLI 状态卡，再由用户选择 Worker |
 
 ## 当前产品事实
 
@@ -33,3 +33,4 @@
 - 结果路线：`ROADMAP.md`
 - 最近完成记录：`docs/work/completed/two-stage-generation-contract/`
 - 工程规则：`docs/engineering/`
+- 多 CLI 协作：`docs/meta/multi-cli-workflow.md`
