@@ -221,7 +221,7 @@ class GenerationContractProbeTest(unittest.TestCase):
             report["identity"]["request_config"],
             {
                 "step1_max_output_tokens": 16384,
-                "step2_max_output_tokens": 8192,
+                "step2_max_output_tokens": 16384,
                 "timeout_ms": 180_000,
             },
         )
