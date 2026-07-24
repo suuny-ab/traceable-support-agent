@@ -354,6 +354,10 @@ class GenerationContractProbeTest(unittest.TestCase):
         for profile, case_ids in (
             ("semantic-qa-v11", generation_contract_probe.SEMANTIC_QA_CASE_IDS),
             (
+                "qa-length-recovery-v13",
+                generation_contract_probe.SEMANTIC_QA_CASE_IDS,
+            ),
+            (
                 "semantic-ticket-v12",
                 generation_contract_probe.REMAINING_TICKET_CASE_IDS,
             ),
