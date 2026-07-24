@@ -36,6 +36,8 @@ _FAMILIES = {
     "ticket_obligation_binding_invalid": "obligation_binding",
     "top10_v7_customer_span_invalid": "semantic_coverage",
     "ticket_v3_customer_span_invalid": "semantic_coverage",
+    "top10_v8_clause_binding_invalid": "obligation_binding",
+    "ticket_v4_clause_binding_invalid": "obligation_binding",
     "completeness_gate_failed": "completeness",
 }
 

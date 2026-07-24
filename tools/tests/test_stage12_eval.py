@@ -121,7 +121,7 @@ def _qa_steps(hit, *, valid: bool = True) -> list[dict]:
             "claims": [
                 {
                     "claim_id": "c1",
-                    "exact_span_text": hit.text,
+                    "exact_span_text": selected["text"],
                     "customer_visible_span_text": first,
                     "evidence_ids": [selected["evidence_id"]],
                     "obligation_ids": ["o1"],
@@ -161,7 +161,7 @@ def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
             "claims": [
                 {
                     "claim_id": "c1",
-                    "exact_span_text": hit.text,
+                    "exact_span_text": selected["text"],
                     "customer_visible_span_text": first,
                     "evidence_ids": [selected["evidence_id"]],
                     "obligation_ids": ["o1"],

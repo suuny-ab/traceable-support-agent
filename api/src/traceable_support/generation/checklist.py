@@ -19,7 +19,7 @@ STEP2_MAX_OUTPUT_TOKENS = 16384
 STEP2_TIMEOUT_MS = 180_000
 STEP1_V2_PROMPT_VERSION = "obligation-checklist-prompt-v2"
 STEP1_PROMPT_VERSION = "obligation-checklist-prompt-v5"
-STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v7"
+STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v8"
 CHECKLIST_SYSTEM_PROMPT_V2 = """你是客服问答的义务分析器。输入包含问题、型号和按顺序排列的10条候选证据。只输出JSON，不输出解释。
 任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，各为一项。并列出现的适用对象、条件或步骤（如\"A或B\"）必须每个分支都纳入义务，不得合并或遗漏。义务只来自证据，不得引入证据外义务。
 每项义务给出：obligation_id（简短标识）、description（义务的一句话描述）、evidence_ids（支撑该义务的证据ID，至少一个）、key_elements（1到4个从所绑定证据中逐字复制的关键短片段，每个2到60字符，用于后续机械核对正文覆盖；片段必须逐字存在于该义务绑定的证据原文中，不得改写包括标点）。
@@ -198,6 +198,14 @@ def validate_step1_result(
                     for evidence_id in evidence_order
                     if evidence_id in selected_evidence
                 ],
+                "approved_source_spans": [
+                    {
+                        "clause_id": clause_id,
+                        "evidence_id": clause_by_id[clause_id]["evidence_id"],
+                        "exact_span_text": clause_by_id[clause_id]["text"],
+                    }
+                    for clause_id in clause_ids
+                ],
             }
         )
         obligation_ids.append(obligation_id)
@@ -253,13 +261,14 @@ def checklist_model_projection(checklist: dict[str, Any]) -> dict[str, Any]:
                 "obligation_id",
                 "description",
                 "evidence_ids",
+                "approved_source_spans",
             )
         }
         if any(value is None for value in projected.values()):
             _fail("two_step_checklist_invalid")
         obligations.append(projected)
     return {
-        "schema_version": "approved-obligation-checklist-v2",
+        "schema_version": "approved-obligation-checklist-v3",
         "obligations": obligations,
     }
 

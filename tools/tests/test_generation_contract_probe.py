@@ -83,15 +83,10 @@ class GenerationContractProbeTest(unittest.TestCase):
                     "clause_ids": clause_ids,
                 }
             )
-            evidence_text = next(
-                entry["text"]
-                for entry in evidence
-                if entry["evidence_id"] == evidence_id
-            )
             claims.append(
                 {
                     "claim_id": f"c{index}",
-                    "exact_span_text": evidence_text,
+                    "exact_span_text": clauses[0]["text"],
                     "customer_visible_span_text": visible_span,
                     "evidence_ids": [evidence_id],
                     "obligation_ids": [obligation_id],

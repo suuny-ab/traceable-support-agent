@@ -110,18 +110,32 @@ def test_v4_checklist_uses_semantic_clause_selection_and_derives_mechanical_fiel
     assert checklist["schema_version"] == "obligation-checklist-v4"
     assert checklist["obligations"][0]["evidence_ids"] == ["E1"]
     assert checklist["obligations"][0]["clause_ids"] == ["c001"]
+    assert checklist["obligations"][0]["approved_source_spans"] == [
+        {
+            "clause_id": "c001",
+            "evidence_id": "E1",
+            "exact_span_text": "先按局部清扫键。",
+        }
+    ]
     assert "key_elements" not in checklist["obligations"][0]
     assert checklist["acknowledged_context"] == [
         "完成后检查尘盒。",
         "不要在积水中运行。",
     ]
     assert checklist_model_projection(checklist) == {
-        "schema_version": "approved-obligation-checklist-v2",
+        "schema_version": "approved-obligation-checklist-v3",
         "obligations": [
             {
                 "obligation_id": "o1",
                 "description": "说明怎样启动指定区域的清洁",
                 "evidence_ids": ["E1"],
+                "approved_source_spans": [
+                    {
+                        "clause_id": "c001",
+                        "evidence_id": "E1",
+                        "exact_span_text": "先按局部清扫键。",
+                    }
+                ],
             }
         ],
     }
@@ -267,6 +281,20 @@ def test_qa_v4_rejects_redundant_or_wrong_source_bindings() -> None:
         validate_result({"evidence": EVIDENCE}, _checklist(), wrong_source)
 
 
+def test_qa_v4_rejects_ignored_clause_from_an_approved_evidence() -> None:
+    ignored_clause = _qa_result()
+    ignored_clause["content"]["answer"]["text"] = "完成后请检查尘盒。"
+    ignored_clause["content"]["claims"][0]["exact_span_text"] = (
+        "完成后检查尘盒。"
+    )
+    ignored_clause["content"]["claims"][0]["customer_visible_span_text"] = (
+        "检查尘盒"
+    )
+
+    with pytest.raises(CandidateV4Error, match="top10_v8_clause_binding_invalid"):
+        validate_result({"evidence": EVIDENCE}, _checklist(), ignored_clause)
+
+
 def test_ticket_v3_accepts_declared_customer_paraphrase_and_derives_plan() -> None:
     paraphrased = _ticket_result()
     paraphrased["content"]["draft_reply"] = "可以通过按键启动局部区域清洁。"
@@ -307,6 +335,24 @@ def test_ticket_v3_rejects_wrong_source_binding() -> None:
         )
 
 
+def test_ticket_v3_rejects_ignored_clause_from_an_approved_evidence() -> None:
+    ignored_clause = copy.deepcopy(_ticket_result())
+    ignored_clause["content"]["draft_reply"] = "完成后请检查尘盒。"
+    ignored_clause["content"]["claims"][0]["exact_span_text"] = (
+        "完成后检查尘盒。"
+    )
+    ignored_clause["content"]["claims"][0]["customer_visible_span_text"] = (
+        "检查尘盒"
+    )
+
+    with pytest.raises(TicketContractError, match="ticket_v4_clause_binding_invalid"):
+        validate_ticket_result_v2(
+            {"evidence": EVIDENCE},
+            _checklist(),
+            ignored_clause,
+        )
+
+
 def test_failure_taxonomy_is_stable_and_content_free() -> None:
     classification = classify_generation_failure(
         "enumeration_execution_failure:provider_response_envelope_invalid"
@@ -330,6 +376,12 @@ def test_failure_taxonomy_is_stable_and_content_free() -> None:
     assert classify_generation_failure(
         "generation_contract_failure:ticket_v3_customer_span_invalid"
     )["family"] == "semantic_coverage"
+    assert classify_generation_failure(
+        "generation_contract_failure:top10_v8_clause_binding_invalid"
+    )["family"] == "obligation_binding"
+    assert classify_generation_failure(
+        "generation_contract_failure:ticket_v4_clause_binding_invalid"
+    )["family"] == "obligation_binding"
 
     summary = summarize_generation_failures(
         [

@@ -67,7 +67,7 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
                 "kind": "qa_answer",
                 "answer": {"text": answer_text},
                 "claims": [
-                    {"claim_id": "c1", "exact_span_text": text,
+                    {"claim_id": "c1", "exact_span_text": selected["text"],
                      "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
                      "evidence_ids": [evidence_id], "obligation_ids": ["o1"]}
                 ],

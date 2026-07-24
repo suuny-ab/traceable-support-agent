@@ -7,7 +7,7 @@ from typing import Any
 
 from traceable_support.provider.contract import assert_no_sensitive_material
 
-PROMPT_VERSION = "retrieved-top10-qa-prompt-v7"
+PROMPT_VERSION = "retrieved-top10-qa-prompt-v8"
 LEGACY_OUTPUT_SCHEMA_VERSION = "retrieved-top10-qa-result-v2"
 OUTPUT_SCHEMA_VERSION = "retrieved-top10-qa-result-v4"
 FORBIDDEN_CUSTOMER_PHRASES = (
@@ -21,7 +21,7 @@ FORBIDDEN_CUSTOMER_PHRASES = (
 SYSTEM_PROMPT = """你是客户可见的设备支持问答生成器。输入包含问题、型号、按顺序排列的候选证据和已审定义务清单。只输出JSON，不输出推理或检查过程。
 严格身份：顶层schema_version必须逐字为\"retrieved-top10-qa-result-v4\"；顶层task_type必须逐字为\"qa\"；content.kind必须逐字为\"qa_answer\"。
 宿主推导：不要输出obligation_plan、used_evidence_ids或answer.claim_ids；宿主会从已审定义务清单和claims机械推导这些字段。
-来源规则：每条claim优先且默认只绑定一个evidence_id，并逐字复制该来源中的连续exact_span_text。逐字复制包括标点：不得把全角标点改写为半角标点，不得增删或替换任何字符。只有同一exact_span_text逐字存在于每个来源时才可绑定多个来源；表达相近不算逐字存在，应拆成不同claim。每条claim还必须逐字复制answer.text中表达同一来源主张的连续customer_visible_span_text；客户片段可以自然改写来源，但必须确实表达该主张。每条claim必须用obligation_ids归属至少一项已审定义务；每项义务至少由一条claim支撑，且claim来源必须属于该义务已审定的evidence_ids。
+来源规则：每项义务的approved_source_spans是宿主从第一阶段所选clause机械派生的唯一允许来源范围。每条claim优先且默认只绑定一个evidence_id，exact_span_text必须逐字位于所绑定每项义务对应evidence_id的一条approved_source_span内。逐字复制包括标点：不得把全角标点改写为半角标点，不得增删或替换任何字符。只有同一exact_span_text逐字存在于每个义务和来源的允许范围时才可绑定多个来源或义务；表达相近不算逐字存在，应拆成不同claim。每条claim还必须逐字复制answer.text中表达同一来源主张的连续customer_visible_span_text；客户片段可以自然改写来源，但必须确实表达该主张。每条claim必须用obligation_ids归属至少一项已审定义务；每项义务至少由一条claim支撑。
 正文规则：answer.text必须以自然段落逐项明确表达已审定义务，不得遗漏；不要输出检查清单本身。不得让用户重复已完成动作，不得跳过剩余检查直接升级。
 客户边界：不得出现自动生成、草稿、内部流程、审核、标记已解决等系统或客服操作话术，不得补充证据外事实。
 完整JSON正例（占位值必须替换）：{\"schema_version\":\"retrieved-top10-qa-result-v4\",\"task_type\":\"qa\",\"content\":{\"kind\":\"qa_answer\",\"answer\":{\"text\":\"面向客户的完整回答\"},\"claims\":[{\"claim_id\":\"c1\",\"exact_span_text\":\"从E1逐字复制的连续原文\",\"customer_visible_span_text\":\"回答中表达该来源主张的连续片段\",\"evidence_ids\":[\"E1\"],\"obligation_ids\":[\"o1\"]}],\"insufficient_evidence\":false}}"""
@@ -73,7 +73,7 @@ def _contract(evidence: list[dict[str, Any]]) -> dict[str, Any]:
             "used_evidence_ids",
             "content.answer.claim_ids",
         ],
-        "obligation_binding_rule": "every claim belongs to at least one approved checklist obligation; every approved obligation is supported by at least one claim; claim sources stay within that obligation's approved evidence_ids",
+        "obligation_binding_rule": "every claim belongs to at least one approved checklist obligation; every approved obligation is supported by at least one claim; exact_span_text stays within an approved_source_span for every bound obligation and evidence_id",
         "single_source_claim_default": True,
         "multi_source_claim_rule": "exact_span_text_must_exist_verbatim_in_every_referenced_evidence",
         "complete_json_example": {
@@ -281,6 +281,9 @@ def validate_result(
             key: deepcopy(obligation.get(key))
             for key in ("obligation_id", "description", "evidence_ids")
         }
+        approved_source_spans = deepcopy(
+            obligation.get("approved_source_spans")
+        )
         if (
             type(projected["obligation_id"]) is not str
             or not projected["obligation_id"]
@@ -293,10 +296,32 @@ def validate_result(
                 type(evidence_id) is not str or evidence_id not in evidence_by_id
                 for evidence_id in projected["evidence_ids"]
             )
+            or type(approved_source_spans) is not list
+            or not approved_source_spans
+            or any(
+                type(source_span) is not dict
+                or set(source_span) != {
+                    "clause_id",
+                    "evidence_id",
+                    "exact_span_text",
+                }
+                or type(source_span["clause_id"]) is not str
+                or not source_span["clause_id"]
+                or type(source_span["evidence_id"]) is not str
+                or source_span["evidence_id"] not in projected["evidence_ids"]
+                or type(source_span["exact_span_text"]) is not str
+                or not source_span["exact_span_text"]
+                or source_span["exact_span_text"]
+                not in evidence_by_id[source_span["evidence_id"]]["text"]
+                for source_span in approved_source_spans
+            )
         ):
             _fail("top10_v6_checklist_invalid")
         plan.append(projected)
-        plan_by_id[projected["obligation_id"]] = projected
+        plan_by_id[projected["obligation_id"]] = {
+            **projected,
+            "approved_source_spans": approved_source_spans,
+        }
     content = value["content"]
     if type(content) is not dict or set(content) != {
         "kind",
@@ -370,9 +395,19 @@ def validate_result(
         ):
             _fail("top10_v6_claim_invalid")
         for obligation_id in obligation_ids:
-            allowed_sources = plan_by_id[obligation_id]["evidence_ids"]
+            obligation = plan_by_id[obligation_id]
+            allowed_sources = obligation["evidence_ids"]
             if any(evidence_id not in allowed_sources for evidence_id in evidence_ids):
                 _fail("top10_v6_obligation_binding_invalid")
+            if any(
+                not any(
+                    source_span["evidence_id"] == evidence_id
+                    and span in source_span["exact_span_text"]
+                    for source_span in obligation["approved_source_spans"]
+                )
+                for evidence_id in evidence_ids
+            ):
+                _fail("top10_v8_clause_binding_invalid")
             referenced[obligation_id].extend(evidence_ids)
         claim_ids.append(claim_id)
         used_set.update(evidence_ids)

@@ -95,7 +95,7 @@ def _fixture(*, valid=True, gate_pass=True):
             "action_steps": ["步骤一"],
             "draft_reply": f"客户回复。{first}" if gate_pass else "客户回复。",
             "claims": [
-                {"claim_id": "c1", "exact_span_text": ev["text"],
+                {"claim_id": "c1", "exact_span_text": selected["text"],
                  "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
                  "evidence_ids": [ev["evidence_id"]], "obligation_ids": ["o1"]}
             ],
