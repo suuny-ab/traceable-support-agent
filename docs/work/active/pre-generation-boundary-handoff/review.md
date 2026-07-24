@@ -1,6 +1,6 @@
 # 独立复核
 
-> 状态：`findings_open`
+> 状态：`product_candidate_approved`
 
 本增量触及安全边界与公共失败关闭合同，正式独立复核必须在 Draft PR 的
 `governance`、`web`、`api`、`containers` 四项 Checks 全绿、head SHA 冻结且主 Agent
@@ -70,3 +70,26 @@ finding-only 复核。
 
 后续仅在能力判定前补齐“已满”等明确状态，并把重置、恢复、测试、维修等高风险动作与
 开启、启动、设置等歧义能力动作分层；补充复核给出的两个公开 API 与零 transport 回归。
+
+## 第五轮聚焦回执
+
+- 候选 SHA：`b2d3c099dcd8d15c4c1a316a33bbc81e6609c16b`。
+- 基线 SHA：`0bb97c974d2a5cdc7d455f329ee81aca9a9f9755`。
+- 前置证据：CI run `30060312783` 的 `governance`、`web`、`api`、`containers`
+  全部成功；`publish` 因 Draft 按设计跳过。
+- 复核范围：第四轮剩余 finding 与覆盖 diff；同一复核者只读执行。
+- Findings：无。
+- 已确认：
+  - `CZ-R1 E310 可以重置吗？` 与 `CZ-R1 集尘袋已满可以重置吗？` 在公开 API 和
+    `DefaultProductRunner` 均于 transport 前转人工，调用数为 0；
+  - “是否支持开启自动集尘功能”与“自动集尘可以设置吗”仍进入 Runner；
+  - “集尘袋可以怎么更换”仍转人工；
+  - 判定顺序固定为明确状态 / 操作上下文、高风险动作、能力问法、歧义动作；
+  - 覆盖 diff 没有引入 Provider、网络或外部业务调用。
+- 结论：上一轮最后 finding 已关闭，固定产品候选通过 findings-only 正式复核。
+
+## 收口边界
+
+本回执批准的是固定产品候选 `b2d3c09`。将回执与当前状态写入 Git 会形成新的纯文档 head，
+因此该收口候选必须重新通过四项 Checks，并由同一复核者只检查文档 diff 与回执一致性。
+通过前 PR 保持 Draft；本回执不批准合并、部署、Provider 调用、Stage 12 重跑或用户验收。
