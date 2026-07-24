@@ -33,14 +33,18 @@
 
 ## 多 CLI 协作
 
-用户只从 Codex 进入开发。任务范围确认后、真正执行前，Codex 报告当前 code CLI、模型、
-额度可见性和写入状态，由用户选择开发 Worker；Codex 不自动选择。一个任务默认对应一个
-有边界的多轮 Worker 会话，一个 worktree 同一时间只有一个写入者，长期连续性依赖 Git、
-事实文档和交接回执，不依赖 Worker 聊天记录。
+用户只从 Codex 进入开发。没有开发任务时，Codex 作为项目规划者与用户持续讨论方向；
+双方形成下一项开发决定后，Codex 报告当前 code CLI、模型、额度和写入状态，由用户选择
+Worker。Codex 使用自然、目标导向的协作式消息派发，不替 Worker 规定常规技术步骤。
 
-完整流程、范围卡、状态卡、Plan 模式、执行包、授权、验收和文档保留规则见
-`docs/meta/multi-cli-workflow.md`。CLI 选择只授权当前已冻结执行包，不能授予产品 Provider、
-凭据、费用、部署或范围外外部写入。
+Worker 是其 worktree 的唯一写入者，负责生产和消费 `spec.md`、`plan.md`、`result.md`
+及执行期状态；`review.md` 由独立复核者维护。Codex 每次发送消息后向用户逐字公开原文，
+并对 Worker 的每次回复提取关键信息，区分 Worker 报告、已核验和待核验。
+
+本文件是各 CLI 共享的仓库规则，当前会话身份由派发消息确定；没有明确角色时，写入前先
+询问。不得用 `/init` 或类似命令覆盖现有 `AGENTS.md`。完整流程、Plan 模式、CLI 状态、
+会话、授权、消息透明、验收和文档保留规则见 `docs/meta/multi-cli-workflow.md`。CLI 选择
+不能授予产品 Provider、凭据、费用、部署或范围外外部写入。
 
 ## 单一活动增量
 
