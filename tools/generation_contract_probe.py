@@ -12,6 +12,7 @@ import hashlib
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any, Callable
 
@@ -45,8 +46,8 @@ from traceable_support.provider.deepseek import (  # noqa: E402
 )
 from traceable_support.provider.response import json_response  # noqa: E402
 
-REPORT_SCHEMA_VERSION = "generation-contract-probe-report-v1"
-RAW_SCHEMA_VERSION = "generation-contract-probe-raw-v1"
+REPORT_SCHEMA_VERSION = "generation-contract-probe-report-v2"
+RAW_SCHEMA_VERSION = "generation-contract-probe-raw-v2"
 OFFLINE_RESPONSES_SCHEMA_VERSION = "generation-contract-probe-offline-v1"
 PUBLIC_SUITE = REPO_ROOT / "evals" / "public-regression-v1.json"
 CASE_IDS = (
@@ -201,6 +202,33 @@ def _visible_text(package: dict[str, Any], task_type: str) -> str:
     )
 
 
+def _score_text(value: str) -> str:
+    return _squash(unicodedata.normalize("NFKC", value))
+
+
+def _safe_observation_summary(transport: Any) -> list[dict[str, Any]]:
+    if not hasattr(transport, "safe_observations"):
+        return []
+    observations = transport.safe_observations()
+    if type(observations) is not list:
+        return []
+    projected: list[dict[str, Any]] = []
+    for observation in observations:
+        if type(observation) is not dict:
+            continue
+        projected.append(
+            {
+                "sequence": observation.get("sequence"),
+                "outcome": observation.get("outcome"),
+                "failure_code": observation.get("failure_code"),
+                "http_status": observation.get("http_status"),
+                "response_received": observation.get("response_received"),
+                "latency_ms": observation.get("latency_ms"),
+            }
+        )
+    return projected
+
+
 def _estimated_cost_nanos(package: dict[str, Any]) -> int:
     return sum(
         entry["cost"]["amount_cny_nanos"]
@@ -231,9 +259,9 @@ def score_case(
     used_sections = _used_source_sections(package, case["task_type"])
     if used_sections != sorted(expected["source_sections"]):
         failures.append("source_sections_mismatch")
-    visible = _squash(_visible_text(package, case["task_type"]))
+    visible = _score_text(_visible_text(package, case["task_type"]))
     if any(
-        _squash(fact) not in visible
+        _score_text(fact) not in visible
         for fact in expected.get("required_facts", [])
     ):
         failures.append("required_fact_missing")
@@ -274,6 +302,8 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
     total_calls = 0
     total_reserved_cost = 0
     total_estimated_cost = 0
+    usage_priced_calls = 0
+    total_provider_latency_ms = 0
     stop_code: str | None = None
     packages: list[dict[str, Any]] = []
     raw_cases: list[dict[str, Any]] = []
@@ -289,13 +319,22 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         ):
             stop_code = "cost_envelope_exceeded"
             break
+        transports: list[Any] = []
         if args.mode == "offline":
             assert offline_factories is not None
-            factory = offline_factories[case["case_id"]]
+            source_factory = offline_factories[case["case_id"]]
             mode = MODE_OFFLINE
         else:
-            factory = default_qa_transport
+            source_factory = default_qa_transport
             mode = MODE_AUTHORIZED_REAL
+
+        def factory(
+            source_factory: Callable[[], Any] = source_factory,
+        ) -> Any:
+            transport = source_factory()
+            transports.append(transport)
+            return transport
+
         runner = DefaultProductRunner(
             transport_factory=factory,
             transport_mode=mode,
@@ -320,12 +359,27 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
             )
         except BaseException as exc:
             code = getattr(exc, "code", type(exc).__name__)
+            observations = (
+                _safe_observation_summary(transports[0]) if transports else []
+            )
+            observed_calls = (
+                getattr(transports[0], "call_count", 0) if transports else 0
+            )
+            if type(observed_calls) is not int:
+                observed_calls = 0
+            total_calls += observed_calls
+            total_provider_latency_ms += sum(
+                observation["latency_ms"]
+                for observation in observations
+                if type(observation.get("latency_ms")) is int
+            )
             public_cases.append(
                 {
                     "case_id": case["case_id"],
                     "task_type": case["task_type"],
                     "observed_outcome": None,
-                    "provider_calls": 0,
+                    "provider_calls": observed_calls,
+                    "provider_observations": observations,
                     "generation_failure": None,
                     "passed": False,
                     "failure_codes": [f"execution_exception:{code}"],
@@ -336,16 +390,26 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
                     "case_id": case["case_id"],
                     "run_id": run_id,
                     "package": None,
-                    "provider_calls": 0,
+                    "provider_calls": observed_calls,
+                    "provider_observations": observations,
                 }
             )
             stop_code = "execution_exception_stop"
             break
         package = execution.package
         packages.append(package)
+        observations = (
+            _safe_observation_summary(transports[0]) if transports else []
+        )
         total_calls += execution.provider_call_count
         total_reserved_cost += package.get("worst_cost_cny_nanos", 0)
         total_estimated_cost += _estimated_cost_nanos(package)
+        usage_priced_calls += len(package.get("usage", []))
+        total_provider_latency_ms += sum(
+            observation["latency_ms"]
+            for observation in observations
+            if type(observation.get("latency_ms")) is int
+        )
         scoring = score_case(case, package, execution.provider_call_count)
         raw_cases.append(
             {
@@ -353,6 +417,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
                 "run_id": run_id,
                 "package": package,
                 "provider_calls": execution.provider_call_count,
+                "provider_observations": observations,
                 "scoring": scoring,
             }
         )
@@ -362,6 +427,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
                 "task_type": case["task_type"],
                 "observed_outcome": package.get("outcome"),
                 "provider_calls": execution.provider_call_count,
+                "provider_observations": observations,
                 "generation_failure": package.get("failure_classification"),
                 "passed": scoring["passed"],
                 "failure_codes": scoring["failure_codes"],
@@ -389,6 +455,9 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         "provider_calls": total_calls,
         "reserved_cost_cny_nanos": total_reserved_cost,
         "estimated_cost_cny_nanos": total_estimated_cost,
+        "usage_priced_calls": usage_priced_calls,
+        "unpriced_provider_calls": max(0, total_calls - usage_priced_calls),
+        "provider_latency_ms": total_provider_latency_ms,
         "automatic_retry_count": 0,
         "stopped_early": stop_code is not None,
         "stop_code": stop_code,

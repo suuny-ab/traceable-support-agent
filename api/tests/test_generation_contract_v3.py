@@ -136,6 +136,34 @@ def test_v3_checklist_rejects_missing_or_conflicting_partition() -> None:
         validate_step1_result({"evidence": EVIDENCE}, overlap)
 
 
+@pytest.mark.parametrize(
+    ("mutator", "code"),
+    [
+        (
+            lambda value: value.update({"schema_version": "wrong"}),
+            "two_step_checklist_identity_invalid",
+        ),
+        (
+            lambda value: value["obligations"][0].update({"clause_ids": ["missing"]}),
+            "two_step_checklist_clause_ids_invalid",
+        ),
+        (
+            lambda value: value["obligations"][0].update({"key_elements": []}),
+            "two_step_checklist_key_elements_invalid",
+        ),
+    ],
+)
+def test_v3_checklist_reports_privacy_safe_subcontract_codes(
+    mutator,
+    code: str,
+) -> None:
+    value = _raw_checklist()
+    mutator(value)
+
+    with pytest.raises(TwoStepError, match=code):
+        validate_step1_result({"evidence": EVIDENCE}, value)
+
+
 def test_v3_checklist_rejects_key_element_crossing_clause_boundary() -> None:
     value = {
         "schema_version": "obligation-checklist-v3",
@@ -150,7 +178,10 @@ def test_v3_checklist_rejects_key_element_crossing_clause_boundary() -> None:
         "ignored_clause_ids": ["c003"],
     }
 
-    with pytest.raises(TwoStepError, match="two_step_checklist_invalid"):
+    with pytest.raises(
+        TwoStepError,
+        match="two_step_checklist_key_elements_invalid",
+    ):
         validate_step1_result({"evidence": EVIDENCE}, value)
 
 
@@ -215,6 +246,9 @@ def test_failure_taxonomy_is_stable_and_content_free() -> None:
         "family": "provider_response_envelope",
         "code": "provider_response_envelope_invalid",
     }
+    assert classify_generation_failure(
+        "enumeration_execution_failure:provider_response_finish_reason_invalid"
+    )["family"] == "provider_response_envelope"
 
     summary = summarize_generation_failures(
         [

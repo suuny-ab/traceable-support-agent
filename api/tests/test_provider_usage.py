@@ -263,7 +263,7 @@ class TG07UUsageCompatibilityTests(unittest.TestCase):
         envelope = json.loads(extended_body())
         envelope["choices"].append(copy.deepcopy(envelope["choices"][0]))
         self.assertCode(
-            "provider_response_envelope_invalid",
+            "provider_response_choice_count_invalid",
             lambda: parse_chat_completion_compatible(canonical_json_bytes(envelope)),
         )
 
@@ -271,7 +271,7 @@ class TG07UUsageCompatibilityTests(unittest.TestCase):
         envelope = json.loads(extended_body())
         envelope["choices"][0]["finish_reason"] = "length"
         self.assertCode(
-            "provider_response_envelope_invalid",
+            "provider_response_finish_reason_invalid",
             lambda: parse_chat_completion_compatible(canonical_json_bytes(envelope)),
         )
 
@@ -286,7 +286,7 @@ class TG07UUsageCompatibilityTests(unittest.TestCase):
         envelope = json.loads(extended_body())
         envelope["choices"][0]["message"]["content"] = ""
         self.assertCode(
-            "provider_response_envelope_invalid",
+            "provider_response_content_invalid",
             lambda: parse_chat_completion_compatible(canonical_json_bytes(envelope)),
         )
 
@@ -294,8 +294,27 @@ class TG07UUsageCompatibilityTests(unittest.TestCase):
         envelope = json.loads(extended_body())
         envelope["system_fingerprint"] = None
         self.assertCode(
-            "provider_response_envelope_invalid",
+            "provider_response_system_fingerprint_invalid",
             lambda: parse_chat_completion_compatible(canonical_json_bytes(envelope)),
+        )
+
+    def test_missing_official_envelope_fields_have_privacy_safe_codes(self) -> None:
+        missing_fingerprint = json.loads(extended_body())
+        del missing_fingerprint["system_fingerprint"]
+        self.assertCode(
+            "provider_response_system_fingerprint_missing",
+            lambda: parse_chat_completion_compatible(
+                canonical_json_bytes(missing_fingerprint)
+            ),
+        )
+
+        missing_logprobs = json.loads(extended_body())
+        del missing_logprobs["choices"][0]["logprobs"]
+        self.assertCode(
+            "provider_response_logprobs_missing",
+            lambda: parse_chat_completion_compatible(
+                canonical_json_bytes(missing_logprobs)
+            ),
         )
 
     def test_safe_compatibility_fact_tamper_is_rejected_by_rederivation(self) -> None:

@@ -19,6 +19,13 @@ _PHASES = {
 _FAMILIES = {
     "provider_response_envelope_invalid": "provider_response_envelope",
     "two_step_checklist_invalid": "checklist_shape",
+    "two_step_checklist_result_shape_invalid": "checklist_shape",
+    "two_step_checklist_identity_invalid": "checklist_shape",
+    "two_step_checklist_obligation_count_invalid": "checklist_shape",
+    "two_step_checklist_obligation_shape_invalid": "checklist_shape",
+    "two_step_checklist_obligation_identity_invalid": "checklist_shape",
+    "two_step_checklist_clause_ids_invalid": "checklist_binding",
+    "two_step_checklist_key_elements_invalid": "checklist_binding",
     "two_step_checklist_too_large": "checklist_shape",
     "two_step_checklist_partition_invalid": "checklist_partition",
     "two_step_checklist_partition_incomplete": "checklist_partition",
@@ -40,7 +47,9 @@ def classify_generation_failure(reason: Any) -> dict[str, str] | None:
     phase = _PHASES.get(prefix, "other")
     family = _FAMILIES.get(code)
     if family is None:
-        if code.startswith("provider_"):
+        if code.startswith("provider_response_"):
+            family = "provider_response_envelope"
+        elif code.startswith("provider_"):
             family = "provider_execution"
         elif code.startswith("two_step_checklist_"):
             family = "checklist_contract"

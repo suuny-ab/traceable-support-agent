@@ -141,12 +141,12 @@ def validate_step1_result(
         "obligations",
         "ignored_clause_ids",
     }:
-        _fail("two_step_checklist_invalid")
+        _fail("two_step_checklist_result_shape_invalid")
     if value["schema_version"] != CHECKLIST_SCHEMA_VERSION:
-        _fail("two_step_checklist_invalid")
+        _fail("two_step_checklist_identity_invalid")
     obligations = value["obligations"]
     if type(obligations) is not list or not 1 <= len(obligations) <= 8:
-        _fail("two_step_checklist_invalid")
+        _fail("two_step_checklist_obligation_count_invalid")
     evidence_order = [entry["evidence_id"] for entry in item["evidence"]]
     checked_obligations: list[dict[str, Any]] = []
     obligation_ids: list[str] = []
@@ -158,7 +158,7 @@ def validate_step1_result(
             "clause_ids",
             "key_elements",
         }:
-            _fail("two_step_checklist_invalid")
+            _fail("two_step_checklist_obligation_shape_invalid")
         obligation_id = obligation["obligation_id"]
         description = obligation["description"]
         clause_ids = obligation["clause_ids"]
@@ -170,17 +170,23 @@ def validate_step1_result(
             or type(description) is not str
             or not description.strip()
             or len(description) > 300
-            or type(clause_ids) is not list
+        ):
+            _fail("two_step_checklist_obligation_identity_invalid")
+        if (
+            type(clause_ids) is not list
             or not clause_ids
             or len(clause_ids) != len(set(clause_ids))
             or any(
                 type(clause_id) is not str or clause_id not in clause_by_id
                 for clause_id in clause_ids
             )
-            or type(key_elements) is not list
+        ):
+            _fail("two_step_checklist_clause_ids_invalid")
+        if (
+            type(key_elements) is not list
             or not 1 <= len(key_elements) <= 4
         ):
-            _fail("two_step_checklist_invalid")
+            _fail("two_step_checklist_key_elements_invalid")
         selected_texts = [
             clause_by_id[clause_id]["text"] for clause_id in clause_ids
         ]
@@ -190,7 +196,7 @@ def validate_step1_result(
             or not any(element in selected_text for selected_text in selected_texts)
             for element in key_elements
         ):
-            _fail("two_step_checklist_invalid")
+            _fail("two_step_checklist_key_elements_invalid")
         selected_evidence = {
             clause_by_id[clause_id]["evidence_id"] for clause_id in clause_ids
         }

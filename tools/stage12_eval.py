@@ -29,6 +29,7 @@ import argparse
 import hashlib
 import json
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any, Callable
 
@@ -222,6 +223,10 @@ def _estimated_cost_nanos(package: dict[str, Any]) -> int:
     )
 
 
+def _score_text(value: str) -> str:
+    return _squash(unicodedata.normalize("NFKC", value))
+
+
 def score_case(
     case: dict[str, Any],
     package: dict[str, Any],
@@ -249,11 +254,11 @@ def score_case(
     if used_sections != sorted(expected["source_sections"]):
         failures.append("source_sections_mismatch")
 
-    visible = _squash(_customer_visible_text(package, task_type))
+    visible = _score_text(_customer_visible_text(package, task_type))
     missing_facts = [
         index
         for index, fact in enumerate(expected["required_facts"])
-        if _squash(fact) not in visible
+        if _score_text(fact) not in visible
     ]
     if missing_facts:
         failures.append("required_fact_missing")

@@ -195,7 +195,7 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(
             report["schema_version"],
-            "generation-contract-probe-report-v1",
+            "generation-contract-probe-report-v2",
         )
         self.assertEqual(
             report["envelope"]["case_ids"],
@@ -203,10 +203,22 @@ class GenerationContractProbeTest(unittest.TestCase):
         )
         self.assertEqual(report["totals"]["cases_executed"], 4)
         self.assertEqual(report["totals"]["provider_calls"], 8)
+        self.assertEqual(report["totals"]["usage_priced_calls"], 8)
+        self.assertEqual(report["totals"]["unpriced_provider_calls"], 0)
+        self.assertGreaterEqual(report["totals"]["provider_latency_ms"], 0)
         self.assertTrue(report["totals"]["passed"])
         self.assertEqual(report["generation_failures"]["failures"], 0)
-        self.assertEqual(raw["schema_version"], "generation-contract-probe-raw-v1")
+        self.assertEqual(raw["schema_version"], "generation-contract-probe-raw-v2")
+        self.assertTrue(
+            all(len(case["provider_observations"]) == 2 for case in report["cases"])
+        )
         self.assertTrue(all(case["passed"] for case in report["cases"]))
+
+    def test_scoring_normalizes_nfkc_punctuation_without_semantic_model(self) -> None:
+        self.assertEqual(
+            generation_contract_probe._score_text("断电，检查。"),
+            generation_contract_probe._score_text("断电,检查。"),
+        )
 
     def test_contract_failure_is_classified_without_false_success(self) -> None:
         code, report, _ = self._run("failure", break_first=True)

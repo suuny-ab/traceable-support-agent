@@ -352,6 +352,12 @@ class Stage12EvalTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("required_fact_missing", report["cases"][0]["failure_codes"])
 
+    def test_required_fact_scoring_normalizes_nfkc_punctuation(self) -> None:
+        self.assertEqual(
+            stage12_eval._score_text("断电，检查。"),
+            stage12_eval._score_text("断电,检查。"),
+        )
+
     def test_unexpected_handoff_is_reported(self) -> None:
         cases, responses = self._passing_pair()
         responses["STG12-TEST-ATK-001"] = _ticket_steps(self.ticket_hit, valid=False)
