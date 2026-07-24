@@ -13,8 +13,8 @@
   当前型号不存在的能力。
 - 新增 Product 层纯函数边界与 `product-boundary-handoff-v1` 零调用包；Runner 在
   transport factory 前执行，QA / 工单直接入口和公网 API 复用同一判定。
-- 安全边界覆盖公开合成 SOP 明确的异常发热、冒烟、起火、触电、进液 / 进水及已吸入
-  液体事件；型号边界覆盖 CZ-R1 请求 CZ-R2 独占的自动集尘、集尘袋、进尘口或 E310。
+- 安全边界只覆盖当前规则来源明确支持的异常发热、冒烟、进液 / 进水及已吸入液体事件；
+  型号边界覆盖 CZ-R1 的自动集尘、集尘袋、进尘口或 E310 操作 / 故障请求。
 - `GEN-DEV-MH-001` 的公开期望现在与产品结果一致：`handoff`、`safety_risk`、
   `安全风险`、`P0-紧急`、固定来源标识、`provider_call_count=0`。
 - 相邻合法负例保持放行：CZ-R2 集尘袋、CZ-R1 尘盒、CZ-R2 清水箱、积水知识问答和
@@ -24,10 +24,10 @@
 
 | 层级 | 命令 / 范围 | 结果 |
 | --- | --- | --- |
-| 最便宜 | `api/tests/test_product_boundaries.py` | 5/5 通过 |
-| API | `python -m pytest api/tests -q` | 74 通过，1 项按环境条件跳过 |
-| Stage 12 机制 | `python -m pytest tools/tests/test_stage12_eval.py -q` | 11/11 通过 |
-| 治理工具 | `python -m unittest discover -s tools/tests -p "test_*.py"` | 64 通过，7 项按环境条件跳过 |
+| 最便宜 | `api/tests/test_product_boundaries.py` | 7/7 通过 |
+| API | `python -m pytest api/tests -q` | 76 通过，1 项按环境条件跳过 |
+| Stage 12 机制 | `python -m pytest tools/tests/test_stage12_eval.py -q` | 12/12 通过 |
+| 治理工具 | `python -m unittest discover -s tools/tests -p "test_*.py"` | 65 通过，7 项按环境条件跳过 |
 | 公开扫描 | `python tools/check_public_repo.py --scope worktree` | 通过，178 个文件、8 个公开案例 |
 | Web | lint、typecheck、生产 build、Node tests | 18/18 通过 |
 
@@ -62,10 +62,27 @@
   `TRACEABLE_PUBLIC_LIVE_ENABLED=false` 下启动成功；健康响应为
   `status=ok`、`live_experience=replay_only`。测试容器随后删除，Provider 调用仍为 0。
 
+## 正式复核修复
+
+- CI run `30058941904` 在候选
+  `8b50618de0f59b623de8e7314201931d2310c6a8` 上四项必需 Checks 全绿后执行首轮只读
+  正式复核；复核结论为 `failed`，候选随即失效。
+- 修复范围固定为四项 finding：校验正文单一明确型号与所选型号的一致性；放行明确的
+  能力存在 / 双型号差异知识问答并继续阻断操作和故障请求；让 Stage 12 评分器读取合法
+  handoff 的 `boundary_sources`；删除当前公开来源未支持的 `起火`、`触电` 安全词。
+- 修复不修改公开合成语料、不伪造 `answer` / `proposal`、不扩展安全词或 Provider 范围。
+- 修复后 replay 镜像
+  `sha256:499828c739ce408f5a321a8ebe5141ba0e003b8b110a40ffbc923e9e2f74b3e6`
+  的 `python -S` 无网络导入、`10001:10001` 用户、只读最小权限启动与
+  `status=ok` / `live_experience=replay_only` 健康检查通过；测试容器已删除。
+- 首轮候选 `8b50618` 不得合入；修复后的新候选需重新通过四项 Checks，并由同一复核者
+  仅复核 finding 与覆盖 diff。
+
 ## 允许与不允许的结论
 
 - 允许：声明的公开合成边界在当前本地候选的 QA、工单、Runner 与公网 API 入口上会于
-  transport 构造前确定性失败关闭，相关负例未被误拦。
+  transport 构造前确定性失败关闭；明确的能力存在与双型号差异知识问答不因排他词本身
+  被误拦。
 - 不允许：Stage 12 已重新通过、真实模型质量提升、任意安全 / 型号表达都能识别、公网
   实时 Provider 就绪或用户验收通过。
 - 正式合入结论仍需 Draft PR 四项 Checks 全绿后的冻结 SHA 独立复核。

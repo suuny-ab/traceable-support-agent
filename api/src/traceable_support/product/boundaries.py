@@ -22,8 +22,6 @@ class BoundaryDecision:
 _DIRECT_SAFETY_TERMS = (
     "异常发热",
     "冒烟",
-    "起火",
-    "触电",
     "进液",
     "进水",
 )
@@ -37,6 +35,40 @@ _CZ_R2_DUST_STATION_TERMS = (
     "进尘口",
     "e310",
 )
+_MODEL_MENTION_PATTERNS = {
+    "CZ-R1": re.compile(r"(?<![a-z0-9])(?:cz-?r1|r1)(?![a-z0-9])"),
+    "CZ-R2": re.compile(r"(?<![a-z0-9])(?:cz-?r2|r2)(?![a-z0-9])"),
+}
+_DUST_STATION_HARD_OPERATION_MARKERS = (
+    "更换",
+    "清理",
+    "安装",
+    "拆卸",
+    "故障",
+    "报错",
+    "报警",
+    "报e310",
+    "满了",
+    "堵塞",
+    "堵了",
+    "橙灯",
+    "红灯",
+    "恢复",
+    "测试",
+    "连续",
+    "触发",
+    "失灵",
+    "坏了",
+    "怎么办",
+)
+_DUST_STATION_INFORMATION_PATTERNS = (
+    re.compile(r"(?:有没有|是否有|是否支持|支不支持|能否|能不能|具备不具备)"
+               r".{0,12}(?:自动集尘|集尘袋|进尘口|e310)"),
+    re.compile(r"(?:自动集尘|集尘袋|进尘口|e310).{0,12}"
+               r"(?:有没有|是否有|是否支持|支持吗|能否|能不能|具备吗|有吗)"),
+    re.compile(r"(?:区别|差异|不同|为什么.{0,16}(?:没有|不支持))"),
+)
+_DUST_STATION_GENERIC_OPERATION_MARKERS = ("怎么", "怎样", "如何", "使用", "操作")
 
 
 def _compact(text: str) -> str:
@@ -50,6 +82,24 @@ def is_safety_hazard(text: str) -> bool:
     return any(term in compact for term in _DIRECT_SAFETY_TERMS) or any(
         pattern.search(compact) for pattern in _LIQUID_INCIDENT_PATTERNS
     )
+
+
+def _mentioned_models(compact: str) -> set[str]:
+    return {
+        model
+        for model, pattern in _MODEL_MENTION_PATTERNS.items()
+        if pattern.search(compact)
+    }
+
+
+def _is_dust_station_information_question(compact: str) -> bool:
+    if any(marker in compact for marker in _DUST_STATION_HARD_OPERATION_MARKERS):
+        return False
+    if any(pattern.search(compact) for pattern in _DUST_STATION_INFORMATION_PATTERNS):
+        return True
+    return not any(
+        marker in compact for marker in _DUST_STATION_GENERIC_OPERATION_MARKERS
+    ) and any(marker in compact for marker in ("区别", "差异", "不同"))
 
 
 def evaluate_generation_boundary(
@@ -70,9 +120,26 @@ def evaluate_generation_boundary(
         )
 
     compact = _compact(text)
+    mentioned_models = _mentioned_models(compact)
+    if (
+        product_model in _MODEL_MENTION_PATTERNS
+        and len(mentioned_models) == 1
+        and product_model not in mentioned_models
+    ):
+        return BoundaryDecision(
+            reason="model_scope_conflict",
+            rule_id="selected_model_conflicts_with_explicit_text_model",
+            source_sections=(
+                "COMMON-FAQ/model-difference",
+                "CUSTOMER-SERVICE-SOP/intake-fields",
+            ),
+            ticket_category="使用咨询",
+            ticket_priority="P2-普通",
+        )
+
     if product_model == "CZ-R1" and any(
         term in compact for term in _CZ_R2_DUST_STATION_TERMS
-    ):
+    ) and not _is_dust_station_information_question(compact):
         return BoundaryDecision(
             reason="model_scope_conflict",
             rule_id="cz_r2_dust_station_not_available_on_cz_r1",

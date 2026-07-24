@@ -53,6 +53,36 @@ def test_cz_r2_dust_station_operations_fail_closed_for_cz_r1_only():
         assert evaluate_generation_boundary(text, model) is None
 
 
+def test_explicit_text_model_must_match_selected_model_unless_comparing_models():
+    mismatched = (
+        ("CZ-R1 的基站集尘袋满了，应该怎么更换？", "CZ-R2"),
+        ("CZ-R2 自动集尘时橙灯一直亮。", "CZ-R1"),
+    )
+    for text, selected_model in mismatched:
+        decision = evaluate_generation_boundary(text, selected_model)
+        assert decision is not None
+        assert decision.reason == "model_scope_conflict"
+        assert decision.rule_id == "selected_model_conflicts_with_explicit_text_model"
+        assert decision.source_sections == (
+            "COMMON-FAQ/model-difference",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+        )
+
+    comparisons = (
+        "CZ-R1 有没有自动集尘功能？",
+        "为什么 CZ-R1 没有自动集尘，而 CZ-R2 有？",
+        "CZ-R1 和 CZ-R2 的自动集尘能力有什么区别？",
+    )
+    for text in comparisons:
+        assert evaluate_generation_boundary(text, "CZ-R1") is None
+
+
+def test_unbacked_safety_words_are_not_classified_as_source_backed_incidents():
+    for text in ("设备起火了。", "用户说设备漏电，担心触电。"):
+        decision = evaluate_generation_boundary(text, "CZ-R1")
+        assert decision is None or decision.reason != "safety_risk"
+
+
 def test_direct_product_paths_return_zero_cost_boundary_packages_without_transport():
     qa = run_qa(
         question="CZ-R1 的基站集尘袋满了，应该怎么更换？",
