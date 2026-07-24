@@ -4,18 +4,18 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| `state` | `ready` |
+| `state` | `developing` |
 | 更新时间 | `2026-07-24` |
-| 当前目标 | Stage 12 正式评测已收口；等待选择下一个单一活动增量 |
-| 活动增量 | 无 |
-| 复杂度 | 无活动工作 |
-| 风险 / 成熟度 | 当前状态维护为 `R0`；产品保持 `S1 公开 Beta` |
-| 活动工作 | 无 |
+| 当前目标 | 修复 Stage 12 暴露的 SAF-003 安全升级与 MBD-003 型号边界未失败关闭缺陷 |
+| 活动增量 | Issue #21：生成前确定性安全 / 型号边界转人工 |
+| 复杂度 | 完整：触及安全边界与公共失败关闭合同 |
+| 风险 / 成熟度 | `R0`：仅本地合成回归，Provider 调用必须为 0；产品保持 `S1 公开 Beta` |
+| 活动工作 | `docs/work/active/pre-generation-boundary-handoff/` |
 | 最近完成 | `docs/work/completed/stage12-formal-eval/` |
-| 当前动作 | PR #20 合并为 `fce7c3b`；生产部署 run `30028764037` 成功，公网健康保持 `replay_only`；用户验收通过；缺陷登记为 Issue #21/#22 |
+| 当前动作 | Issue #21 本地候选已实现；API 74 通过 / 1 环境跳过，Stage 12 runner 机制 11 通过，治理工具 64 通过 / 7 环境跳过，Web 18 通过；正在同步候选事实 |
 | 阻碍 | 无 |
-| Provider | 公网已禁用；`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；Stage 12 一次性授权执行 31 调用 / 记账 ¥0.7096 / 重试 0（信封内，不经公网） |
-| 下一检查点 | 从路线 Issue #13–#15 与缺陷 Issue #21/#22 中选择并建立下一个唯一活动增量；在此之前不启动实现 |
+| Provider | 公网已禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；本增量不授权 Provider、费用或重试，验证中调用数必须保持 0 |
+| 下一检查点 | 完成候选一致性检查；随后把推送、Draft PR、四项 Checks 和冻结 SHA 独立复核作为下一外部阶段 |
 
 ## 当前产品事实
 

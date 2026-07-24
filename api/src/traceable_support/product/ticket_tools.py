@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .boundaries import is_safety_hazard
 from .classification import TICKET_INPUT_SCHEMA, validate_ticket_input
 
 
@@ -24,7 +25,7 @@ class CategoryTool:
     def execute(self, ticket: dict[str, Any]) -> dict[str, str]:
         validated = validate_ticket_input(ticket)
         text = validated["issue_description"]
-        if any(word in text for word in ("异常发热", "冒烟", "起火", "触电", "吸入积水")):
+        if is_safety_hazard(text):
             return {"category": "安全风险", "reason_code": "safety_hazard_signal"}
         if any(word in text for word in ("退换", "退款", "保修", "签收", "售后申请")):
             return {"category": "售后申请", "reason_code": "after_sales_request"}
@@ -52,7 +53,7 @@ class PriorityTool:
     def execute(self, ticket: dict[str, Any]) -> dict[str, str]:
         validated = validate_ticket_input(ticket)
         text = validated["issue_description"]
-        if any(word in text for word in ("异常发热", "冒烟", "起火", "触电", "吸入积水")):
+        if is_safety_hazard(text):
             return {"priority": "P0-紧急", "reason_code": "immediate_safety_risk"}
         if any(word in text for word in ("E101", "E210", "E310", "仍不能", "仍亮橙灯", "退换", "退款", "硬件故障")):
             return {"priority": "P1-高", "reason_code": "unresolved_fault_or_after_sales"}

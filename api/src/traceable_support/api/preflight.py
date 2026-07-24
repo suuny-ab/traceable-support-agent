@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from traceable_support.product.boundaries import evaluate_generation_boundary
+
 _SENSITIVE_PATTERNS = (
     re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
     re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)"),
@@ -64,7 +66,6 @@ _SUPPORT_INTENTS = (
     "退换",
     "退款",
 )
-_SAFETY_TERMS = ("异常发热", "冒烟", "起火", "触电", "吸入积水")
 _OUT_OF_SCOPE_INTENTS = (
     "写诗",
     "一首诗",
@@ -81,7 +82,7 @@ _OUT_OF_SCOPE_INTENTS = (
 )
 
 
-def preflight(text: str) -> str | None:
+def preflight(text: str, product_model: str | None = None) -> str | None:
     """Return a client-safe handoff code or ``None`` for an allowed input."""
 
     lowered = text.casefold()
@@ -89,8 +90,9 @@ def preflight(text: str) -> str | None:
         phrase in lowered for phrase in _SENSITIVE_PHRASES
     ):
         return "sensitive_input_blocked"
-    if any(term in text for term in _SAFETY_TERMS):
-        return "safety_handoff"
+    boundary = evaluate_generation_boundary(text, product_model)
+    if boundary is not None:
+        return boundary.reason
     if any(term in lowered for term in _OUT_OF_SCOPE_INTENTS):
         return "out_of_scope_blocked"
     if not any(term in lowered for term in _SUPPORT_INTENTS):

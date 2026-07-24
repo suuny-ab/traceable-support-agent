@@ -12,6 +12,7 @@ Python HTTP boundary
 Run service / SQLite / budget / queue
     ↓
 ProductRunner
+    ├─ Boundary: deterministic safety / model-scope handoff
     ├─ Retrieval: model filter + BM25/BGE/RRF
     ├─ Generation: checklist → customer-visible candidate
     ├─ Provider: DeepSeek transport + usage/budget
@@ -21,7 +22,7 @@ ProductRunner
 ## 模块
 
 - `traceable_support.api`：负责 HTTP、CORS、请求限制、运行生命周期、持久化和公开结果投影。
-- `traceable_support.product`：负责 QA/工单编排与分类。
+- `traceable_support.product`：负责生成前业务边界、QA/工单编排与分类。
 - `traceable_support.retrieval`：负责合成语料、混合检索和模型清单。
 - `traceable_support.generation`：负责义务清单、QA/工单合同和机械门。
 - `traceable_support.provider`：负责传输合同、DeepSeek 适配、用量与原子预算。
@@ -29,7 +30,7 @@ ProductRunner
 
 ## 公开状态
 
-一次运行依次经过 `queued → retrieving → planning → generating → validating → completed|handoff`。Provider 关闭时，合法输入返回 `503 live_experience_unavailable`，Web 则提供明确标注的独立回放。前置检查触发转人工时，可以不调用 Provider 并确定性完成。
+一次运行依次经过 `queued → preflight → retrieving → planning → generating → validating → completed|handoff`。Provider 关闭时，合法输入返回 `503 live_experience_unavailable`，Web 则提供明确标注的独立回放。敏感输入、声明的安全事件或型号独占能力冲突触发前置转人工时，不构造 transport、不调用 Provider，并以稳定原因码确定性完成。
 
 ## 部署
 

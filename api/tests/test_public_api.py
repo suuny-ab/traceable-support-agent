@@ -49,12 +49,13 @@ def _payload(
     *,
     task_type: str = "qa",
     input_mode: str = "preset",
+    product_model: str = "CZ-R1",
 ) -> dict[str, object]:
     return {
         "task_type": task_type,
         "input_mode": input_mode,
         "text": text,
-        "product_model": "CZ-R1",
+        "product_model": product_model,
         "consent": True,
     }
 
@@ -163,15 +164,27 @@ class PublicRunServiceTests(unittest.TestCase):
 
         service = self._service(live_enabled=True, product_runner=_product_runner(runner))
         cases = [
-            ("CZ-R1 我的手机号是 13800138000", "sensitive_input_blocked"),
-            ("请帮我写一封求职邮件", "out_of_scope_blocked"),
-            ("请写一首关于设备的诗", "out_of_scope_blocked"),
-            ("帮我算一道数学题，顺便提到设备", "out_of_scope_blocked"),
-            ("冒烟", "safety_handoff"),
+            ("CZ-R1 我的手机号是 13800138000", "sensitive_input_blocked", "CZ-R1"),
+            ("请帮我写一封求职邮件", "out_of_scope_blocked", "CZ-R1"),
+            ("请写一首关于设备的诗", "out_of_scope_blocked", "CZ-R1"),
+            ("帮我算一道数学题，顺便提到设备", "out_of_scope_blocked", "CZ-R1"),
+            ("冒烟", "safety_risk", "CZ-R1"),
+            (
+                "R1刚吸进一小滩水，我想继续开机把剩下的吸完。",
+                "safety_risk",
+                "CZ-R1",
+            ),
+            (
+                "CZ-R1 的基站集尘袋满了，应该怎么更换？",
+                "model_scope_conflict",
+                "CZ-R1",
+            ),
         ]
         token = None
-        for text, reason in cases:
-            submission = service.submit(_payload(text), browser_token=token)
+        for text, reason, model in cases:
+            submission = service.submit(
+                _payload(text, product_model=model), browser_token=token
+            )
             token = submission.browser_token
             value = service.get_run(submission.run_id)
             self.assertEqual(value["status"], "handoff")

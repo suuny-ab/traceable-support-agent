@@ -6,6 +6,10 @@ import hashlib
 from collections.abc import Callable
 from typing import Any
 
+from .boundaries import (
+    build_boundary_handoff_package,
+    evaluate_generation_boundary,
+)
 from .qa import run_qa
 from .ticket import run_ticket
 from .ticket_tools import CategoryTool, PriorityTool
@@ -40,6 +44,30 @@ class DefaultProductRunner:
         run_input: RunInput,
         on_stage: StageCallback,
     ) -> ExecutionResult:
+        if run_input.task_type not in {"qa", "ticket"}:
+            raise ValueError("product_task_type_invalid")
+        boundary = evaluate_generation_boundary(
+            run_input.text, run_input.product_model
+        )
+        if boundary is not None:
+            on_stage("preflight", "failed")
+            ticket_input = None
+            if run_input.task_type == "ticket":
+                ticket_input = {
+                    "ticket_id": "PUB-"
+                    + hashlib.sha256(run_input.run_id.encode("utf-8")).hexdigest()[:24].upper(),
+                    "product_model": run_input.product_model,
+                    "issue_description": run_input.text,
+                }
+            package = build_boundary_handoff_package(
+                task_type=run_input.task_type,
+                text=run_input.text,
+                product_model=run_input.product_model,
+                run_id=run_input.run_id,
+                decision=boundary,
+                ticket=ticket_input,
+            )
+            return ExecutionResult(package=package, provider_call_count=0)
         if not self.is_ready or self._transport_factory is None:
             raise RuntimeError("product_runner_not_ready")
         transport = self._transport_factory()
@@ -73,8 +101,6 @@ class DefaultProductRunner:
                 worst_cost_limit_cny_nanos=run_input.reserved_cny_nanos,
                 on_stage=on_stage,
             )
-        else:
-            raise ValueError("product_task_type_invalid")
         call_count = getattr(transport, "call_count", 0)
         return ExecutionResult(
             package=package,
