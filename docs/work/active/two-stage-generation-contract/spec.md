@@ -102,7 +102,7 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 验证说明卡
 
-> 状态：`fixed_pending_execution_identity_and_authorization`
+> 状态：`fixed_pending_provider_recheck_and_authorization`
 >
 > 执行权限：无
 
@@ -150,20 +150,20 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
   来源、事实覆盖、失败分类、调用、延迟和费用。
 - 不允许结论：Stage 12 分数改变、开放域质量提升、生产实时就绪、`product/0.1.0`
   可发布或用户验收通过。
-- `last_verified_checkpoint`：`not_started`。
-- `resume_preconditions`：不可变候选 SHA 和实际执行镜像摘要完整；当前 Provider
-  正式合同与价格复核通过；用户对本卡给出独立授权；凭据只在 transport send 时从当前
-  进程读取。
+- `execution_identity`：
+  `sha256:01b1ad5f43918a23d66dd14a022d03b329f0e54d0ccd7e5988640abee1c2bbe9`。
+- `last_verified_checkpoint`：`candidate_image_offline_verified`。
+- `resume_preconditions`：当前 Provider 正式合同与价格复核通过；用户对本卡给出独立
+  授权；凭据只在 transport send 时从当前进程读取。
 - `restart_scope`：任何硬停止后不消费剩余额度；保留失败回执，修复并重新冻结候选、
   建立新 `attempt_id`、重新授权后从第 1 例开始。
 
-仍待补齐的 `execution_identity` 必须是由上述代码 SHA 构建并实际执行的不可变镜像
-摘要。锁定依赖文件 SHA-256 为
+上述执行镜像由固定代码 SHA 构建。锁定依赖文件 SHA-256 为
 `c23979d95c9429e098d13a8ac5f8cdd807eb2c1d9fb956c0a162013bfe44bb0d`；BGE 检索资产
 清单 SHA-256 为
 `c25626d58149bd63c8081f11ca7876f18a2b4a8b3d13ee278cc5ac9ea1d5326e`，声明解包后
 总字节数 `95,332,206`。该 BGE 只用于既有检索，不执行生成或语义分类。
 
-两项身份、执行当日 Provider 合同复核和用户独立批准齐全前，不得执行任何 Provider
-调用。任何代码、prompt、schema、案例、模型、价格、调用或停止条件变化都使已有授权
-失效。
+两项身份已经完整；执行当日 Provider 合同复核和用户独立批准齐全前，仍不得执行任何
+Provider 调用。任何代码、prompt、schema、案例、模型、价格、调用或停止条件变化都使
+已有授权失效。
