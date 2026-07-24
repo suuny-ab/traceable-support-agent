@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | 当前本地诊断为 `R0`；真实外部 API 验证为待独立授权的 `R1`；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | `R1` 固定外部 API 验证已执行并按硬停止结束；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | 候选代码、执行镜像、Provider 合同和有界 API 验证卡均已冻结 |
-| 阻碍 | 外部 API 验证只缺用户对 DeepSeek `deepseek-v4-pro` 最多 8 次调用、最坏 ¥2.80 的独立授权；凭据仅在获准执行的 transport send 时检查 |
-| Provider | 公网已禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；任何后续 API 调用仍需独立授权 |
-| 下一检查点 | 取得精确 API 授权后执行一次固定公开合成探针；未授权时保持停止 |
+| 当前动作 | 保存 `issue22-public-synthetic-api-1` 停止回执，只做隐私安全的失败分类与下一最便宜证伪设计 |
+| 阻碍 | 候选未通过固定探针：第一阶段清单形状失败 1 例、QA candidate 缺公开必需事实 1 例、Provider 信封失败 1 例；第 4 例未执行 |
+| Provider | 生产仍禁用：`provider_enabled=false`、生产调用 0；本次获准验证执行 4 次、重试 0，成功解析 usage 的估算费用 ¥0.075783，三例最坏预留 ¥0.359697，实际账单待账号侧确认 |
+| 下一检查点 | 不消费剩余授权；基于稳定失败码和官方合同提出本地修正 / 诊断候选，重新冻结后再请求新 attempt 授权 |
 
 ## 当前产品事实
 

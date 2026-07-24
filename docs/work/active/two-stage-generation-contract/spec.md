@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：当前 `R0`；真实外部 API 验证为待独立授权的 `R1`
+> 外部风险：`R1` 固定验证已执行并按硬停止结束
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -102,9 +102,9 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 验证说明卡
 
-> 状态：`ready_for_independent_authorization`
+> 状态：`executed_hard_stopped`
 >
-> 执行权限：无
+> 执行权限：已消费并关闭；不得恢复或使用剩余额度
 
 固定执行合同：
 
@@ -156,9 +156,11 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
   可发布或用户验收通过。
 - `execution_identity`：
   `sha256:01b1ad5f43918a23d66dd14a022d03b329f0e54d0ccd7e5988640abee1c2bbe9`。
-- `last_verified_checkpoint`：`provider_contract_reverified`。
-- `resume_preconditions`：用户对本卡给出独立授权；凭据只在 transport send 时从当前
-  进程读取。若凭据或账号模型不可用，记录失败回执并停止，不扩大调用或重试。
+- `last_verified_checkpoint`：
+  `case_3_enumeration_provider_response_envelope_invalid`。
+- `resume_preconditions`：本 attempt 禁止恢复。任何后续执行都必须先完成本地修正或
+  安全诊断候选、固定新的代码 / 镜像 / prompt / schema 身份，建立新 `attempt_id` 并
+  重新取得独立授权。
 - `restart_scope`：任何硬停止后不消费剩余额度；保留失败回执，修复并重新冻结候选、
   建立新 `attempt_id`、重新授权后从第 1 例开始。
 
@@ -168,6 +170,18 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 `c25626d58149bd63c8081f11ca7876f18a2b4a8b3d13ee278cc5ac9ea1d5326e`，声明解包后
 总字节数 `95,332,206`。该 BGE 只用于既有检索，不执行生成或语义分类。
 
-两项身份已经完整；执行当日 Provider 合同复核和用户独立批准齐全前，仍不得执行任何
-Provider 调用。任何代码、prompt、schema、案例、模型、价格、调用或停止条件变化都使
-已有授权失效。
+## 执行结果
+
+- 执行案例 `3/4`，调用 `4/8`，自动重试 `0`，硬停止：
+  `execution_integrity_failure_stop`。
+- 案例结果：第一例 checklist shape handoff；第二例 candidate 但缺 2 条公开必需事实；
+  第三例 Provider envelope handoff 并停止；第四例未执行。
+- 成功解析 usage 的估算费用 `¥0.075783`；三例最坏预留 `¥0.359697`。失败调用的
+  实际账单未知，不能把 usage 估算当作全部费用或发票。
+- 公开报告 SHA-256：
+  `c44ba1f50b9fb8cd265045c119854a2e98657649c815677330ea42d01bb7d05b`。
+- 私有记录 SHA-256：
+  `ae727603242d0b163cdc59121c39f89d328294aea1a6c8102b6e028dcc27627d`。
+
+本卡和用户授权已经消费完毕。剩余 4 次上限不是可恢复额度；任何后续 Provider 调用都
+必须使用新卡和新授权。
