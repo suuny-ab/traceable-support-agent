@@ -203,7 +203,7 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(
             report["schema_version"],
-            "generation-contract-probe-report-v3",
+            "generation-contract-probe-report-v4",
         )
         self.assertEqual(
             report["envelope"]["case_ids"],
@@ -216,13 +216,22 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertGreaterEqual(report["totals"]["provider_latency_ms"], 0)
         self.assertTrue(report["totals"]["passed"])
         self.assertEqual(report["generation_failures"]["failures"], 0)
-        self.assertEqual(raw["schema_version"], "generation-contract-probe-raw-v3")
+        self.assertEqual(raw["schema_version"], "generation-contract-probe-raw-v4")
+        self.assertEqual(
+            report["identity"]["request_config"],
+            {
+                "step1_max_output_tokens": 16384,
+                "step2_max_output_tokens": 8192,
+                "timeout_ms": 180_000,
+            },
+        )
         self.assertTrue(
             all(len(case["provider_observations"]) == 2 for case in report["cases"])
         )
         self.assertTrue(
             all(
                 observation["response_received"] is True
+                and observation["timeout_ms"] == 180_000
                 for case in report["cases"]
                 for observation in case["provider_observations"]
             )

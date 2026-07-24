@@ -33,7 +33,10 @@ from traceable_support.generation.ticket_contract import (  # noqa: E402
     TICKET_SYSTEM_PROMPT,
 )
 from traceable_support.product.qa import (  # noqa: E402
+    LLM_TIMEOUT_MS,
     SESSION_MAX_WORST_COST_CNY_NANOS,
+    STEP1_MAX_OUTPUT_TOKENS,
+    STEP2_MAX_OUTPUT_TOKENS,
     default_qa_transport,
 )
 from traceable_support.product.runner import DefaultProductRunner  # noqa: E402
@@ -46,8 +49,8 @@ from traceable_support.provider.deepseek import (  # noqa: E402
 )
 from traceable_support.provider.response import json_response  # noqa: E402
 
-REPORT_SCHEMA_VERSION = "generation-contract-probe-report-v3"
-RAW_SCHEMA_VERSION = "generation-contract-probe-raw-v3"
+REPORT_SCHEMA_VERSION = "generation-contract-probe-report-v4"
+RAW_SCHEMA_VERSION = "generation-contract-probe-raw-v4"
 OFFLINE_RESPONSES_SCHEMA_VERSION = "generation-contract-probe-offline-v1"
 PUBLIC_SUITE = REPO_ROOT / "evals" / "public-regression-v1.json"
 CASE_IDS = (
@@ -237,6 +240,7 @@ def _safe_observation_summary(transport: Any) -> list[dict[str, Any]]:
                 "response_received": observation.get(
                     "provider_response_received"
                 ),
+                "timeout_ms": observation.get("timeout_ms"),
                 "latency_ms": observation.get("latency_ms"),
             }
         )
@@ -466,6 +470,11 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         "image_digest": args.image_digest,
         "model": MODEL,
         "public_suite_sha256": hashlib.sha256(PUBLIC_SUITE.read_bytes()).hexdigest(),
+        "request_config": {
+            "step1_max_output_tokens": STEP1_MAX_OUTPUT_TOKENS,
+            "step2_max_output_tokens": STEP2_MAX_OUTPUT_TOKENS,
+            "timeout_ms": LLM_TIMEOUT_MS,
+        },
         **_prompt_identity(),
     }
     totals = {
