@@ -184,6 +184,11 @@ class PublicRunServiceTests(unittest.TestCase):
                 "model_scope_conflict",
                 "CZ-R2",
             ),
+            (
+                "CZ-R1 和 CZ-R2 的集尘袋都满了，应该怎么更换？",
+                "model_scope_conflict",
+                "CZ-R2",
+            ),
         ]
         token = None
         for text, reason, model in cases:

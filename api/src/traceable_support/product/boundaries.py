@@ -44,6 +44,12 @@ _DUST_STATION_HARD_OPERATION_MARKERS = (
     "清理",
     "安装",
     "拆卸",
+    "开启",
+    "启动",
+    "设置",
+    "重置",
+    "维修",
+    "处理",
     "故障",
     "报错",
     "报警",
@@ -62,10 +68,12 @@ _DUST_STATION_HARD_OPERATION_MARKERS = (
     "怎么办",
 )
 _DUST_STATION_INFORMATION_PATTERNS = (
-    re.compile(r"(?:有没有|是否有|是否支持|支不支持|能否|能不能|具备不具备)"
+    re.compile(r"(?:有没有|是否有|是否支持|支不支持|能否|能不能|具备不具备|"
+               r"可以|可不可以|会不会)"
                r".{0,12}(?:自动集尘|集尘袋|进尘口|e310)"),
     re.compile(r"(?:自动集尘|集尘袋|进尘口|e310).{0,12}"
-               r"(?:有没有|是否有|是否支持|支持吗|能否|能不能|具备吗|有吗)"),
+               r"(?:有没有|是否有|是否支持|支持吗|能否|能不能|具备吗|有吗|"
+               r"可以吗|可不可以|会不会|会吗)"),
     re.compile(r"(?:区别|差异|不同|为什么.{0,16}(?:没有|不支持))"),
 )
 _DUST_STATION_GENERIC_OPERATION_MARKERS = ("怎么", "怎样", "如何", "使用", "操作")
@@ -137,9 +145,11 @@ def evaluate_generation_boundary(
             ticket_priority="P2-普通",
         )
 
-    if product_model == "CZ-R1" and any(
-        term in compact for term in _CZ_R2_DUST_STATION_TERMS
-    ) and not _is_dust_station_information_question(compact):
+    if (
+        (product_model == "CZ-R1" or "CZ-R1" in mentioned_models)
+        and any(term in compact for term in _CZ_R2_DUST_STATION_TERMS)
+        and not _is_dust_station_information_question(compact)
+    ):
         return BoundaryDecision(
             reason="model_scope_conflict",
             rule_id="cz_r2_dust_station_not_available_on_cz_r1",

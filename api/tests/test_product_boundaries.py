@@ -70,11 +70,23 @@ def test_explicit_text_model_must_match_selected_model_unless_comparing_models()
 
     comparisons = (
         "CZ-R1 有没有自动集尘功能？",
+        "CZ-R1 可以自动集尘吗？",
+        "CZ-R1 可不可以自动集尘？",
+        "CZ-R1 会不会自动集尘？",
         "为什么 CZ-R1 没有自动集尘，而 CZ-R2 有？",
         "CZ-R1 和 CZ-R2 的自动集尘能力有什么区别？",
     )
     for text in comparisons:
         assert evaluate_generation_boundary(text, "CZ-R1") is None
+
+    operational = (
+        ("CZ-R1 和 CZ-R2 的集尘袋都满了，应该怎么更换？", "CZ-R2"),
+        ("CZ-R1 的集尘袋可以怎么更换？", "CZ-R1"),
+    )
+    for text, selected_model in operational:
+        decision = evaluate_generation_boundary(text, selected_model)
+        assert decision is not None
+        assert decision.reason == "model_scope_conflict"
 
 
 def test_unbacked_safety_words_are_not_classified_as_source_backed_incidents():
@@ -148,6 +160,13 @@ def test_runner_blocks_before_transport_factory_for_qa_and_ticket():
             "ticket",
             "R1刚吸进一小滩水，我想继续开机把剩下的吸完。",
             "CZ-R1",
+            1,
+        ),
+        RunInput(
+            "boundary-runner-dual-model-operation",
+            "qa",
+            "CZ-R1 和 CZ-R2 的集尘袋都满了，应该怎么更换？",
+            "CZ-R2",
             1,
         ),
     )

@@ -12,7 +12,7 @@
 | 风险 / 成熟度 | `R0`：仅本地合成回归，Provider 调用必须为 0；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/pre-generation-boundary-handoff/` |
 | 最近完成 | `docs/work/completed/stage12-formal-eval/` |
-| 当前动作 | Draft PR #24 首轮正式复核的 4 项 finding 与覆盖 diff 已完成本地分层验证，准备提交新候选 |
+| 当前动作 | Draft PR #24 第二轮剩余 2 项 finding 与覆盖 diff 已完成本地分层验证，准备提交新候选 |
 | 阻碍 | 无 |
 | Provider | 公网已禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；本增量不授权 Provider、费用或重试，验证中调用数必须保持 0 |
 | 下一检查点 | 完成本地分层验证后提交新 head；等待四项 Checks 重新全绿，再由同一复核者仅复核 finding 与覆盖 diff |
