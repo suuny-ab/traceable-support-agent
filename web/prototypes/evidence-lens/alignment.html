@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="color-scheme" content="dark" />
+    <title>TRACEABLE · 首屏视觉对齐稿</title>
+    <link rel="stylesheet" href="./alignment.css" />
+  </head>
+  <body>
+    <header class="board-header">
+      <div>
+        <p>FIRST-SCREEN ALIGNMENT · 01</p>
+        <h1>先对齐参考，再重写首屏。</h1>
+      </div>
+      <span>结构与运动合同 · 非最终视觉</span>
+    </header>
+
+    <main>
+      <section class="finding-grid" aria-label="已确认差异">
+        <article>
+          <span>01 · 方向</span>
+          <strong>参考字带向右</strong>
+          <p>500 ms 双帧测得位移约 43 px，即约 86 px/s；v3 当前方向相反。</p>
+        </article>
+        <article>
+          <span>02 · 画布</span>
+          <strong>手机不是等比缩小</strong>
+          <p>桌面画布 1276×400；手机仍使用 960×400 的宽画布，居中后裁切。</p>
+        </article>
+        <article>
+          <span>03 · 焦点</span>
+          <strong>月牙，不是完整圆环</strong>
+          <p>约 216 px 的暗圆只让一段高亮月牙成为焦点，暗侧接近背景。</p>
+        </article>
+        <article>
+          <span>04 · 入口</span>
+          <strong>入口是一块内容区域</strong>
+          <p>桌面约 740×139，手机约 346×115；v3 的入口过小，首屏重心失衡。</p>
+        </article>
+      </section>
+
+      <section class="alignment-section">
+        <header class="section-heading">
+          <div>
+            <p>DESKTOP · 1280 × 720</p>
+            <h2>桌面目标帧</h2>
+          </div>
+          <p>下图只比较位置、比例与运动，不决定字体、颜色和最终材质。</p>
+        </header>
+
+        <div class="frame-pair">
+          <article>
+            <div class="frame-label">
+              <strong>参考观测</strong>
+              <span>Moonshot 当前首屏</span>
+            </div>
+            <div class="screen screen--desktop screen--reference">
+              <div class="screen-nav">
+                <b>Moonshot AI</b>
+                <span>导航 · 72px</span>
+              </div>
+              <div class="motion-canvas">
+                <div class="rolling-type">
+                  <span>Moonshot AI&nbsp;&nbsp;&nbsp;Moonshot AI&nbsp;&nbsp;&nbsp;Moonshot AI</span>
+                </div>
+                <i class="lens"></i>
+                <em>→&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;&nbsp;86 px/s</em>
+              </div>
+              <p class="screen-tagline screen-tagline--single">寻求将能源转化为智能的最优解</p>
+              <div class="screen-entry">
+                <span>问点难的，让我多想一步</span><i>↑</i>
+              </div>
+              <div class="measure measure--canvas">y 144.5 · h 400</div>
+              <div class="measure measure--lens">Ø ≈ 216</div>
+            </div>
+          </article>
+
+          <article>
+            <div class="frame-label">
+              <strong>Traceable 目标</strong>
+              <span>只替换品牌与产品内容</span>
+            </div>
+            <div class="screen screen--desktop screen--target">
+              <div class="screen-nav">
+                <b>TRACEABLE</b>
+                <span>产品原理&nbsp;&nbsp;&nbsp;工程证据</span>
+              </div>
+              <div class="motion-canvas">
+                <div class="rolling-type">
+                  <span>TRACEABLE&nbsp;&nbsp;&nbsp;TRACEABLE&nbsp;&nbsp;&nbsp;TRACEABLE</span>
+                </div>
+                <i class="lens"></i>
+                <em>→&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;&nbsp;86 px/s</em>
+              </div>
+              <p class="screen-tagline screen-tagline--single">
+                让每一条客服回复，都能回到它的依据。
+              </p>
+              <div class="screen-entry">
+                <span>查看一条回复如何形成</span><i>→</i>
+              </div>
+              <div class="measure measure--canvas">相同 y / h</div>
+              <div class="measure measure--lens">相同 Ø</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="alignment-section">
+        <header class="section-heading">
+          <div>
+            <p>MOBILE · 390 × 844</p>
+            <h2>手机目标帧</h2>
+          </div>
+          <p>动态画布保持宽度并居中裁切；定位句换行，入口与行动保持参考站节奏。</p>
+        </header>
+
+        <div class="mobile-pair">
+          <article>
+            <div class="frame-label">
+              <strong>参考观测</strong>
+              <span>固定 960×400 画布</span>
+            </div>
+            <div class="screen screen--mobile screen--reference">
+              <div class="screen-nav">
+                <b>Moonshot AI</b><span>☰</span>
+              </div>
+              <div class="motion-canvas">
+                <div class="rolling-type">
+                  <span>Moonshot AI&nbsp;&nbsp;&nbsp;Moonshot AI&nbsp;&nbsp;&nbsp;Moonshot AI</span>
+                </div>
+                <i class="lens"></i>
+                <em>→&nbsp;&nbsp;86 px/s</em>
+              </div>
+              <p class="screen-tagline">寻求将能源转化为智能的最优解</p>
+              <div class="screen-entry">
+                <span>问点难的，让我多想一步</span><i>↑</i>
+              </div>
+              <div class="screen-actions"><span>体验 Kimi</span><span>体验 API</span></div>
+            </div>
+          </article>
+
+          <article>
+            <div class="frame-label">
+              <strong>Traceable 目标</strong>
+              <span>相同位置与纵向节奏</span>
+            </div>
+            <div class="screen screen--mobile screen--target">
+              <div class="screen-nav">
+                <b>TRACEABLE</b><span>☰</span>
+              </div>
+              <div class="motion-canvas">
+                <div class="rolling-type">
+                  <span>TRACEABLE&nbsp;&nbsp;&nbsp;TRACEABLE&nbsp;&nbsp;&nbsp;TRACEABLE</span>
+                </div>
+                <i class="lens"></i>
+                <em>→&nbsp;&nbsp;86 px/s</em>
+              </div>
+              <p class="screen-tagline">让每一条客服回复，<br />都能回到它的依据。</p>
+              <div class="screen-entry">
+                <span>查看一条回复如何形成</span><i>→</i>
+              </div>
+              <div class="screen-actions"><span>进入工作台</span><span>工程证据</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="contract-section">
+        <header class="section-heading">
+          <div>
+            <p>MEASURED CONTRACT</p>
+            <h2>首屏对齐合同</h2>
+          </div>
+          <p>任何实现偏离这些数据，都先回到对齐稿解释，而不是继续凭感觉微调。</p>
+        </header>
+
+        <div class="contract-table" role="table" aria-label="首屏测量合同">
+          <div role="row" class="contract-head">
+            <span role="columnheader">项目</span>
+            <span role="columnheader">参考观测</span>
+            <span role="columnheader">Traceable 目标</span>
+            <span role="columnheader">容差</span>
+          </div>
+          <div role="row">
+            <strong role="cell">导航</strong>
+            <span role="cell">桌面 / 手机高 72px</span>
+            <span role="cell">相同</span>
+            <span role="cell">±2px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">桌面动态画布</strong>
+            <span role="cell">x 0 · y 144.5 · 1276×400</span>
+            <span role="cell">同一占位区域</span>
+            <span role="cell">±4px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">手机动态画布</strong>
+            <span role="cell">x -287 · y 72 · 960×400</span>
+            <span role="cell">固定宽画布居中裁切</span>
+            <span role="cell">±4px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">品牌字带</strong>
+            <span role="cell">向右约 86px/s</span>
+            <span role="cell">向右、相同周期</span>
+            <span role="cell">速度 ±5%</span>
+          </div>
+          <div role="row">
+            <strong role="cell">透镜核心</strong>
+            <span role="cell">直径约 216px</span>
+            <span role="cell">同尺寸暗圆与月牙</span>
+            <span role="cell">±8px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">桌面定位句</strong>
+            <span role="cell">y 518.3 · 单行</span>
+            <span role="cell">产品命题单行</span>
+            <span role="cell">±6px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">手机定位句</strong>
+            <span role="cell">y 452 · 两行 · h 69.3</span>
+            <span role="cell">产品命题两行</span>
+            <span role="cell">±6px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">桌面入口</strong>
+            <span role="cell">x 268.3 · y 605 · 739.5×139.3</span>
+            <span role="cell">同尺寸运行入口</span>
+            <span role="cell">±6px</span>
+          </div>
+          <div role="row">
+            <strong role="cell">手机入口</strong>
+            <span role="cell">x 20 · y 573.3 · 346×115.3</span>
+            <span role="cell">同尺寸运行入口</span>
+            <span role="cell">±4px</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="scope-note">
+        <p>本轮只确认首屏。</p>
+        <h2>第二屏及后续页面暂不进入视觉设计。</h2>
+        <p>
+          首屏对齐通过后，再单独确定“一个运行如何展开”的信息架构；不会沿用 v3 的三栏仪表盘，
+          也不会让参考站的首屏风格强行覆盖全站。
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

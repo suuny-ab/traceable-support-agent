@@ -20,11 +20,14 @@
 
 ## 当前
 
-- 当前没有活动增量。仓库处于 `ready`，等待在新会话启动 Issue #28。
+- [ ] [Issue #28：打造可真实运行、视觉有记忆点的公开作品集](https://github.com/suuny-ab/traceable-support-agent/issues/28)。
+  设计简报、参考矩阵、主页结构 v1 与产品命题已经用户确认；`Evidence Lens` v1–v3 均未
+  达到用户预期，Moonshot 桌面 / 手机首屏已形成可测量对齐合同。当前用首页 v4 作为真实
+  产品载体，验证 Codex 作为唯一入口、用户选择 CLI、Codex 派发与集成的最小多 CLI 协作；
+  实验通过前不形成长期治理规则。Provider、Qoder、生产开关与部署仍未授权。
 
 ## 下一步
 
-- [ ] [Issue #28：打造可真实运行、视觉有记忆点的公开作品集](https://github.com/suuny-ab/traceable-support-agent/issues/28)。
 - [ ] [Issue #29：以面试官视角完成 GitHub 仓库展示改造](https://github.com/suuny-ab/traceable-support-agent/issues/29)。
 - [ ] [Issue #14：评估并收口 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
 
