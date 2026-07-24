@@ -83,7 +83,7 @@ API。
 
 ## 仍待验证
 
-- 新 QA v4 语义跨度 schema / prompt 是否被真实模型遵守并形成 candidate。
+- QA v4 语义跨度 schema / prompt 的真实模型兼容性（v10 未触达第二阶段）。
 - 八次 R1 尝试中未获得 usage 的历史调用实际账单。
 - Draft PR 四项 Checks、冻结 head SHA 的正式独立复核和用户实际体验。
 
@@ -357,6 +357,34 @@ v6 与 v7 的一失败一通过证明同一候选存在输出波动；两次样�
   revision 精确匹配，运行用户 `10001:10001`。
 - profile 定向 11 项、工具全量 77 项通过（7 项环境门跳过）；公开扫描 `187` 个文件 /
   8 个公开案例通过；镜像无网络检索 8/8，Provider 调用 `0`。
+
+## 第十次外部 API 候选失败回执
+
+- 使用代码 `4e71fdaecf858e900831d1223857eb8ca574f97d`、镜像
+  `sha256:99a02f11b6d33c0c0c9605996c4871525c3f57d21b5b60ccbe5013e998b036ff`
+  执行 `issue22-public-synthetic-semantic-qa-10`。
+- 固定 QA-003 执行 `1/1`、调用 `1/2`、自动重试 `0`；第一阶段 HTTP 200、
+  `response_received=true`，延迟 `84,990ms`。
+- 第一阶段以
+  `enumeration_contract_failure:two_step_checklist_key_elements_invalid`
+  转人工；没有执行完整性停止，第二阶段未调用，QA v4 新 schema / prompt 因而未触达。
+- 本次没有可解析 usage；估算费用 `0` 不代表免费，调用前预留 `¥0.139287`，实际账单
+  未知。
+- 公开报告 SHA-256：
+  `b7cb9545fb5d1f314d67360ee25b05d843e349ba3675c5c7f5d7922ce0408ec3`。
+- 仓库外私有记录 SHA-256：
+  `e6d4d2e50e2195a0b4461c76b0b2534eff08bdf2bd470fdad47491818bcc9fb0`。
+
+本次只证明 QA 第一阶段仍可能因 key_elements 绑定失败关闭；它既不证明也不反证 QA v4
+真实兼容性。按冻结计划停止扩大外部样本。
+
+## 最终本地候选检查
+
+- API `95` 项通过、1 项环境门跳过，20 个子测试通过。
+- 工具 `77` 项通过、7 项环境门跳过。
+- 公开仓扫描通过：`187` 个文件、8 个公开案例；`git diff --check` 通过。
+- 最终检查未产生额外产品改动；生产保持 `replay_only`，本地最终检查没有 Provider
+  调用。
 
 ## 当前允许的结论
 

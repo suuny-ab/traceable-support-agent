@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：语义跨度 ticket v3 单例通过；QA v4 单例 v10 待执行
+> 外部风险：语义跨度 ticket v3 单例通过；QA v4 因第一阶段 checklist 失败未触达
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -597,7 +597,7 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 语义跨度 QA 验证说明卡 v10
 
-> 状态：`ready_under_external_standing_authorization`
+> 状态：`executed_candidate_failed`
 >
 > 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
 
@@ -630,4 +630,19 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - restart：本 attempt 执行一次即关闭；不自动重跑。
 - `last_verified_checkpoint`：`v10_semantic_qa_image_offline_verified`。
 
-本卡只有在当前仓外常设授权仍有效、执行前身份完全匹配时才可执行；Git 内容本身不授权。
+### v10 执行结果
+
+- 固定 QA-003 执行 `1/1`、调用 `1/2`、自动重试 `0`；第一阶段 HTTP 200、
+  `response_received=true`，延迟 `84,990ms`。
+- 第一阶段以
+  `enumeration_contract_failure:two_step_checklist_key_elements_invalid`
+  转人工；没有执行完整性停止，第二阶段未调用，QA v4 新 schema / prompt 未触达。
+- 本次没有可解析 usage；费用估算 `0` 不代表免费，调用前预留 `¥0.139287`，实际账单
+  未知。
+- 公开报告 SHA-256：
+  `b7cb9545fb5d1f314d67360ee25b05d843e349ba3675c5c7f5d7922ce0408ec3`。
+- 私有记录 SHA-256：
+  `e6d4d2e50e2195a0b4461c76b0b2534eff08bdf2bd470fdad47491818bcc9fb0`。
+
+本卡已经消费并关闭。结果只说明第一阶段候选质量失败，不证明 QA v4 兼容或不兼容；
+按计划不再扩大外部样本。

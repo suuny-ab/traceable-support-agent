@@ -20,8 +20,9 @@
 ## 当前
 
 - [ ] [Issue #22：修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
-  当前先执行零 Provider 调用的失败分类、合同候选与公开合成回归；真实外部 API 验证需
-  独立授权。
+  已形成失败分类、宿主机械投影和 LLM 客户可见语义跨度候选；有界真实 API 证明
+  ticket v3 单例兼容，QA v4 因第一阶段 checklist 失败尚未触达。Draft PR 与正式复核
+  待完成，不形成成功率或发布主张。
 
 ## 下一步
 
