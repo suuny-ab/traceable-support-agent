@@ -2,7 +2,7 @@
 
 > Issue：[#22](https://github.com/suuny-ab/traceable-support-agent/issues/22)
 >
-> 状态：`active`
+> 状态：`closed_not_planned`
 >
 > 复杂度：完整
 >

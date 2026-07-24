@@ -16,22 +16,17 @@
 - [x] 用 Issue #7 精简元开发治理，并通过商业 SaaS 四页重设计、冻结候选复核、自动部署和用户验收。
 - [x] 用 Issue #12 完成 Stage 12 全新未见正式评测：19/24、9 通过、2 条边界缺陷登记为 Issue #21/#22，`0.1.0` 判断留待 Issue #14。
 - [x] 用 Issue #21 建立 QA、工单与公网 API 共用的生成前确定性安全 / 型号边界，并通过固定候选复核、自动部署和用户验收。
+- [x] 用 Issue #22 建立两阶段失败分类、宿主机械投影和 clause 级来源绑定，关闭正式复核发现的来源越界；原真实模型候选质量完成门未满足，v15 兼容性保持未知并停止开放域调优。
 
 ## 当前
 
-- [ ] [Issue #22：修复两阶段生成合同在真实模型下的高失败率](https://github.com/suuny-ab/traceable-support-agent/issues/22)。
-  已形成失败分类、宿主机械投影和 LLM 客户可见语义跨度候选；v4 进一步让 LLM 直接
-  判断义务与 clause 的语义对应，移除脆弱的 `key_elements` 复制合同。v14 QA003
-  曾通过修复前两阶段合同并形成 candidate，但公开评分仍为 `required_fact_missing`；
-  正式复核发现并已修正同 evidence 忽略 clause 可越界的问题，v15 真实兼容性与针对性
-  复核待完成。Issue 保持开放，不形成成功率或发布主张。
+- 当前没有活动增量。仓库处于 `ready`，等待在新会话启动 Issue #28。
 
 ## 下一步
 
-- [ ] [评估外部 API 语义分类器与确定性硬门的混合边界](https://github.com/suuny-ab/traceable-support-agent/issues/25)。
-- [ ] [在费用授权和全部硬门通过后评估开启实时 Provider](https://github.com/suuny-ab/traceable-support-agent/issues/13)。
-- [ ] [依据质量门发布 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
-- [ ] [独立域名作为非阻塞增强](https://github.com/suuny-ab/traceable-support-agent/issues/15)。
+- [ ] [Issue #28：打造可真实运行、视觉有记忆点的公开作品集](https://github.com/suuny-ab/traceable-support-agent/issues/28)。
+- [ ] [Issue #29：以面试官视角完成 GitHub 仓库展示改造](https://github.com/suuny-ab/traceable-support-agent/issues/29)。
+- [ ] [Issue #14：评估并收口 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
 
 ## 长期范围外
 
