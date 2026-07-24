@@ -48,6 +48,7 @@ _DUST_STATION_OPERATION_CONTEXT_MARKERS = (
     "报错",
     "报警",
     "报e310",
+    "已满",
     "满了",
     "堵塞",
     "堵了",
@@ -58,19 +59,21 @@ _DUST_STATION_OPERATION_CONTEXT_MARKERS = (
     "失灵",
     "坏了",
 )
-_DUST_STATION_ACTION_MARKERS = (
+_DUST_STATION_HIGH_RISK_ACTION_MARKERS = (
     "更换",
     "清理",
     "安装",
     "拆卸",
-    "开启",
-    "启动",
-    "设置",
     "重置",
     "维修",
     "处理",
     "恢复",
     "测试",
+)
+_DUST_STATION_AMBIGUOUS_ACTION_MARKERS = (
+    "开启",
+    "启动",
+    "设置",
     "使用",
     "操作",
 )
@@ -111,9 +114,11 @@ def _mentioned_models(compact: str) -> set[str]:
 def _is_dust_station_information_question(compact: str) -> bool:
     if any(marker in compact for marker in _DUST_STATION_OPERATION_CONTEXT_MARKERS):
         return False
+    if any(marker in compact for marker in _DUST_STATION_HIGH_RISK_ACTION_MARKERS):
+        return False
     if any(pattern.search(compact) for pattern in _DUST_STATION_INFORMATION_PATTERNS):
         return True
-    if any(marker in compact for marker in _DUST_STATION_ACTION_MARKERS):
+    if any(marker in compact for marker in _DUST_STATION_AMBIGUOUS_ACTION_MARKERS):
         return False
     return any(marker in compact for marker in ("区别", "差异", "不同"))
 

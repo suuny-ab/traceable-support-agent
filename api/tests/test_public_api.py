@@ -162,7 +162,6 @@ class PublicRunServiceTests(unittest.TestCase):
             calls += 1
             return _candidate_package(), 2
 
-        service = self._service(live_enabled=True, product_runner=_product_runner(runner))
         cases = [
             ("CZ-R1 我的手机号是 13800138000", "sensitive_input_blocked", "CZ-R1"),
             ("请帮我写一封求职邮件", "out_of_scope_blocked", "CZ-R1"),
@@ -189,7 +188,18 @@ class PublicRunServiceTests(unittest.TestCase):
                 "model_scope_conflict",
                 "CZ-R2",
             ),
+            ("CZ-R1 E310 可以重置吗？", "model_scope_conflict", "CZ-R1"),
+            (
+                "CZ-R1 集尘袋已满可以重置吗？",
+                "model_scope_conflict",
+                "CZ-R1",
+            ),
         ]
+        service = self._service(
+            live_enabled=True,
+            product_runner=_product_runner(runner),
+            browser_daily_limit=len(cases),
+        )
         token = None
         for text, reason, model in cases:
             submission = service.submit(

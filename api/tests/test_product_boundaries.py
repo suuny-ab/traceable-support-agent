@@ -84,6 +84,8 @@ def test_explicit_text_model_must_match_selected_model_unless_comparing_models()
     operational = (
         ("CZ-R1 和 CZ-R2 的集尘袋都满了，应该怎么更换？", "CZ-R2"),
         ("CZ-R1 的集尘袋可以怎么更换？", "CZ-R1"),
+        ("CZ-R1 E310 可以重置吗？", "CZ-R1"),
+        ("CZ-R1 集尘袋已满可以重置吗？", "CZ-R1"),
     )
     for text, selected_model in operational:
         decision = evaluate_generation_boundary(text, selected_model)
@@ -169,6 +171,20 @@ def test_runner_blocks_before_transport_factory_for_qa_and_ticket():
             "qa",
             "CZ-R1 和 CZ-R2 的集尘袋都满了，应该怎么更换？",
             "CZ-R2",
+            1,
+        ),
+        RunInput(
+            "boundary-runner-e310-reset",
+            "qa",
+            "CZ-R1 E310 可以重置吗？",
+            "CZ-R1",
+            1,
+        ),
+        RunInput(
+            "boundary-runner-full-dust-bag-reset",
+            "qa",
+            "CZ-R1 集尘袋已满可以重置吗？",
+            "CZ-R1",
             1,
         ),
     )
