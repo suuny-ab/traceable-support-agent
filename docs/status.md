@@ -9,13 +9,13 @@
 | 当前目标 | 修复两阶段生成合同在真实外部模型下的高失败率，同时保持来源、安全与失败关闭边界 |
 | 活动增量 | Issue #22 两阶段生成合同可用性 |
 | 复杂度 | 完整 |
-| 风险 / 成熟度 | 前三次 `R1` 按硬停止结束，第四次为候选质量失败；v5 在仓外常设授权下待执行；产品保持 `S1 公开 Beta` |
+| 风险 / 成熟度 | 前三次 `R1` 按硬停止结束，第四次为候选质量失败，第五次单例通过；v6 在仓外常设授权下待执行；产品保持 `S1 公开 Beta` |
 | 活动工作 | `docs/work/active/two-stage-generation-contract/` |
 | 最近完成 | `docs/work/completed/pre-generation-boundary-handoff/` |
-| 当前动作 | v4 已消除本次 `length`，但 checklist 义务数量失败；v5 已冻结类型 / 空 / 超限子码 |
-| 阻碍 | 义务数量失败的具体子合同未知；v5 将按仓外常设授权执行单例诊断 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；四次验证分别调用 4 / 3 / 1 / 1 次、均重试 0；后两次未计价，实际账单待账号侧确认 |
-| 下一检查点 | 身份复核后直接执行 TK-001、最多 2 次、最坏 ¥0.70、重试 0 的 `obligation-count-v5` |
+| 当前动作 | v5 同配置下 TK-001 两阶段通过；已冻结从未执行过的 TK-006 单例 v6 |
+| 阻碍 | 原始固定四例中只剩 TK-006 没有真实 API 结果 |
+| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；五次验证分别调用 4 / 3 / 1 / 1 / 2 次、均重试 0；v5 估算 ¥0.0792522，未获得 usage 的历史调用实际账单待账号侧确认 |
+| 下一检查点 | 身份复核后直接执行 TK-006、最多 2 次、最坏 ¥0.70、重试 0 的 `remaining-ticket-v6` |
 
 ## 当前产品事实
 

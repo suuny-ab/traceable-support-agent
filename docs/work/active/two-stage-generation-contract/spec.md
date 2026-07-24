@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 外部风险：前三次 `R1` 按硬停止结束，第四次为候选质量失败；v5 为待执行 `R0` 候选
+> 外部风险：前三次 `R1` 按硬停止结束，第四次为候选质量失败，第五次单例通过；v6 为待执行 `R0` 候选
 >
 > 成熟度：保持 `S1 公开 Beta`
 
@@ -370,7 +370,7 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 
 ## 外部 API 义务数量诊断说明卡 v5
 
-> 状态：`ready_under_external_standing_authorization`
+> 状态：`executed_passed`
 >
 > 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
 
@@ -401,5 +401,52 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - 不允许结论：义务上限应该放宽、prompt 已修复、开放域成功率、Stage 12、生产或发布。
 - restart：本 attempt 执行一次即关闭；不自动重跑。
 - `last_verified_checkpoint`：`v5_candidate_image_offline_verified`。
+
+### v5 执行结果
+
+- 固定 TK-001 执行 `1/1`、调用 `2/2`、自动重试 `0`，没有停止码；第一阶段 checklist
+  和第二阶段 ticket 均通过并形成 candidate。
+- 两次均 HTTP 200、`response_received=true`；延迟 `74,139ms` 和 `64,209ms`。
+- 两次调用均获得 usage；估算费用 `¥0.0792522`，预留 `¥0.231147`，未越过
+  `¥0.70` 上限。估算不是账号账单。
+- 公开报告 SHA-256：
+  `b6c6ede2441274c194b7cb4874751d3385ca3788ad94f135590b75fbaf629108`。
+- 私有记录 SHA-256：
+  `4266086013ccbd9e00ff01cda0b73db06f3b34c105d57ff5114efa3b041b5f18`。
+
+本卡已经消费并关闭。它证明同配置可以成功，不证明 v4 数量失败的具体子合同或稳定成功率。
+
+## 外部 API 剩余工单验证说明卡 v6
+
+> 状态：`ready_under_external_standing_authorization`
+>
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只运行原始四例中从未执行过的 `GEN-DEV-TK-006`，获得合法 ticket candidate
+  或当前稳定失败分类；不重复付费运行已有合法候选的三个案例。
+- `content_identity`：
+  `29619efab39f1bc7aab5e4c8631b71d55f444598`。
+- `execution_identity`：
+  `sha256:44d1a7fad122967e1730b72a39356d4d0c74e3761f1748a4c2b9d83eb3392159`。
+- `content_version`：`two-stage-generation-contract/v6-remaining-ticket`。
+- `attempt_id`：`issue22-public-synthetic-remaining-ticket-6`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-TK-006`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt / 请求：与 v5 相同；第一阶段 `16384`、第二阶段 `8192`、两阶段超时
+  `180,000ms`，prompt 集 SHA-256：
+  `72954fa1ae4d2f8f330a872c43f467c3d7686d536591ec35b0e8b6b994bec28e`。
+- 调用 / 费用：固定 profile `remaining-ticket-v6`，最多 1 例、每例最多 2 次、总调用
+  最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于当前仓外常设授权的每 attempt
+  `¥1` 上限。
+- 执行：任一非 `stop`、Provider / transport、身份、预算、安全或来源完整性失败立即
+  硬停止；第一阶段合法且 checklist 通过时才允许第二次调用。
+- 公开记录：只保存安全请求配置、稳定失败码、HTTP 状态、响应接收、延迟、来源、调用
+  和费用覆盖；不公开正文、推理、凭据或原始信封。
+- 允许结论：TK-006 在该冻结候选上形成合法 candidate，或暴露一项有界合同 / 执行失败。
+- 不允许结论：四例来自同一 attempt、稳定成功率、开放域质量、Stage 12、生产或发布。
+- restart：本 attempt 执行一次即关闭；不自动重跑。
+- `last_verified_checkpoint`：`v6_candidate_image_offline_verified`。
 
 本卡只有在当前仓外常设授权仍有效、执行前身份完全匹配时才可执行；Git 内容本身不授权。
