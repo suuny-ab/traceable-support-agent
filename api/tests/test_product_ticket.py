@@ -73,10 +73,10 @@ def _fixture(*, valid=True, gate_pass=True):
     )
     first = selected["text"] if len(selected["text"]) <= 60 else selected["text"][:60]
     checklist = {
-        "schema_version": "obligation-checklist-v3",
+        "schema_version": "obligation-checklist-v4",
         "obligations": [
             {"obligation_id": "o1", "description": "义务",
-             "clause_ids": [selected["clause_id"]], "key_elements": [first]}
+             "clause_ids": [selected["clause_id"]]}
         ],
         "ignored_clause_ids": [
             entry["clause_id"] for entry in inventory[1:]
@@ -148,7 +148,7 @@ def test_ticket_contract_accepts_valid_and_rejects_known_failures():
 
 def test_ticket_gate_uses_llm_declared_customer_visible_claims():
     checklist = {"obligations": [{"obligation_id": "o1", "description": "d",
-                                  "evidence_ids": ["E1"], "key_elements": ["边缘松散", "禁区"]}]}
+                                  "evidence_ids": ["E1"]}]}
     passing = {"content": {
         "draft_reply": "这种地毯需要避开。",
         "action_steps": [],

@@ -11,15 +11,15 @@ from traceable_support.provider.contract import canonical_json_bytes
 from .qa_contract import SYSTEM_PROMPT as QA_SYSTEM_PROMPT
 
 CHECKLIST_SCHEMA_VERSION_V2 = "obligation-checklist-v2"
-CHECKLIST_SCHEMA_VERSION = "obligation-checklist-v3"
+CHECKLIST_SCHEMA_VERSION = "obligation-checklist-v4"
 CHECKLIST_MAX_BYTES = 3000
 STEP1_MAX_OUTPUT_TOKENS = 16384
 STEP1_TIMEOUT_MS = 30_000
 STEP2_MAX_OUTPUT_TOKENS = 8192
 STEP2_TIMEOUT_MS = 180_000
 STEP1_V2_PROMPT_VERSION = "obligation-checklist-prompt-v2"
-STEP1_PROMPT_VERSION = "obligation-checklist-prompt-v3"
-STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v6"
+STEP1_PROMPT_VERSION = "obligation-checklist-prompt-v4"
+STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v7"
 CHECKLIST_SYSTEM_PROMPT_V2 = """你是客服问答的义务分析器。输入包含问题、型号和按顺序排列的10条候选证据。只输出JSON，不输出解释。
 任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，各为一项。并列出现的适用对象、条件或步骤（如\"A或B\"）必须每个分支都纳入义务，不得合并或遗漏。义务只来自证据，不得引入证据外义务。
 每项义务给出：obligation_id（简短标识）、description（义务的一句话描述）、evidence_ids（支撑该义务的证据ID，至少一个）、key_elements（1到4个从所绑定证据中逐字复制的关键短片段，每个2到60字符，用于后续机械核对正文覆盖；片段必须逐字存在于该义务绑定的证据原文中，不得改写包括标点）。
@@ -28,11 +28,11 @@ CHECKLIST_SYSTEM_PROMPT_V2 = """你是客服问答的义务分析器。输入包
 输出格式（占位值必须替换；evidence_ids必须逐字使用输入证据中的实际evidence_id值，不得照抄示例中的\"E1\"）：{\"schema_version\":\"obligation-checklist-v2\",\"obligations\":[{\"obligation_id\":\"o1\",\"description\":\"义务描述\",\"evidence_ids\":[\"E1\"],\"key_elements\":[\"逐字片段\"]}],\"acknowledged_context\":[\"逐字复制的非义务子句\"]}"""
 CHECKLIST_SYSTEM_PROMPT = """你是客服问答的义务分析器。输入包含问题、型号和按检索顺序排列的证据子句。只输出JSON，不输出解释。
 任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，各为一项。并列出现的适用对象、条件或步骤必须每个分支都纳入义务，不得合并或遗漏。义务只来自证据，不得引入证据外义务。
-每项义务给出：obligation_id（简短且唯一）、description（义务的一句话描述）、clause_ids（支撑义务的证据子句ID，至少一个）、key_elements（1到4个从所选子句中逐字复制的关键短片段，每个2到60字符，用于后续机械核对正文覆盖）。
+每项义务给出：obligation_id（简短且唯一）、description（准确概括这项义务的一句话）、clause_ids（语义上支撑该义务的证据子句ID，至少一个）。description允许自然概括，不要复制用于机械匹配的关键字片段。
 分区合同：输入中的每个clause_id都必须被显式记账。与问题义务有关的子句放入至少一项义务的clause_ids；与当前问题无关的子句只放入ignored_clause_ids。不得把同一子句同时列为义务和忽略，不得漏掉任何clause_id。宿主会从clause_ids推导evidence_ids和被忽略的原文，不要重复这些机械字段。
-输出格式（占位值必须替换，clause_ids必须逐字使用输入中的实际值）：{\"schema_version\":\"obligation-checklist-v3\",\"obligations\":[{\"obligation_id\":\"o1\",\"description\":\"义务描述\",\"clause_ids\":[\"c001\"],\"key_elements\":[\"逐字片段\"]}],\"ignored_clause_ids\":[\"c002\"]}"""
+输出格式（占位值必须替换，clause_ids必须逐字使用输入中的实际值）：{\"schema_version\":\"obligation-checklist-v4\",\"obligations\":[{\"obligation_id\":\"o1\",\"description\":\"义务描述\",\"clause_ids\":[\"c001\"]}],\"ignored_clause_ids\":[\"c002\"]}"""
 STEP2_SYSTEM_PROMPT = QA_SYSTEM_PROMPT + """
-义务清单：输入中的obligation_checklist是已审定的运行时义务清单。每条claim仍必须用obligation_ids绑定它实际支撑的义务；宿主会从清单推导obligation_plan和used_evidence_ids，不要重复输出这些字段。answer.text必须逐字包含清单每项的key_elements全部片段（保持原字原标点），并以自然段落完整表达每项义务。"""
+义务清单：输入中的obligation_checklist是已审定的运行时义务清单。每条claim必须用obligation_ids绑定它实际表达的义务，并通过exact_span_text声明来源原文、通过customer_visible_span_text声明answer.text中语义对应的连续片段。answer.text必须以自然语言完整表达每项义务。宿主会验证这些声明并推导obligation_plan和used_evidence_ids，不要重复输出这些字段。"""
 
 
 class TwoStepError(ValueError):
@@ -131,7 +131,7 @@ def build_clause_inventory(evidence: Any) -> list[dict[str, str]]:
 def validate_step1_result(
     item: dict[str, Any], value: Any
 ) -> dict[str, Any]:
-    """Validate v3 semantic selections and derive every mechanical projection."""
+    """Validate v4 semantic selections and derive every mechanical projection."""
 
     if type(item) is not dict or type(item.get("evidence")) is not list:
         _fail("two_step_evidence_invalid")
@@ -161,13 +161,11 @@ def validate_step1_result(
             "obligation_id",
             "description",
             "clause_ids",
-            "key_elements",
         }:
             _fail("two_step_checklist_obligation_shape_invalid")
         obligation_id = obligation["obligation_id"]
         description = obligation["description"]
         clause_ids = obligation["clause_ids"]
-        key_elements = obligation["key_elements"]
         if (
             type(obligation_id) is not str
             or not obligation_id
@@ -187,21 +185,6 @@ def validate_step1_result(
             )
         ):
             _fail("two_step_checklist_clause_ids_invalid")
-        if (
-            type(key_elements) is not list
-            or not 1 <= len(key_elements) <= 4
-        ):
-            _fail("two_step_checklist_key_elements_invalid")
-        selected_texts = [
-            clause_by_id[clause_id]["text"] for clause_id in clause_ids
-        ]
-        if any(
-            type(element) is not str
-            or not 2 <= len(element) <= 60
-            or not any(element in selected_text for selected_text in selected_texts)
-            for element in key_elements
-        ):
-            _fail("two_step_checklist_key_elements_invalid")
         selected_evidence = {
             clause_by_id[clause_id]["evidence_id"] for clause_id in clause_ids
         }
@@ -215,7 +198,6 @@ def validate_step1_result(
                     for evidence_id in evidence_order
                     if evidence_id in selected_evidence
                 ],
-                "key_elements": deepcopy(key_elements),
             }
         )
         obligation_ids.append(obligation_id)
@@ -271,14 +253,13 @@ def checklist_model_projection(checklist: dict[str, Any]) -> dict[str, Any]:
                 "obligation_id",
                 "description",
                 "evidence_ids",
-                "key_elements",
             )
         }
         if any(value is None for value in projected.values()):
             _fail("two_step_checklist_invalid")
         obligations.append(projected)
     return {
-        "schema_version": "approved-obligation-checklist-v1",
+        "schema_version": "approved-obligation-checklist-v2",
         "obligations": obligations,
     }
 

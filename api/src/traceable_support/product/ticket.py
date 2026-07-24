@@ -199,7 +199,7 @@ def run_ticket(
     _stage("enumeration", "finished")
 
     stage_input_2 = {
-        "schema_version": "ticket-proposal-input-v2",
+        "schema_version": "ticket-proposal-input-v3",
         "question": question,
         "product_model": ticket["product_model"],
         "channel": "ticket",

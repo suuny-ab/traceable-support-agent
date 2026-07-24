@@ -39,13 +39,12 @@ EVIDENCE = [
 def _raw_checklist() -> dict:
     inventory = build_clause_inventory(EVIDENCE)
     return {
-        "schema_version": "obligation-checklist-v3",
+        "schema_version": "obligation-checklist-v4",
         "obligations": [
             {
                 "obligation_id": "o1",
-                "description": "说明如何开始局部清扫",
+                "description": "说明怎样启动指定区域的清洁",
                 "clause_ids": [inventory[0]["clause_id"]],
-                "key_elements": ["局部清扫键"],
             }
         ],
         "ignored_clause_ids": [
@@ -104,29 +103,30 @@ def _ticket_result() -> dict:
     }
 
 
-def test_v3_checklist_uses_clause_ids_and_derives_mechanical_fields() -> None:
+def test_v4_checklist_uses_semantic_clause_selection_and_derives_mechanical_fields() -> None:
     checklist = _checklist()
 
+    assert checklist["schema_version"] == "obligation-checklist-v4"
     assert checklist["obligations"][0]["evidence_ids"] == ["E1"]
     assert checklist["obligations"][0]["clause_ids"] == ["c001"]
+    assert "key_elements" not in checklist["obligations"][0]
     assert checklist["acknowledged_context"] == [
         "完成后检查尘盒。",
         "不要在积水中运行。",
     ]
     assert checklist_model_projection(checklist) == {
-        "schema_version": "approved-obligation-checklist-v1",
+        "schema_version": "approved-obligation-checklist-v2",
         "obligations": [
             {
                 "obligation_id": "o1",
-                "description": "说明如何开始局部清扫",
+                "description": "说明怎样启动指定区域的清洁",
                 "evidence_ids": ["E1"],
-                "key_elements": ["局部清扫键"],
             }
         ],
     }
 
 
-def test_v3_checklist_rejects_missing_or_conflicting_partition() -> None:
+def test_v4_checklist_rejects_missing_or_conflicting_partition() -> None:
     missing = _raw_checklist()
     missing["ignored_clause_ids"].pop()
     with pytest.raises(TwoStepError, match="two_step_checklist_partition_incomplete"):
@@ -150,12 +150,14 @@ def test_v3_checklist_rejects_missing_or_conflicting_partition() -> None:
             "two_step_checklist_clause_ids_invalid",
         ),
         (
-            lambda value: value["obligations"][0].update({"key_elements": []}),
-            "two_step_checklist_key_elements_invalid",
+            lambda value: value["obligations"][0].update(
+                {"key_elements": ["局部清扫键"]}
+            ),
+            "two_step_checklist_obligation_shape_invalid",
         ),
     ],
 )
-def test_v3_checklist_reports_privacy_safe_subcontract_codes(
+def test_v4_checklist_reports_privacy_safe_subcontract_codes(
     mutator,
     code: str,
 ) -> None:
@@ -177,7 +179,7 @@ def test_v3_checklist_reports_privacy_safe_subcontract_codes(
         ),
     ],
 )
-def test_v3_checklist_reports_safe_obligation_count_codes(
+def test_v4_checklist_reports_safe_obligation_count_codes(
     obligations,
     code: str,
 ) -> None:
@@ -188,25 +190,24 @@ def test_v3_checklist_reports_safe_obligation_count_codes(
         validate_step1_result({"evidence": EVIDENCE}, value)
 
 
-def test_v3_checklist_rejects_key_element_crossing_clause_boundary() -> None:
+def test_v4_checklist_accepts_semantic_description_without_source_substring() -> None:
     value = {
-        "schema_version": "obligation-checklist-v3",
+        "schema_version": "obligation-checklist-v4",
         "obligations": [
             {
                 "obligation_id": "o1",
-                "description": "覆盖两条子句",
+                "description": "先启动指定区域的清洁，再确认收集盒状态",
                 "clause_ids": ["c001", "c002"],
-                "key_elements": ["先按局部清扫键。\n完成后检查尘盒。"],
             }
         ],
         "ignored_clause_ids": ["c003"],
     }
 
-    with pytest.raises(
-        TwoStepError,
-        match="two_step_checklist_key_elements_invalid",
-    ):
-        validate_step1_result({"evidence": EVIDENCE}, value)
+    checked = validate_step1_result({"evidence": EVIDENCE}, value)
+    assert checked["obligations"][0]["evidence_ids"] == ["E1"]
+    assert checked["obligations"][0]["description"] == (
+        "先启动指定区域的清洁，再确认收集盒状态"
+    )
 
 
 def test_qa_v4_derives_plan_used_evidence_and_claim_ids() -> None:
@@ -219,7 +220,7 @@ def test_qa_v4_derives_plan_used_evidence_and_claim_ids() -> None:
     assert normalized["obligation_plan"] == [
         {
             "obligation_id": "o1",
-            "description": "说明如何开始局部清扫",
+            "description": "说明怎样启动指定区域的清洁",
             "evidence_ids": ["E1"],
         }
     ]

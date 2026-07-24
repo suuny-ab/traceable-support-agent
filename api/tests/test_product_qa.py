@@ -50,10 +50,10 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
     if valid:
         first = selected["text"] if len(selected["text"]) <= 60 else selected["text"][:60]
         checklist = {
-            "schema_version": "obligation-checklist-v3",
+            "schema_version": "obligation-checklist-v4",
             "obligations": [
                 {"obligation_id": "o1", "description": "义务",
-                 "clause_ids": [selected["clause_id"]], "key_elements": [first]}
+                 "clause_ids": [selected["clause_id"]]}
             ],
             "ignored_clause_ids": [
                 entry["clause_id"] for entry in inventory[1:]
@@ -97,7 +97,7 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
         worst_cost_limit_cny_nanos=500_000_000,
     )
     assert package["outcome"] == "candidate"
-    assert package["checklist"]["schema_version"] == "obligation-checklist-v3"
+    assert package["checklist"]["schema_version"] == "obligation-checklist-v4"
     assert package["gates"]["completeness_gate"]["pass"] is True
     assert package["answer"]["obligation_plan"][0]["obligation_id"] == "o1"
     assert package["answer"]["used_evidence_ids"] == [

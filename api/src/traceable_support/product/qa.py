@@ -323,7 +323,7 @@ def run_qa(
     _stage("enumeration", "finished")
 
     stage_input_2 = {
-        "schema_version": "retrieved-top10-qa-input-v6",
+        "schema_version": "retrieved-top10-qa-input-v7",
         "question": question,
         "product_model": product_model,
         "channel": "qa",

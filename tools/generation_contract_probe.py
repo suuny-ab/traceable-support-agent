@@ -76,6 +76,8 @@ PROFILES = {
     "obligation-count-v5": OBLIGATION_COUNT_CASE_IDS,
     "remaining-ticket-v6": REMAINING_TICKET_CASE_IDS,
     "semantic-qa-v10": SEMANTIC_QA_CASE_IDS,
+    "semantic-qa-v11": SEMANTIC_QA_CASE_IDS,
+    "semantic-ticket-v12": REMAINING_TICKET_CASE_IDS,
 }
 MAX_CASES = len(CASE_IDS)
 MAX_CALLS = MAX_CASES * 2

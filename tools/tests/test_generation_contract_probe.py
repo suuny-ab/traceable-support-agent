@@ -64,7 +64,7 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertTrue(selected_evidence_ids)
         obligations = []
         selected_clause_ids: set[str] = set()
-        key_elements: list[str] = []
+        visible_spans: list[str] = []
         claims = []
         for index, evidence_id in enumerate(selected_evidence_ids, start=1):
             clauses = [
@@ -73,15 +73,14 @@ class GenerationContractProbeTest(unittest.TestCase):
             self.assertTrue(clauses)
             clause_ids = [entry["clause_id"] for entry in clauses]
             selected_clause_ids.update(clause_ids)
-            key_element = clauses[0]["text"][:60]
-            key_elements.append(key_element)
+            visible_span = clauses[0]["text"][:60]
+            visible_spans.append(visible_span)
             obligation_id = f"o{index}"
             obligations.append(
                 {
                     "obligation_id": obligation_id,
                     "description": f"覆盖来源 {evidence_id}",
                     "clause_ids": clause_ids,
-                    "key_elements": [key_element],
                 }
             )
             evidence_text = next(
@@ -93,13 +92,13 @@ class GenerationContractProbeTest(unittest.TestCase):
                 {
                     "claim_id": f"c{index}",
                     "exact_span_text": evidence_text,
-                    "customer_visible_span_text": key_element,
+                    "customer_visible_span_text": visible_span,
                     "evidence_ids": [evidence_id],
                     "obligation_ids": [obligation_id],
                 }
             )
         checklist = {
-            "schema_version": "obligation-checklist-v3",
+            "schema_version": "obligation-checklist-v4",
             "obligations": obligations,
             "ignored_clause_ids": [
                 entry["clause_id"]
@@ -108,7 +107,7 @@ class GenerationContractProbeTest(unittest.TestCase):
             ],
         }
         visible = "；".join(
-            case["expected"].get("required_facts", []) + key_elements
+            case["expected"].get("required_facts", []) + visible_spans
         )
         if case["task_type"] == "qa":
             generated = {
@@ -350,6 +349,27 @@ class GenerationContractProbeTest(unittest.TestCase):
         self.assertEqual(report["envelope"]["max_calls"], 2)
         self.assertEqual(report["envelope"]["max_cost_cny_nanos"], 700_000_000)
         self.assertEqual(report["totals"]["provider_calls"], 2)
+
+    def test_v4_checklist_validation_profiles_are_single_case_bounded(self) -> None:
+        for profile, case_ids in (
+            ("semantic-qa-v11", generation_contract_probe.SEMANTIC_QA_CASE_IDS),
+            (
+                "semantic-ticket-v12",
+                generation_contract_probe.REMAINING_TICKET_CASE_IDS,
+            ),
+        ):
+            with self.subTest(profile=profile):
+                code, report, _ = self._run(profile, profile=profile)
+                self.assertEqual(code, 0)
+                self.assertEqual(report["profile"], profile)
+                self.assertEqual(report["envelope"]["case_ids"], list(case_ids))
+                self.assertEqual(report["envelope"]["max_cases"], 1)
+                self.assertEqual(report["envelope"]["max_calls"], 2)
+                self.assertEqual(
+                    report["envelope"]["max_cost_cny_nanos"],
+                    700_000_000,
+                )
+                self.assertEqual(report["totals"]["provider_calls"], 2)
 
     def test_scoring_allows_bound_extra_sources_but_requires_expected_sources(
         self,

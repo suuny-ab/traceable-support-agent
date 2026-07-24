@@ -90,15 +90,14 @@ def _retrieved_evidence() -> list[dict]:
     ]
 
 
-def _checklist(selected: dict, key_element: str, ignored: list[str]) -> dict:
+def _checklist(selected: dict, ignored: list[str]) -> dict:
     return {
-        "schema_version": "obligation-checklist-v3",
+        "schema_version": "obligation-checklist-v4",
         "obligations": [
             {
                 "obligation_id": "o1",
                 "description": "义务",
                 "clause_ids": [selected["clause_id"]],
-                "key_elements": [key_element],
             }
         ],
         "ignored_clause_ids": ignored,
@@ -136,7 +135,6 @@ def _qa_steps(hit, *, valid: bool = True) -> list[dict]:
             "kind": "response",
             "json": _checklist(
                 selected,
-                first,
                 [entry["clause_id"] for entry in inventory[1:]],
             ),
             "usage": USAGE,
@@ -177,7 +175,6 @@ def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
             "kind": "response",
             "json": _checklist(
                 selected,
-                first,
                 [entry["clause_id"] for entry in inventory[1:]],
             ),
             "usage": USAGE,
