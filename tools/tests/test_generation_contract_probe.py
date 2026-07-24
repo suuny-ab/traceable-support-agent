@@ -93,6 +93,7 @@ class GenerationContractProbeTest(unittest.TestCase):
                 {
                     "claim_id": f"c{index}",
                     "exact_span_text": evidence_text,
+                    "customer_visible_span_text": key_element,
                     "evidence_ids": [evidence_id],
                     "obligation_ids": [obligation_id],
                 }
@@ -111,7 +112,7 @@ class GenerationContractProbeTest(unittest.TestCase):
         )
         if case["task_type"] == "qa":
             generated = {
-                "schema_version": "retrieved-top10-qa-result-v3",
+                "schema_version": "retrieved-top10-qa-result-v4",
                 "task_type": "qa",
                 "content": {
                     "kind": "qa_answer",
@@ -122,7 +123,7 @@ class GenerationContractProbeTest(unittest.TestCase):
             }
         else:
             generated = {
-                "schema_version": "ticket-proposal-result-v2",
+                "schema_version": "ticket-proposal-result-v3",
                 "task_type": "ticket",
                 "content": {
                     "kind": "ticket_proposal",

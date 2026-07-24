@@ -7,13 +7,13 @@ from typing import Any
 
 FORBIDDEN_CUSTOMER_PHRASES = ("自动生成", "仅为草稿", "不能标记为已解决", "内部流程", "系统要求", "客服审核")
 LEGACY_TICKET_OUTPUT_SCHEMA_VERSION = "ticket-proposal-result-v1"
-TICKET_OUTPUT_SCHEMA_VERSION = "ticket-proposal-result-v2"
+TICKET_OUTPUT_SCHEMA_VERSION = "ticket-proposal-result-v3"
 TICKET_SYSTEM_PROMPT = """你是客服工单处理建议生成器。输入包含工单问题、型号、按顺序排列的10条候选证据和已审定obligation_checklist义务清单。只输出JSON，不输出推理。
-严格身份：顶层schema_version必须逐字为\"ticket-proposal-result-v2\"；顶层task_type必须逐字为\"ticket\"；content.kind必须逐字为\"ticket_proposal\"。
+严格身份：顶层schema_version必须逐字为\"ticket-proposal-result-v3\"；顶层task_type必须逐字为\"ticket\"；content.kind必须逐字为\"ticket_proposal\"。
 宿主推导：不要输出obligation_plan或used_evidence_ids；宿主会从已审定义务清单和claims机械推导这些字段。
-来源规则：每条claim优先且默认只绑定一个evidence_id，并逐字复制该来源中的连续exact_span_text；只有同一exact_span_text逐字存在于每个来源时才可绑定多个来源。每条claim必须用obligation_ids归属至少一项义务；每项义务至少由一条claim支撑。
-内容规则：action_steps是给客服的操作步骤（每步一句话，先用户可自助的检查，后升级路径）；draft_reply是给客户看的回复草稿，必须逐字包含清单每项的key_elements全部片段（保持原字原标点），并明确表达每项义务。draft_reply不得出现自动生成、草稿、内部流程、审核、标记已解决等系统或客服操作话术，不得补充证据外事实。
-输出格式：{"schema_version":"ticket-proposal-result-v2","task_type":"ticket","content":{"kind":"ticket_proposal","action_steps":["步骤一","步骤二"],"draft_reply":"客户可见回复","claims":[{"claim_id":"c1","exact_span_text":"从E1逐字复制的连续原文","evidence_ids":["E1"],"obligation_ids":["o1"]}],"insufficient_evidence":false}}"""
+来源规则：每条claim优先且默认只绑定一个evidence_id，并逐字复制该来源中的连续exact_span_text；只有同一exact_span_text逐字存在于每个来源时才可绑定多个来源。每条claim还必须逐字复制draft_reply中表达同一来源主张的连续customer_visible_span_text；客户片段可以自然改写来源，但必须确实表达该主张。每条claim必须用obligation_ids归属至少一项义务；每项义务至少由一条claim支撑。
+内容规则：action_steps是给客服的操作步骤（每步一句话，先用户可自助的检查，后升级路径）；draft_reply是给客户看的回复草稿，必须明确表达每项义务。draft_reply不得出现自动生成、草稿、内部流程、审核、标记已解决等系统或客服操作话术，不得补充证据外事实。
+输出格式：{"schema_version":"ticket-proposal-result-v3","task_type":"ticket","content":{"kind":"ticket_proposal","action_steps":["步骤一","步骤二"],"draft_reply":"客户可见回复","claims":[{"claim_id":"c1","exact_span_text":"从E1逐字复制的连续原文","customer_visible_span_text":"回复中表达该来源主张的连续片段","evidence_ids":["E1"],"obligation_ids":["o1"]}],"insufficient_evidence":false}}"""
 
 
 class TicketContractError(ValueError):
@@ -185,14 +185,23 @@ def validate_ticket_result_v2(
         if type(claim) is not dict or set(claim) != {
             "claim_id",
             "exact_span_text",
+            "customer_visible_span_text",
             "evidence_ids",
             "obligation_ids",
         }:
-            _fail("ticket_v2_claim_invalid")
+            _fail("ticket_v3_claim_shape_invalid")
         claim_id = claim["claim_id"]
         span = claim["exact_span_text"]
+        customer_span = claim["customer_visible_span_text"]
         evidence_ids = claim["evidence_ids"]
         obligation_ids = claim["obligation_ids"]
+        if (
+            type(customer_span) is not str
+            or not customer_span
+            or len(customer_span) > 300
+            or customer_span not in draft
+        ):
+            _fail("ticket_v3_customer_span_invalid")
         if (
             type(claim_id) is not str
             or not claim_id
@@ -248,27 +257,29 @@ def validate_ticket_result_v2(
 
 
 def ticket_completeness_gate(checklist: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
-    """Every checklist key element must appear in draft_reply or action_steps."""
-    body = result["content"]["draft_reply"] + "\n" + "\n".join(result["content"]["action_steps"])
-    squashed_body = "".join(body.split())
+    """Every obligation must have a declared customer-visible draft claim."""
+    draft = result["content"]["draft_reply"]
+    claims = result["content"]["claims"]
     obligations = []
     for obligation in checklist["obligations"]:
-        missing = [
-            element for element in obligation["key_elements"]
-            if "".join(element.split()) not in squashed_body
+        claim_ids = [
+            claim["claim_id"]
+            for claim in claims
+            if obligation["obligation_id"] in claim["obligation_ids"]
+            and claim["customer_visible_span_text"] in draft
         ]
         obligations.append({
             "obligation_id": obligation["obligation_id"],
-            "missing_key_elements": missing,
-            "covered": not missing,
+            "customer_visible_claim_ids": claim_ids,
+            "covered": bool(claim_ids),
         })
     uncovered = [entry["obligation_id"] for entry in obligations if not entry["covered"]]
     return {
-        "schema_version": "ticket-completeness-gate-result-v1",
+        "schema_version": "ticket-completeness-gate-result-v2",
         "obligations": obligations,
         "uncovered_obligation_ids": uncovered,
         "pass": not uncovered,
-        "product_semantics": "fail_closed_handoff_when_not_passing",
+        "product_semantics": "llm_declares_semantic_mapping_host_verifies_visible_span_and_fails_closed",
     }
 
 

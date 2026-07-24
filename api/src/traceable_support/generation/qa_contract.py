@@ -7,9 +7,9 @@ from typing import Any
 
 from traceable_support.provider.contract import assert_no_sensitive_material
 
-PROMPT_VERSION = "retrieved-top10-qa-prompt-v6"
+PROMPT_VERSION = "retrieved-top10-qa-prompt-v7"
 LEGACY_OUTPUT_SCHEMA_VERSION = "retrieved-top10-qa-result-v2"
-OUTPUT_SCHEMA_VERSION = "retrieved-top10-qa-result-v3"
+OUTPUT_SCHEMA_VERSION = "retrieved-top10-qa-result-v4"
 FORBIDDEN_CUSTOMER_PHRASES = (
     "自动生成",
     "仅为草稿",
@@ -19,12 +19,12 @@ FORBIDDEN_CUSTOMER_PHRASES = (
     "客服审核",
 )
 SYSTEM_PROMPT = """你是客户可见的设备支持问答生成器。输入包含问题、型号、按顺序排列的候选证据和已审定义务清单。只输出JSON，不输出推理或检查过程。
-严格身份：顶层schema_version必须逐字为\"retrieved-top10-qa-result-v3\"；顶层task_type必须逐字为\"qa\"；content.kind必须逐字为\"qa_answer\"。
+严格身份：顶层schema_version必须逐字为\"retrieved-top10-qa-result-v4\"；顶层task_type必须逐字为\"qa\"；content.kind必须逐字为\"qa_answer\"。
 宿主推导：不要输出obligation_plan、used_evidence_ids或answer.claim_ids；宿主会从已审定义务清单和claims机械推导这些字段。
-来源规则：每条claim优先且默认只绑定一个evidence_id，并逐字复制该来源中的连续exact_span_text。逐字复制包括标点：不得把全角标点改写为半角标点，不得增删或替换任何字符。只有同一exact_span_text逐字存在于每个来源时才可绑定多个来源；表达相近不算逐字存在，应拆成不同claim。每条claim必须用obligation_ids归属至少一项已审定义务；每项义务至少由一条claim支撑，且claim来源必须属于该义务已审定的evidence_ids。
+来源规则：每条claim优先且默认只绑定一个evidence_id，并逐字复制该来源中的连续exact_span_text。逐字复制包括标点：不得把全角标点改写为半角标点，不得增删或替换任何字符。只有同一exact_span_text逐字存在于每个来源时才可绑定多个来源；表达相近不算逐字存在，应拆成不同claim。每条claim还必须逐字复制answer.text中表达同一来源主张的连续customer_visible_span_text；客户片段可以自然改写来源，但必须确实表达该主张。每条claim必须用obligation_ids归属至少一项已审定义务；每项义务至少由一条claim支撑，且claim来源必须属于该义务已审定的evidence_ids。
 正文规则：answer.text必须以自然段落逐项明确表达已审定义务，不得遗漏；不要输出检查清单本身。不得让用户重复已完成动作，不得跳过剩余检查直接升级。
 客户边界：不得出现自动生成、草稿、内部流程、审核、标记已解决等系统或客服操作话术，不得补充证据外事实。
-完整JSON正例（占位值必须替换）：{\"schema_version\":\"retrieved-top10-qa-result-v3\",\"task_type\":\"qa\",\"content\":{\"kind\":\"qa_answer\",\"answer\":{\"text\":\"面向客户的完整回答\"},\"claims\":[{\"claim_id\":\"c1\",\"exact_span_text\":\"从E1逐字复制的连续原文\",\"evidence_ids\":[\"E1\"],\"obligation_ids\":[\"o1\"]}],\"insufficient_evidence\":false}}"""
+完整JSON正例（占位值必须替换）：{\"schema_version\":\"retrieved-top10-qa-result-v4\",\"task_type\":\"qa\",\"content\":{\"kind\":\"qa_answer\",\"answer\":{\"text\":\"面向客户的完整回答\"},\"claims\":[{\"claim_id\":\"c1\",\"exact_span_text\":\"从E1逐字复制的连续原文\",\"customer_visible_span_text\":\"回答中表达该来源主张的连续片段\",\"evidence_ids\":[\"E1\"],\"obligation_ids\":[\"o1\"]}],\"insufficient_evidence\":false}}"""
 
 
 class CandidateV4Error(ValueError):
@@ -61,6 +61,7 @@ def _contract(evidence: list[dict[str, Any]]) -> dict[str, Any]:
                 {
                     "claim_id": "c1",
                     "exact_span_text": "verbatim evidence substring",
+                    "customer_visible_span_text": "verbatim customer answer substring",
                     "evidence_ids": ["allowed id"],
                     "obligation_ids": ["planned obligation id"],
                 }
@@ -85,6 +86,7 @@ def _contract(evidence: list[dict[str, Any]]) -> dict[str, Any]:
                     {
                         "claim_id": "c1",
                         "exact_span_text": "verbatim span from E1",
+                        "customer_visible_span_text": "customer answer span",
                         "evidence_ids": ["E1"],
                         "obligation_ids": ["o1"],
                     }
@@ -324,14 +326,23 @@ def validate_result(
         if type(claim) is not dict or set(claim) != {
             "claim_id",
             "exact_span_text",
+            "customer_visible_span_text",
             "evidence_ids",
             "obligation_ids",
         }:
-            _fail("top10_v6_claim_invalid")
+            _fail("top10_v7_claim_shape_invalid")
         claim_id = claim["claim_id"]
         span = claim["exact_span_text"]
+        customer_span = claim["customer_visible_span_text"]
         evidence_ids = claim["evidence_ids"]
         obligation_ids = claim["obligation_ids"]
+        if (
+            type(customer_span) is not str
+            or not customer_span
+            or len(customer_span) > 300
+            or customer_span not in answer["text"]
+        ):
+            _fail("top10_v7_customer_span_invalid")
         if (
             type(claim_id) is not str
             or not claim_id

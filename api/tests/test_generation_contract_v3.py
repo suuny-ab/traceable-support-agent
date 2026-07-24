@@ -63,7 +63,7 @@ def _checklist() -> dict:
 
 def _qa_result() -> dict:
     return {
-        "schema_version": "retrieved-top10-qa-result-v3",
+        "schema_version": "retrieved-top10-qa-result-v4",
         "task_type": "qa",
         "content": {
             "kind": "qa_answer",
@@ -72,6 +72,7 @@ def _qa_result() -> dict:
                 {
                     "claim_id": "c1",
                     "exact_span_text": "先按局部清扫键。",
+                    "customer_visible_span_text": "请先按局部清扫键",
                     "evidence_ids": ["E1"],
                     "obligation_ids": ["o1"],
                 }
@@ -83,7 +84,7 @@ def _qa_result() -> dict:
 
 def _ticket_result() -> dict:
     return {
-        "schema_version": "ticket-proposal-result-v2",
+        "schema_version": "ticket-proposal-result-v3",
         "task_type": "ticket",
         "content": {
             "kind": "ticket_proposal",
@@ -93,6 +94,7 @@ def _ticket_result() -> dict:
                 {
                     "claim_id": "c1",
                     "exact_span_text": "先按局部清扫键。",
+                    "customer_visible_span_text": "请先按局部清扫键",
                     "evidence_ids": ["E1"],
                     "obligation_ids": ["o1"],
                 }
@@ -207,7 +209,7 @@ def test_v3_checklist_rejects_key_element_crossing_clause_boundary() -> None:
         validate_step1_result({"evidence": EVIDENCE}, value)
 
 
-def test_qa_v3_derives_plan_used_evidence_and_claim_ids() -> None:
+def test_qa_v4_derives_plan_used_evidence_and_claim_ids() -> None:
     normalized = validate_result(
         {"case_id": "qa-1", "evidence": EVIDENCE},
         _checklist(),
@@ -225,7 +227,28 @@ def test_qa_v3_derives_plan_used_evidence_and_claim_ids() -> None:
     assert normalized["content"]["answer"]["claim_ids"] == ["c1"]
 
 
-def test_qa_v3_rejects_redundant_or_wrong_source_bindings() -> None:
+def test_qa_v4_accepts_declared_customer_paraphrase_and_rejects_forged_span() -> None:
+    paraphrased = _qa_result()
+    paraphrased["content"]["answer"]["text"] = "可以通过按键启动局部区域清洁。"
+    paraphrased["content"]["claims"][0]["customer_visible_span_text"] = (
+        "按键启动局部区域清洁"
+    )
+    normalized = validate_result(
+        {"case_id": "qa-1", "evidence": EVIDENCE},
+        _checklist(),
+        paraphrased,
+    )
+    assert normalized["content"]["claims"][0]["customer_visible_span_text"] == (
+        "按键启动局部区域清洁"
+    )
+
+    forged = _qa_result()
+    forged["content"]["claims"][0]["customer_visible_span_text"] = "正文中不存在"
+    with pytest.raises(CandidateV4Error, match="top10_v7_customer_span_invalid"):
+        validate_result({"evidence": EVIDENCE}, _checklist(), forged)
+
+
+def test_qa_v4_rejects_redundant_or_wrong_source_bindings() -> None:
     redundant = _qa_result()
     redundant["obligation_plan"] = []
     with pytest.raises(CandidateV4Error, match="top10_v6_result_shape_invalid"):
@@ -238,14 +261,34 @@ def test_qa_v3_rejects_redundant_or_wrong_source_bindings() -> None:
         validate_result({"evidence": EVIDENCE}, _checklist(), wrong_source)
 
 
-def test_ticket_v2_derives_plan_and_rejects_wrong_source_binding() -> None:
+def test_ticket_v3_accepts_declared_customer_paraphrase_and_derives_plan() -> None:
+    paraphrased = _ticket_result()
+    paraphrased["content"]["draft_reply"] = "可以通过按键启动局部区域清洁。"
+    paraphrased["content"]["claims"][0]["customer_visible_span_text"] = (
+        "按键启动局部区域清洁"
+    )
     normalized = validate_ticket_result_v2(
         {"case_id": "ticket-1", "evidence": EVIDENCE},
         _checklist(),
-        _ticket_result(),
+        paraphrased,
     )
     assert normalized["obligation_plan"][0]["obligation_id"] == "o1"
     assert normalized["used_evidence_ids"] == ["E1"]
+    assert normalized["content"]["claims"][0]["customer_visible_span_text"] == (
+        "按键启动局部区域清洁"
+    )
+
+    forged = _ticket_result()
+    forged["content"]["claims"][0]["customer_visible_span_text"] = "正文中不存在"
+    with pytest.raises(TicketContractError, match="ticket_v3_customer_span_invalid"):
+        validate_ticket_result_v2(
+            {"evidence": EVIDENCE},
+            _checklist(),
+            forged,
+        )
+
+
+def test_ticket_v3_rejects_wrong_source_binding() -> None:
 
     wrong_source = copy.deepcopy(_ticket_result())
     wrong_source["content"]["claims"][0]["exact_span_text"] = "不要在积水中运行。"
@@ -275,6 +318,12 @@ def test_failure_taxonomy_is_stable_and_content_free() -> None:
         "enumeration_contract_failure:"
         "two_step_checklist_obligation_count_exceeded"
     )["family"] == "checklist_shape"
+    assert classify_generation_failure(
+        "generation_contract_failure:top10_v7_customer_span_invalid"
+    )["family"] == "semantic_coverage"
+    assert classify_generation_failure(
+        "generation_contract_failure:ticket_v3_customer_span_invalid"
+    )["family"] == "semantic_coverage"
 
     summary = summarize_generation_failures(
         [

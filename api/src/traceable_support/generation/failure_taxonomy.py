@@ -34,6 +34,8 @@ _FAMILIES = {
     "two_step_checklist_partition_incomplete": "checklist_partition",
     "top10_v4_obligation_binding_invalid": "obligation_binding",
     "ticket_obligation_binding_invalid": "obligation_binding",
+    "top10_v7_customer_span_invalid": "semantic_coverage",
+    "ticket_v3_customer_span_invalid": "semantic_coverage",
     "completeness_gate_failed": "completeness",
 }
 

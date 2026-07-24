@@ -61,13 +61,14 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
         }
         answer_text = f"回答。{first}" if gate_pass else "回答。不含要素"
         result_obj = {
-            "schema_version": "retrieved-top10-qa-result-v3",
+            "schema_version": "retrieved-top10-qa-result-v4",
             "task_type": "qa",
             "content": {
                 "kind": "qa_answer",
                 "answer": {"text": answer_text},
                 "claims": [
                     {"claim_id": "c1", "exact_span_text": text,
+                     "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
                      "evidence_ids": [evidence_id], "obligation_ids": ["o1"]}
                 ],
                 "insufficient_evidence": False,
@@ -126,7 +127,7 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
     assert runs[0]["run_id"] == "test-run-1"
 
 
-def test_run_qa_completeness_gate_failure_handoffs_with_answer():
+def test_run_qa_rejects_forged_customer_visible_span():
     package = run_qa(
         question="CZ-R1 怎么开始局部清扫？",
         product_model="CZ-R1",
@@ -136,9 +137,11 @@ def test_run_qa_completeness_gate_failure_handoffs_with_answer():
         worst_cost_limit_cny_nanos=500_000_000,
     )
     assert package["outcome"] == "handoff"
-    assert package["handoff_reason"] == "completeness_gate_failed"
-    assert package["failure_classification"]["family"] == "completeness"
-    assert package["answer"] is not None
+    assert package["handoff_reason"] == (
+        "generation_contract_failure:top10_v7_customer_span_invalid"
+    )
+    assert package["failure_classification"]["family"] == "semantic_coverage"
+    assert package["answer"] is None
 
     connection = sqlite3.connect(":memory:")
     create_qa_tables(connection)

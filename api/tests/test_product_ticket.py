@@ -88,7 +88,7 @@ def _fixture(*, valid=True, gate_pass=True):
              "body": json_response({"schema_version": "wrong"}, usage=USAGE, response_id="fx-1")},
         ])
     proposal = {
-        "schema_version": "ticket-proposal-result-v2",
+        "schema_version": "ticket-proposal-result-v3",
         "task_type": "ticket",
         "content": {
             "kind": "ticket_proposal",
@@ -96,6 +96,7 @@ def _fixture(*, valid=True, gate_pass=True):
             "draft_reply": f"客户回复。{first}" if gate_pass else "客户回复。",
             "claims": [
                 {"claim_id": "c1", "exact_span_text": ev["text"],
+                 "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
                  "evidence_ids": [ev["evidence_id"]], "obligation_ids": ["o1"]}
             ],
             "insufficient_evidence": False,
@@ -145,11 +146,27 @@ def test_ticket_contract_accepts_valid_and_rejects_known_failures():
         validate_ticket_result(item, no_plan_link)
 
 
-def test_ticket_gate_detects_missing_key_elements():
+def test_ticket_gate_uses_llm_declared_customer_visible_claims():
     checklist = {"obligations": [{"obligation_id": "o1", "description": "d",
                                   "evidence_ids": ["E1"], "key_elements": ["边缘松散", "禁区"]}]}
-    passing = {"content": {"draft_reply": "长毛地毯或边缘松散的地毯仍应设置为禁区。", "action_steps": []}}
-    failing = {"content": {"draft_reply": "长毛地毯仍应设置为禁区。", "action_steps": []}}
+    passing = {"content": {
+        "draft_reply": "这种地毯需要避开。",
+        "action_steps": [],
+        "claims": [{
+            "claim_id": "c1",
+            "customer_visible_span_text": "需要避开",
+            "obligation_ids": ["o1"],
+        }],
+    }}
+    failing = {"content": {
+        "draft_reply": "这种地毯需要避开。",
+        "action_steps": [],
+        "claims": [{
+            "claim_id": "c1",
+            "customer_visible_span_text": "需要避开",
+            "obligation_ids": [],
+        }],
+    }}
     assert ticket_completeness_gate(checklist, passing)["pass"] is True
     assert ticket_completeness_gate(checklist, failing)["pass"] is False
 

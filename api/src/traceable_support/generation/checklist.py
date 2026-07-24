@@ -54,33 +54,34 @@ def _squash(text: str) -> str:
 def completeness_gate(
     checklist: dict[str, Any], result: dict[str, Any]
 ) -> dict[str, Any]:
-    """Fail closed unless every checklist key element appears in the answer."""
+    """Fail closed unless every obligation has a declared visible answer claim."""
 
     answer_text = result["content"]["answer"]["text"]
-    squashed_answer = _squash(answer_text)
+    claims = result["content"]["claims"]
     obligations = []
     for obligation in checklist["obligations"]:
-        missing = [
-            element
-            for element in obligation["key_elements"]
-            if _squash(element) not in squashed_answer
+        claim_ids = [
+            claim["claim_id"]
+            for claim in claims
+            if obligation["obligation_id"] in claim["obligation_ids"]
+            and claim["customer_visible_span_text"] in answer_text
         ]
         obligations.append(
             {
                 "obligation_id": obligation["obligation_id"],
-                "missing_key_elements": missing,
-                "covered": not missing,
+                "customer_visible_claim_ids": claim_ids,
+                "covered": bool(claim_ids),
             }
         )
     uncovered = [
         entry["obligation_id"] for entry in obligations if not entry["covered"]
     ]
     return {
-        "schema_version": "two-step-completeness-gate-result-v1",
+        "schema_version": "two-step-completeness-gate-result-v2",
         "obligations": obligations,
         "uncovered_obligation_ids": uncovered,
         "pass": not uncovered,
-        "product_semantics": "fail_closed_handoff_when_not_passing",
+        "product_semantics": "llm_declares_semantic_mapping_host_verifies_visible_span_and_fails_closed",
     }
 
 

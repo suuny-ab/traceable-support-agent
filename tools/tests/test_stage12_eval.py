@@ -114,7 +114,7 @@ def _qa_steps(hit, *, valid: bool = True) -> list[dict]:
     selected = inventory[0]
     first = selected["text"][:60]
     answer = {
-        "schema_version": "retrieved-top10-qa-result-v3",
+        "schema_version": "retrieved-top10-qa-result-v4",
         "task_type": "qa",
         "content": {
             "kind": "qa_answer",
@@ -123,6 +123,7 @@ def _qa_steps(hit, *, valid: bool = True) -> list[dict]:
                 {
                     "claim_id": "c1",
                     "exact_span_text": hit.text,
+                    "customer_visible_span_text": first,
                     "evidence_ids": [selected["evidence_id"]],
                     "obligation_ids": ["o1"],
                 }
@@ -153,7 +154,7 @@ def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
     selected = inventory[0]
     first = selected["text"][:60]
     proposal = {
-        "schema_version": "ticket-proposal-result-v2",
+        "schema_version": "ticket-proposal-result-v3",
         "task_type": "ticket",
         "content": {
             "kind": "ticket_proposal",
@@ -163,6 +164,7 @@ def _ticket_steps(hit, *, valid: bool = True) -> list[dict]:
                 {
                     "claim_id": "c1",
                     "exact_span_text": hit.text,
+                    "customer_visible_span_text": first,
                     "evidence_ids": [selected["evidence_id"]],
                     "obligation_ids": ["o1"],
                 }
