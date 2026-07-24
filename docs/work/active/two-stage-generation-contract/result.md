@@ -420,3 +420,41 @@ v9 证明 ticket v3 在固定 TK-006 上与真实模型兼容。尚不能声称 
 
 本地证据证明 v4 接受不复制来源原词的义务概括，并继续拒绝错误 clause、分区缺失、
 错误来源、伪造客户跨度和漏义务；不证明真实 Provider 兼容或开放域质量改善。
+
+## 第十一次外部 API 硬停止回执
+
+- 使用代码 `cece633a6b11af3f36a116ca3a793b0f8654b94c`、镜像
+  `sha256:a8cfbede1481a38a2eb97dcf0abcbc36e9ca210de01af7cc378574db90fe4bb8`
+  执行 `issue22-public-synthetic-semantic-checklist-qa-11`。
+- 固定 QA003 执行 `1/1`、调用 `2/2`、自动重试 `0`；两阶段均 HTTP 200 且
+  `response_received=true`，延迟分别为 `78,188ms`、`111,182ms`。
+- checklist v4 第一阶段通过；QA 第二阶段以
+  `generation_execution_failure:provider_response_finish_reason_length` 失败关闭，
+  触发 `execution_integrity_failure_stop`。按卡片没有启动 v12 工单。
+- 一次调用获得 usage、一次未计价；估算费用 `¥0.042246`、预留 `¥0.239229`，
+  未越过 `¥0.70` 上限。估算不是账号账单。
+- 公开报告 SHA-256：
+  `0776f4a952b3295669cdfec5f4ea1c14e5a968677a752a24d64260f77a2b49a2`。
+- 仓库外私有记录 SHA-256：
+  `ff2bd78f2d4a1a44f0d0a382ce6e9db7b9fdafc6e6df3b60b18dbce1075885ef`；
+  未读取其正文。
+
+该回执证明移除 `key_elements` 后真实模型可通过 checklist v4 第一阶段；它不证明 QA v4
+已兼容。第二阶段失败属于输出长度执行完整性，而不是语义覆盖结论。
+
+## v13 QA 长度恢复候选
+
+- 第二阶段最大输出从 `8192` 提至 `16384`；prompt、schema、thinking、`180,000ms`
+  超时、重试 0 与全部硬门不变。
+- 代码：
+  `4c3879076133cfe177924ef4604f9cff1c53907a`；镜像：
+  `sha256:6686211b190228c3cabff7abf99b19cb7b48866d0c67a39ea245b149bb8d69f4`，
+  revision 精确匹配，运行用户 `10001:10001`。
+- 定向长度 / 预算 / 产品 / profile 通过；完整 API `96` 项、工具 `78` 项通过
+  （7 项环境门跳过），公开扫描 `187` 文件 / 8 案例；镜像无网络检索 8/8，
+  Provider 调用 `0`。
+- 新 profile `qa-length-recovery-v13` 只选择 QA003；每次运行仍封顶 1 例、2 次调用、
+  `¥0.70`、自动重试 0。
+
+本地证据只证明 16K 请求和最坏预算包络可被产品与探针接受，不证明真实 Provider 会以
+`stop` 完成。

@@ -153,3 +153,17 @@ v10 第一阶段以 `two_step_checklist_key_elements_invalid` 转人工，没有
    否则按独立卡执行 ticket。两次都不读取 Provider 原始正文调优。
 6. 更新同一 Draft PR，等待最终四项 Checks 全绿后冻结 head，再做一次正式只读复核；
    合并和部署仍是后续独立动作。
+
+## v11 硬停止后的长度恢复
+
+v11 的 checklist v4 第一阶段通过，QA 第二阶段以
+`provider_response_finish_reason_length` 执行失败关闭；按卡片未启动 v12。后续：
+
+1. 不恢复 v11、不复用其额度、不读取原始正文；把 v12 保持为未执行事实。
+2. 根据脱敏回执和 Provider 官方合同，把第二阶段最大输出从 `8192` 增至 `16384`；
+   schema、prompt、thinking、超时、重试和全部硬门保持不变。
+3. 重新运行完整 R0、预算公式和无网络镜像检查。
+4. 建立新 `qa-length-recovery-v13` 单例，仅执行 QA003，最多 2 次调用、`¥0.70`、
+   自动重试 0；任一执行完整性失败立即关闭。
+5. v13 形成安全回执后，才决定是否需要用新候选恢复独立 ticket 验证；不得自动执行
+   旧 v12。

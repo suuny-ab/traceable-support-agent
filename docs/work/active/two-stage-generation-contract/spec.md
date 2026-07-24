@@ -679,6 +679,20 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - restart：本 attempt 执行一次即关闭；不自动重跑。
 - `last_verified_checkpoint`：`v11_image_offline_verified`。
 
+### v11 执行结果
+
+- 固定 QA003 执行 `1/1`、调用 `2/2`、自动重试 `0`；两阶段均 HTTP 200、
+  `response_received=true`，延迟 `78,188ms` / `111,182ms`。
+- 第一阶段 checklist v4 通过；第二阶段以
+  `generation_execution_failure:provider_response_finish_reason_length` 失败关闭，
+  `stop_code=execution_integrity_failure_stop`。
+- 一次调用未计价；估算 `¥0.042246`、预留 `¥0.239229`，实际账单未知。
+- 公开 / 私有 SHA-256：
+  `0776f4a952b3295669cdfec5f4ea1c14e5a968677a752a24d64260f77a2b49a2` /
+  `ff2bd78f2d4a1a44f0d0a382ce6e9db7b9fdafc6e6df3b60b18dbce1075885ef`。
+
+本卡已消费并关闭。按预声明硬停止，下面的 v12 卡没有执行，也不得恢复或复用。
+
 ## checklist v4 工单单例验证说明卡
 
 > 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
@@ -710,3 +724,42 @@ Stage 12 在候选生成类案例中执行 9 例，仅 1 例完全通过。公�
 - 允许结论：checklist v4 与 ticket v3 在该冻结 TK006 样本上兼容，或暴露具体安全
   失败码。
 - `last_verified_checkpoint`：`v12_image_offline_verified`。
+
+### v12 状态
+
+`not_executed`。v11 触发执行完整性硬停止，因此没有 Provider 调用、费用或结果；旧卡
+关闭，不得在新候选上复用。
+
+## QA 第二阶段长度恢复验证说明卡
+
+> 执行权限：仅来自当前 Git 仓库之外的用户会话常设授权；本文件不授予权限
+
+- 目的：只在 `GEN-DEV-QA-003` 验证把 QA 第二阶段最大输出从 8K 提到 16K 后，
+  Provider 是否以 `stop` 完成，并继续执行既有 QA v4 合同。
+- `content_identity`：`4c3879076133cfe177924ef4604f9cff1c53907a`。
+- `execution_identity`：
+  `sha256:6686211b190228c3cabff7abf99b19cb7b48866d0c67a39ea245b149bb8d69f4`。
+- `content_version`：`two-stage-generation-contract/v13-qa-length-recovery`。
+- `attempt_id`：`issue22-public-synthetic-qa-length-recovery-13`。
+- Provider / model / endpoint：`deepseek` / `deepseek-v4-pro` /
+  `https://api.deepseek.com/chat/completions`。
+- 数据：只使用公开套件中的 `GEN-DEV-QA-003`；套件 SHA-256：
+  `5fd3042f90c708d84cc9cb0f859c086feeab2b4fbac42fdc86b1c12123946440`。
+- prompt SHA-256：checklist
+  `bb9f58b196d67ab01aa43c59499136b5c6dd7576247c9c576c5e74be490908cf`，QA
+  `df7200de0fdcb5ed25ec094ae7873397a4da22e1d186b9d23b7511789f913878`，集合
+  `d66cd07906481faf93d9c13fa1a0b9deb262e50168e60b898c1d4f097419a7fb`。
+- 请求：第一阶段 `16384`、第二阶段 `16384`、两阶段超时 `180,000ms`；这是相对 v11
+  唯一行为变化。
+- 调用 / 费用：固定 `qa-length-recovery-v13` profile，最多 1 例、每例最多 2 次、
+  总调用最多 2；自动重试 `0`；总最坏上限 `¥0.70 CNY`，低于仓外常设授权的每
+  attempt `¥1` 上限。
+- 执行：任一授权、transport、身份、预算、包完整性、安全或 Provider 信封失败立即
+  硬停止；合同 / 候选质量失败形成类型明确的 handoff，不读取原始正文调优。
+- 公开记录：只保存安全请求配置、稳定失败码、HTTP 状态、响应接收、延迟、来源、调用
+  和费用覆盖；不公开正文、推理、凭据或原始信封。
+- 允许结论：16K 能否消除该冻结 QA003 的第二阶段 `length`，以及随后 QA v4 是否
+  兼容或暴露具体安全失败码。
+- 不允许结论：稳定成功率、开放域质量、Stage 12、生产、发布或用户验收。
+- restart：本 attempt 执行一次即关闭；不自动重跑。
+- `last_verified_checkpoint`：`v13_image_offline_verified`。
