@@ -7,11 +7,11 @@
 | `state` | `developing` |
 | 更新时间 | `2026-07-24` |
 | 当前产品目标 | Issue #28：完成最终作品集视觉与三个固定示例的受控真实体验 |
-| 当前集成任务 | 已采用 `ai-work-control/0.1`；下一项工程集成为 live workbench 候选 |
-| 复杂度 | 元规则变化，要求文档一致性检查与独立复核边界继续有效 |
-| 风险 / 成熟度 | 当前迁移为 `R0`；产品保持 `S1 公开 Beta`，实时 Provider、费用、凭据、生产开关和部署仍需独立授权 |
+| 当前集成任务 | 核验并集成 live workbench 候选 |
+| 复杂度 | 完整；候选涉及前端、API、持久化和受控 live 路径 |
+| 风险 / 成熟度 | 当前候选核验为 `R0`；产品保持 `S1 公开 Beta`，实时 Provider、费用、凭据、生产开关和部署仍需独立授权 |
 | 产品候选 | `codex/live-llm-workbench` @ `71104ee`，等待从 Worker 候选进入工程集成 |
-| 项目基线 | `codex/portfolio-experience`；元开发适配器已在本分支应用 |
+| 项目基线 | `codex/portfolio-experience` |
 | 活动工作 | `docs/work/active/portfolio-live-experience/` |
 | 阻碍 | 无工程阻碍；产品候选的 Worker 测试结果尚未由当前 Codex 复跑 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；历史账单事实不提供当前调用授权 |
@@ -21,7 +21,6 @@
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `TASK-TRACEABLE-CONTROL-ADAPTER` | `integrated` | 项目采用 `ai-work-control/0.1`，清除单一活动增量与单会话约束 |
 | `TASK-TRACEABLE-LIVE-WORKBENCH` | `candidate_ready` | Kimi 候选 `71104ee`；Worker 报告 API 110、tools 71、Web 23 通过，当前 Codex 待核验 |
 
 Task 可以并行，进入受保护 `main`、正式复核、部署和用户验收仍按依赖串行。
@@ -43,5 +42,4 @@ Task 可以并行，进入受保护 `main`、正式复核、部署和用户验�
 - 产品事实：`PROJECT.md`
 - 结果路线：`ROADMAP.md`
 - 工程规则：`docs/engineering/`
-- 项目多 CLI 适配器：`docs/meta/multi-cli-workflow.md`
-- 通用控制协议：Git 外个人控制仓库 `ai-work-control/0.1`
+- Agent 协作规则：`docs/engineering/agent-workflow.md`

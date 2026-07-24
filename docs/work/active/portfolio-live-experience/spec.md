@@ -19,18 +19,10 @@
 保留已经形成的首屏参考对齐 checkpoint，不预设下一步一定实现首页 v4；新会话必须先重新
 确认一个可独立验收的任务范围。
 
-多 CLI 协作已经由用户直接决定为正式元开发规则，唯一详细来源为
-`docs/meta/multi-cli-workflow.md`。本活动不再承担工作流实验，也不复制该文件的流程正文。
-
 ## 开发协作边界
 
-后续任务遵循正式多 CLI 规则：没有开发任务时，Codex 与用户持续讨论项目方向；形成下一项
-开发决定后，Codex 才读取当前 CLI、模型和额度，用户选择 Worker。Codex 透明发送自然
-委托，Worker 在独立 worktree 中负责过程文档、技术计划、实现和验证。旧会话中的额度值、
-CLI 选择和授权均不进入新会话。
-
-本 checkpoint 没有确定首个开发决定或 Worker，因此不生成执行前状态卡，也不启动新的
-外部 CLI 写入。若新会话继续 Issue #28，Codex 先与用户讨论希望解决的用户可见问题。
+后续任务遵守 `docs/engineering/agent-workflow.md`。当前 CLI、模型、额度、Worker 选择和
+授权属于对应 Run，不能从旧会话继承。
 
 ## 用户结果
 
@@ -144,7 +136,7 @@ Issue #28 后续涉及公共 API、持久化 trace、Provider、费用、生产�
 - 清楚区分已经确定、暂定和待原型验证的内容；
 - 未改变生产、产品 Provider、产品费用、产品凭据或公开状态。
 
-后续开发还必须遵守 `docs/meta/multi-cli-workflow.md`：Codex 规划讨论、执行前 CLI 状态、
+后续开发还必须遵守 `docs/engineering/agent-workflow.md`：Codex 规划讨论、执行前 CLI 状态、
 用户选择 Worker、自然派发、Worker 过程文档所有权、单 worktree 单写入者、双向消息透明、
 交接回执和分层验收都属于当前规则。它们约束执行过程，但不改变本增量的产品完成条件。
 

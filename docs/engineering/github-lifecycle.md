@@ -39,7 +39,6 @@ Issue、评论和标签不授予 Provider、费用、凭据、生产、外部写
 
 ## 最小标签
 
-- `meta`：元开发与治理。
 - `product`：面向用户的产品结果。
 - `priority:next`：当前增量结束后的下一候选。
 - `priority:later`：已登记但不阻塞当前路线。
