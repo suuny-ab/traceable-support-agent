@@ -98,3 +98,16 @@ npm + pip 三路扫描(退出码 1,符合发现语义)。
 上述漂移全部是开发 / 测试 / 构建工具链,live 运行时依赖干净;这同时意味着 main 上
 旧的“每次 runtime 变更阻塞 audit”门今天就会因外部 advisory 变红,本增量的门分离
 正是针对这类不可归因红灯。
+
+## 2026-07-26 续二:首次真实 CI 暴露 workflow 语义缺陷并修复
+
+Draft PR #32 的首次 push 触发 run 30194650726 在 0 秒失败、未创建任何 job,GitHub
+报告 workflow file issue。根因:四个 job 的 job 级 `env` 绑定了 `${{ runner.temp }}`,
+而 `runner` context 不允许出现在 job 级 `env`(该处在 runner 分配前求值)。本地
+YAML 解析与 `bash -n` 都无法覆盖这类 GitHub 语义校验,属本增量引入的定义缺陷
+(归因 `product`)。
+
+最小修复(不重构):删除四个 job 级 `env`,proof 路径在 run 块内统一以 shell 变量
+`"$RUNNER_TEMP/ci-proof.jsonl"` 引用(每个 job 独立 runner,无冲突);扫描器容器
+冒烟钉定与测试夹具同步一行;`quality.md` 登记该验证边界。既有合法 step 级
+`runner.temp` 用法(`TRACEABLE_MODEL_ROOT` 等)保持不变。

@@ -37,3 +37,13 @@
 - 审计发现的依赖漂移(npm 11 个 high、test 锁 2 个)不在本增量修复;定期审计
   上线后首次周跑预计变红,这是设计内的检测行为,不是回归。
 - 真实 CI 结果与 Draft PR 回执在下一轮用户确认后记录。
+
+## 2026-07-26 续二:workflow 评估失败复核
+
+- 根因复核成立:全仓库仅四处 job 级 `env` 使用 `runner` context,均为本增量引入;
+  既有绿色 workflow 只在 step 级使用该 context;失败形态(0 秒、无 job、workflow
+  file issue)与 GitHub context 位置限制完全吻合。
+- 修复保持最小:不改变证明合同设计、不触碰扫描器钉定的安全不变量,仅把 proof 路径
+  从 GitHub expression 改为 run 块内 shell 变量;扫描器钉定与夹具同步更新。
+- 该事件本身验证了失败归因设计的必要性:workflow 评估失败发生在任何检查执行之前,
+  摘要机制对此类启动失败无法记录,已在 quality.md 诚实登记该边界。

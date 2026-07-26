@@ -74,6 +74,13 @@ python tools/dependency_audit.py
 变更下运行时检查记录为“故意跳过”；依赖未变化时依赖审计记录为“故意跳过”；因之前失败
 而未运行的检查列为“未执行”。绿色 Check 只有在表中对应主张为“通过”时才表示已证明。
 
+验证边界（2026-07-26 由 Draft PR #32 首次运行暴露）：本地 YAML 解析和 `bash -n` 只能
+证明 workflow 的语法有效，不能覆盖 GitHub 对 context 使用位置的语义限制——例如
+`runner` context 不允许出现在 job 级 `env`（job env 在 runner 分配前求值），该类错误
+只有在真实 runner 评估 workflow 时才显现，表现为 run 0 秒失败、不创建任何 job。proof
+文件的路径因此只能在 run 块内以 shell 变量 `$RUNNER_TEMP` 引用，不得经 job 级 `env`
+绑定 `runner` context。
+
 ## 必需检查
 
 ### 治理与公开安全

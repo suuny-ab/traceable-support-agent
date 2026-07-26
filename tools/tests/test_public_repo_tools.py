@@ -142,8 +142,6 @@ jobs:
   containers:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    env:
-      CI_PROOF: ${{ runner.temp }}/ci-proof-containers.jsonl
     steps:
       - name: Smoke replay images without model or credential
         run: |
@@ -201,7 +199,7 @@ jobs:
               status=1
             fi
           done
-          python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$CI_PROOF"
+          python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$RUNNER_TEMP/ci-proof.jsonl"
           exit "$status"
 """
         self.assertEqual(_container_smoke_workflow_errors(workflow), [])

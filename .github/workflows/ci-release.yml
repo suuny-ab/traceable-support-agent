@@ -16,8 +16,6 @@ jobs:
   governance:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      CI_PROOF: ${{ runner.temp }}/ci-proof-governance.jsonl
     outputs:
       classification: ${{ steps.impact.outputs.classification }}
     steps:
@@ -70,7 +68,7 @@ jobs:
             --claim governance.release-decision \
             --category boundary \
             --exit-code "$status" \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
           exit "$status"
       - name: Store release decision
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
@@ -84,33 +82,33 @@ jobs:
           python3 tools/ci_proof.py run \
             --claim governance.tooling \
             --category product \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m unittest discover -s tools/tests -p "test_*.py"
       - name: Scan current tree and full history
         run: |
           python3 tools/ci_proof.py run \
             --claim governance.public-repo-hygiene \
             --category boundary \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python tools/check_public_repo.py --scope tree
           python3 tools/ci_proof.py run \
             --claim governance.public-repo-hygiene \
             --category boundary \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python tools/check_public_repo.py --scope history --expect-migration-history
       - name: Check whitespace
         run: |
           python3 tools/ci_proof.py run \
             --claim governance.whitespace \
             --category boundary \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             git diff --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
       - name: Publish proof summary
         if: always()
         run: |
           python3 tools/ci_proof.py summary \
             --job governance \
-            --proof "$CI_PROOF" \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" \
             --step-summary "$GITHUB_STEP_SUMMARY" \
             --expect governance.release-decision \
             --expect governance.tooling \
@@ -120,8 +118,6 @@ jobs:
   web:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      CI_PROOF: ${{ runner.temp }}/ci-proof-web.jsonl
     defaults:
       run:
         working-directory: web
@@ -155,7 +151,7 @@ jobs:
             --claim web.build-and-tests \
             --claim web.routes \
             --reason governance_only \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
       - name: Set up Node
         if: steps.impact.outputs.classification == 'runtime'
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
@@ -169,7 +165,7 @@ jobs:
           python3 ../tools/ci_proof.py run \
             --claim web.dependencies \
             --category external \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm ci
       - name: Audit dependencies (blocking only on dependency changes)
         if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.dependency_files_changed == 'true'
@@ -177,7 +173,7 @@ jobs:
           python3 ../tools/ci_proof.py run \
             --claim web.dependency-advisory \
             --category boundary \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm audit --audit-level=high --registry=https://registry.npmjs.org
       - name: Record skipped dependency audit (dependencies unchanged)
         if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.dependency_files_changed == 'false'
@@ -185,19 +181,19 @@ jobs:
           python3 ../tools/ci_proof.py skip \
             --claim web.dependency-advisory \
             --reason dependencies_unchanged \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
       - name: Lint and typecheck
         if: steps.impact.outputs.classification == 'runtime'
         run: |
           python3 ../tools/ci_proof.py run \
             --claim web.static-contract \
             --category product \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm run lint
           python3 ../tools/ci_proof.py run \
             --claim web.static-contract \
             --category product \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm run typecheck
       - name: Build and test
         if: steps.impact.outputs.classification == 'runtime'
@@ -205,7 +201,7 @@ jobs:
           python3 ../tools/ci_proof.py run \
             --claim web.build-and-tests \
             --category product \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm test
       - name: Smoke four standalone routes with content assertions
         if: steps.impact.outputs.classification == 'runtime'
@@ -245,14 +241,14 @@ jobs:
             --claim web.routes \
             --category product \
             --exit-code "$status" \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
           exit "$status"
       - name: Publish proof summary
         if: always()
         run: |
           python3 ../tools/ci_proof.py summary \
             --job web \
-            --proof "$CI_PROOF" \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" \
             --step-summary "$GITHUB_STEP_SUMMARY" \
             --expect web.dependencies \
             --expect web.dependency-advisory \
@@ -263,8 +259,6 @@ jobs:
   api:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
-    env:
-      CI_PROOF: ${{ runner.temp }}/ci-proof-api.jsonl
     steps:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -295,7 +289,7 @@ jobs:
             --claim api.eval-runner-tests \
             --claim api.replay-assembly-boundary \
             --reason governance_only \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
       - name: Set up Python
         if: steps.impact.outputs.classification == 'runtime'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -311,12 +305,12 @@ jobs:
           python3 tools/ci_proof.py run \
             --claim api.dependencies \
             --category external \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pip install --disable-pip-version-check --no-deps --requirement api/requirements-test.lock
           python3 tools/ci_proof.py run \
             --claim api.dependencies \
             --category external \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pip install --disable-pip-version-check --no-deps --require-hashes --requirement api/requirements-live.lock
       - name: Download and verify the pinned embedding model
         if: steps.impact.outputs.classification == 'runtime'
@@ -324,7 +318,7 @@ jobs:
           python3 tools/ci_proof.py run \
             --claim api.model-download \
             --category external \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python deploy/download_embedding_model.py \
               --manifest api/src/traceable_support/retrieval/bge-small-zh-v1.5-fastembed.json \
               --root "$RUNNER_TEMP/traceable-model"
@@ -337,7 +331,7 @@ jobs:
           python3 tools/ci_proof.py run \
             --claim api.product-tests \
             --category product \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pytest api/tests
       - name: Run Stage 12 evaluation runner and freeze checker tests
         if: steps.impact.outputs.classification == 'runtime'
@@ -348,7 +342,7 @@ jobs:
           python3 tools/ci_proof.py run \
             --claim api.eval-runner-tests \
             --category product \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pytest tools/tests/test_stage12_eval.py
       - name: Prove replay control plane has no site dependency
         if: steps.impact.outputs.classification == 'runtime'
@@ -358,14 +352,14 @@ jobs:
           python3 tools/ci_proof.py run \
             --claim api.replay-assembly-boundary \
             --category boundary \
-            --proof "$CI_PROOF" -- \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -S -c "from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"
       - name: Publish proof summary
         if: always()
         run: |
           python3 tools/ci_proof.py summary \
             --job api \
-            --proof "$CI_PROOF" \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" \
             --step-summary "$GITHUB_STEP_SUMMARY" \
             --expect api.dependencies \
             --expect api.model-download \
@@ -376,8 +370,6 @@ jobs:
   containers:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    env:
-      CI_PROOF: ${{ runner.temp }}/ci-proof-containers.jsonl
     steps:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -406,7 +398,7 @@ jobs:
             --claim containers.replay-smoke \
             --claim containers.offline-live \
             --reason governance_only \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
       - name: Set up Buildx
         if: steps.impact.outputs.classification == 'runtime'
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
@@ -421,7 +413,7 @@ jobs:
             --claim containers.image-build \
             --category product \
             --exit-code "$status" \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
           exit "$status"
       - name: Smoke replay images without model or credential
         if: steps.impact.outputs.classification == 'runtime'
@@ -480,7 +472,7 @@ jobs:
               status=1
             fi
           done
-          python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$CI_PROOF"
+          python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$RUNNER_TEMP/ci-proof.jsonl"
           exit "$status"
       - name: Build live target but verify only offline retrieval
         if: steps.impact.outputs.classification == 'runtime'
@@ -501,14 +493,14 @@ jobs:
             --claim containers.offline-live \
             --category boundary \
             --exit-code "$status" \
-            --proof "$CI_PROOF"
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
           exit "$status"
       - name: Publish proof summary
         if: always()
         run: |
           python3 tools/ci_proof.py summary \
             --job containers \
-            --proof "$CI_PROOF" \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" \
             --step-summary "$GITHUB_STEP_SUMMARY" \
             --expect containers.image-build \
             --expect containers.replay-smoke \

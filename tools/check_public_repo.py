@@ -366,7 +366,6 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         "  containers:",
         "    runs-on: ubuntu-24.04",
         "    timeout-minutes: 30",
-        "    env:",
         "    steps:",
     ):
         return ["ci_container_job_metadata_invalid"]
@@ -460,7 +459,7 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         "status=1",
         "fi",
         "done",
-        'python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$CI_PROOF"',
+        'python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$RUNNER_TEMP/ci-proof.jsonl"',
         'exit "$status"',
     )
     if script_lines != smoke_contract:
