@@ -1,0 +1,53 @@
+{
+  "schema_version": "live-workbench-cases-v1",
+  "cases": [
+    {
+      "id": "qa-local-clean",
+      "kind": "default",
+      "taskType": "qa",
+      "label": "QA · 局部清扫",
+      "model": "CZ-R1",
+      "input": "CZ-R1 怎么开始局部清扫？",
+      "summary": "带来源问答：答案必须逐字绑定批准 clause。",
+      "replayPresetId": "qa-local-clean"
+    },
+    {
+      "id": "ticket-carpet-risk",
+      "kind": "default",
+      "taskType": "ticket",
+      "label": "工单 · 地毯风险",
+      "model": "CZ-R2",
+      "input": "客户反馈 CZ-R2 扫拖时遇到长毛、边缘松散的地毯，应该怎么处理？",
+      "summary": "工单处理建议：草稿与步骤只等待人工决定。",
+      "replayPresetId": "ticket-carpet-risk"
+    },
+    {
+      "id": "qa-e310-fault",
+      "kind": "default",
+      "taskType": "qa",
+      "label": "故障处理 · E310 集尘通道",
+      "model": "CZ-R2",
+      "input": "CZ-R2 基站提示 E310 集尘通道受阻，应该如何排查？",
+      "summary": "故障排查：只允许引用 CZ-R2 故障码资料。"
+    },
+    {
+      "id": "qa-insufficient-evidence",
+      "caseId": "GEN-DEV-IE-001",
+      "kind": "boundary",
+      "taskType": "qa",
+      "label": "边界挑战 · 证据不足",
+      "model": "CZ-R1",
+      "input": "CZ-R1只支持2.4GHz还是也支持5GHz无线网络？",
+      "summary": "批准资料未覆盖无线频段；确定性边界在模型调用前停止，Provider 调用为 0。",
+      "replayPresetId": "qa-insufficient-evidence"
+    }
+  ],
+  "suggested_questions": [
+    { "taskType": "qa", "model": "CZ-R1", "text": "CZ-R1 的尘盒和滤网怎么清理？" },
+    { "taskType": "qa", "model": "CZ-R2", "text": "CZ-R2 任务结束后会自动集尘吗？" },
+    { "taskType": "qa", "model": "CZ-R1", "text": "CZ-R1 报 E101 驱动轮受阻怎么处理？" },
+    { "taskType": "qa", "model": "CZ-R1", "text": "CZ-R1 和 CZ-R2 有什么关键区别？" },
+    { "taskType": "ticket", "model": "CZ-R1", "text": "客户反馈 CZ-R1 清扫路线突然混乱，应该怎么排查？" },
+    { "taskType": "ticket", "model": "CZ-R2", "text": "客户反馈 CZ-R2 回站后集尘噪声突然变大，什么属于正常？" }
+  ]
+}

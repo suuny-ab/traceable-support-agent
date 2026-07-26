@@ -77,6 +77,11 @@ _DUST_STATION_AMBIGUOUS_ACTION_MARKERS = (
     "使用",
     "操作",
 )
+_UNSUPPORTED_CAPABILITY_PATTERNS = (
+    re.compile(r"2\.4g(?:hz)?"),
+    re.compile(r"(?<![\d.])5g(?:hz)?"),
+    re.compile(r"(?:wi-?fi|无线).{0,12}(?:频段|双频)"),
+)
 _DUST_STATION_INFORMATION_PATTERNS = (
     re.compile(r"(?:有没有|是否有|是否支持|支不支持|能否|能不能|具备不具备|"
                r"可以|可不可以|会不会)"
@@ -170,6 +175,14 @@ def evaluate_generation_boundary(
                 "COMMON-FAQ/model-difference",
                 "CZ-R2-MANUAL/auto-empty",
             ),
+            ticket_category="使用咨询",
+            ticket_priority="P2-普通",
+        )
+    if any(pattern.search(compact) for pattern in _UNSUPPORTED_CAPABILITY_PATTERNS):
+        return BoundaryDecision(
+            reason="unsupported_claim",
+            rule_id="capability_not_covered_by_approved_sources",
+            source_sections=(),
             ticket_category="使用咨询",
             ticket_priority="P2-普通",
         )

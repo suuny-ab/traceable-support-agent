@@ -45,3 +45,31 @@
 4. 只有冻结 Provider / model / prompt / schema / 示例 / 预算 / 停止条件并获得授权后，
    才执行两个 candidate 示例的有界真实验证。
 5. 推送、Draft PR、正式复核、合并、自动部署后的生产验证和用户验收分别形成证据。
+
+---
+
+## 本轮计划：live 主路径工作台（2026-07-24 · Worker Kimi K3）
+
+1. 后端边界：在 `product/boundaries.py` 增加 `unsupported_claim` 确定性规则（2.4GHz /
+   5GHz / 频段 / 双频等无线网络频段能力不在批准来源内）；在 `api/projection.py`
+   `blocked_result` 增加对应文案分支（证据不足转人工、0 调用、不猜测）。
+2. 后端装配：`api/http.py main()` 增加 env 门控 live 装配——`TRACEABLE_PUBLIC_LIVE_ENABLED`
+   为真且依赖（合成语料、嵌入模型文件）与凭据占位（仅检查环境变量存在性，不读取值）
+   齐备时注入 `DefaultProductRunner(default_qa_transport, MODE_AUTHORIZED_REAL)`；
+   否则保持 `product_runner=None`，健康状态继续 `replay_only`。生产配置不改。
+3. 本地验收工具：`tools/local_live_workbench.py`（dev-only，不进产品路径）以检索派生的
+   `OfflineInjectedTransport` 装配同一 `PublicRunService`，供本地浏览器端到端验收。
+4. 前端数据层：`web/app/lib/demo-data.ts` 增加三个默认 live 案例 + 边界挑战案例 +
+   推荐问法；`replay-presets.json` 更新 IE-001 note 并继续只承担显式回放。
+5. 前端路由：`replay-routing.mjs` 改为 live 优先——案例 / 自由输入只走 live 或 blocked，
+   回放仅由显式按钮触发。
+6. 前端工作台：重构 `DemoWorkbench.tsx` 信息层级（运行身份 → 案例卡 → 自由探索 →
+   回放入口），结果视图补充 Provider 调用次数与 `handoff_reason` 的诚实展示；
+   `app/page.tsx` 简介改为 live 主路径表述，状态由检测决定而非写死。
+7. 测试：更新 / 新增 web 测试（路由、预设、渲染 HTML）与 api 测试（边界、投影、装配）；
+   运行 web `npm test`、api Fast 子集、公开仓库扫描。
+8. 文档：更新活动工作 `result.md`、`docs/status.md`；隐私边界无变化，仅在结果中记录评估。
+9. 本地端到端验收与截图自验后提交边界清楚的 checkpoint commit，输出交接回执。
+
+以上 1–9 全部执行完成：后端边界、装配、本地工具、前端数据 / 路由 / 工作台、测试、
+文档、本地端到端验收与截图自验均已落地；细节与证据见 `result.md` 本轮结果段。

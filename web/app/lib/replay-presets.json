@@ -93,7 +93,7 @@
           { "label": "Provider 调用前拦截", "pass": true },
           { "label": "失败关闭", "pass": true }
         ],
-        "note": "GEN-DEV-IE-001 的机械预期回放：无支持性来源时停止并转人工，Provider 调用为 0。当前继承的实时链尚未实现同一拦截。",
+        "note": "GEN-DEV-IE-001 的机械预期回放：无支持性来源时停止并转人工，Provider 调用为 0。实时链已用确定性 unsupported_claim 边界实现同一拦截，本回放只作为实时不可用时的已验证参照。",
         "handoff_reason": "unsupported_claim",
         "provider_call_count": 0
       }

@@ -1,3 +1,4 @@
+import liveCaseData from "./live-cases.json";
 import replayData from "./replay-presets.json";
 
 export type DemoMode = "qa" | "ticket";
@@ -28,9 +29,31 @@ export type DemoExample = {
   result: DemoResult;
 };
 
-const presets = replayData.presets as unknown as DemoExample[];
-
-export const examples: Record<DemoMode, readonly DemoExample[]> = {
-  qa: presets.filter((preset) => preset.taskType === "qa"),
-  ticket: presets.filter((preset) => preset.taskType === "ticket"),
+export type LiveCase = {
+  id: string;
+  caseId?: string;
+  kind: "default" | "boundary";
+  taskType: DemoMode;
+  label: string;
+  model: "CZ-R1" | "CZ-R2";
+  input: string;
+  summary: string;
+  replayPresetId?: string;
 };
+
+export type SuggestedQuestion = {
+  taskType: DemoMode;
+  model: "CZ-R1" | "CZ-R2";
+  text: string;
+};
+
+export const replayPresets: readonly DemoExample[] =
+  replayData.presets as unknown as DemoExample[];
+
+/** Default live cases; every click creates a new run through the real chain. */
+export const liveCases: readonly LiveCase[] =
+  liveCaseData.cases as unknown as LiveCase[];
+
+/** Recommended questions for the constrained free exploration, all inside the synthetic sandbox. */
+export const suggestedQuestions: readonly SuggestedQuestion[] =
+  liveCaseData.suggested_questions as unknown as SuggestedQuestion[];

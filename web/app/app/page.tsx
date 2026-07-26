@@ -18,9 +18,10 @@ export default function AppPage() {
             <h1>从输入到决定，<br /><em>看见完整证据链。</em></h1>
           </div>
           <div className="workbench-intro-copy">
-            <p>页面会先检测实时服务。当前公网固定为已验证回放；自由输入不会被预设答案冒充，
-              也不会执行任何外部业务动作。</p>
-            <div className="beta-notice"><strong>REPLAY ONLY</strong><span>Provider disabled · 合成数据</span></div>
+            <p>每次点击都会创建一次新的运行：检索、义务规划、生成和机械门都发生在服务端，
+              结果只有候选或转人工两种。实时状态由页面检测；不可用时不能创建新运行，
+              只能查看明确标记的已验证回放。</p>
+            <div className="beta-notice"><strong>合成数据 · 零业务动作</strong><span>实时状态由工作台检测显示，不用回放冒充新运行</span></div>
           </div>
         </header>
         <DemoWorkbench />

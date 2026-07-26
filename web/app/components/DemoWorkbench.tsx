@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DemoMode, DemoResult, examples } from "../lib/demo-data";
+import {
+  DemoMode,
+  DemoResult,
+  LiveCase,
+  liveCases,
+  replayPresets,
+  suggestedQuestions,
+} from "../lib/demo-data";
 import {
   checkLiveAvailability,
   pollLiveRun,
@@ -31,7 +38,7 @@ function uncertainResult(kind: string, reason: string): DemoResult {
       mode: "handoff",
       outcome: "handoff",
       title: "实时体验当前未接收运行",
-      answer: "额度、队列或实时开关阻止了这次运行。系统没有用预设答案替换自由输入；你仍可查看已验证回放。",
+      answer: "额度、队列或实时开关阻止了这次运行。系统没有用预设答案替换输入；你仍可查看已验证回放。",
       obligations: ["在调用前检查预算与容量", "不伪造实时生成", "保留回放降级"],
       evidence: [],
       gates: [{ label: "运行准入", pass: false }, { label: "失败关闭", pass: true }],
@@ -62,13 +69,17 @@ function uncertainResult(kind: string, reason: string): DemoResult {
   };
 }
 
+function providerCallCopy(result: DemoResult): string {
+  if (result.mode === "verified_replay") return "回放不调用模型";
+  const count = result.provider_call_count;
+  if (typeof count === "number") {
+    return count === 0 ? "0 次 · 模型调用前停止" : `${count} 次 · 零自动重试`;
+  }
+  return "未知";
+}
+
 export function DemoWorkbench() {
-  const initialExample = examples.qa[0];
   const operationRef = useRef(0);
-  const [mode, setMode] = useState<DemoMode>("qa");
-  const [selectedPresetId, setSelectedPresetId] = useState(initialExample.id);
-  const [input, setInput] = useState(initialExample.input);
-  const [model, setModel] = useState<"CZ-R1" | "CZ-R2">(initialExample.model);
   const [trace, setTrace] = useState<TraceState[]>(emptyTrace);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DemoResult | null>(null);
@@ -79,11 +90,13 @@ export function DemoWorkbench() {
   const [decision, setDecision] = useState<Decision | null>(null);
   const [decisionState, setDecisionState] = useState<DecisionState>("idle");
   const [decisionText, setDecisionText] = useState("");
-  const modeExamples = examples[mode];
-  const selectedExample = modeExamples.find((example) => example.id === selectedPresetId) ?? modeExamples[0];
-  const isPreset = input.trim() === selectedExample.input && model === selectedExample.model;
-  const inputCount = useMemo(() => Array.from(input).length, [input]);
+  const [freeTaskType, setFreeTaskType] = useState<DemoMode>("qa");
+  const [freeModel, setFreeModel] = useState<"CZ-R1" | "CZ-R2">("CZ-R1");
+  const [freeInput, setFreeInput] = useState("");
+  const freeCount = useMemo(() => Array.from(freeInput).length, [freeInput]);
   const inputLocked = running || decisionState === "submitting";
+  const liveReady = availability === "available";
+  const visibleSuggestions = suggestedQuestions.filter((item) => item.taskType === freeTaskType);
 
   useEffect(() => {
     let active = true;
@@ -103,36 +116,6 @@ export function DemoWorkbench() {
     setDecisionState("idle");
     setDecisionText("");
     setTrace(emptyTrace());
-  }
-
-  function changeMode(next: DemoMode) {
-    if (inputLocked) return;
-    operationRef.current += 1;
-    const nextExample = examples[next][0];
-    setMode(next);
-    setSelectedPresetId(nextExample.id);
-    setInput(nextExample.input);
-    setModel(nextExample.model);
-    clearRun();
-  }
-
-  function changePreset(presetId: string) {
-    if (inputLocked) return;
-    const nextExample = modeExamples.find((example) => example.id === presetId);
-    if (!nextExample) return;
-    operationRef.current += 1;
-    setSelectedPresetId(nextExample.id);
-    setInput(nextExample.input);
-    setModel(nextExample.model);
-    clearRun();
-  }
-
-  function resetExample() {
-    if (inputLocked) return;
-    operationRef.current += 1;
-    setInput(selectedExample.input);
-    setModel(selectedExample.model);
-    clearRun();
   }
 
   async function refreshAvailability() {
@@ -159,25 +142,6 @@ export function DemoWorkbench() {
     }
   }
 
-  async function showReplay() {
-    if (running || !isPreset) return;
-    const operation = ++operationRef.current;
-    setRunning(true);
-    clearRun();
-    const stopIndex = selectedExample.stopStageIndex ?? stageNames.length - 1;
-    for (let index = 0; index <= stopIndex; index += 1) {
-      if (operation !== operationRef.current) return;
-      setTrace(stageNames.map((_, itemIndex) => itemIndex < index ? "pass" : itemIndex === index ? "run" : "wait"));
-      await delay(180);
-    }
-    if (operation !== operationRef.current) return;
-    setTrace(selectedExample.result.outcome === "handoff"
-      ? stageNames.map((_, index) => index < stopIndex ? "pass" : index === stopIndex ? "stop" : "wait")
-      : stageNames.map(() => "pass"));
-    setResult(selectedExample.result);
-    setRunning(false);
-  }
-
   function applyLiveOutcome(outcome: Awaited<ReturnType<typeof requestLiveRun>>) {
     if (outcome.kind === "terminal") {
       setRunId(outcome.runId);
@@ -196,28 +160,20 @@ export function DemoWorkbench() {
     });
   }
 
-  async function run() {
-    if (running || !input.trim() || inputCount > 500) return;
-    const route = selectRunRoute({
-      availability,
-      isPreset,
-      replayOnly: selectedExample.replayOnly,
-    });
-    if (route === "replay") {
-      await showReplay();
-      return;
-    }
-    if (route === "blocked") {
-      return;
-    }
+  async function startLiveRun({ taskType, inputMode, text, productModel }: {
+    taskType: DemoMode;
+    inputMode: "preset" | "free_text";
+    text: string;
+    productModel: "CZ-R1" | "CZ-R2";
+  }) {
     const operation = ++operationRef.current;
     setRunning(true);
     clearRun();
     const outcome = await requestLiveRun({
-      taskType: mode,
-      inputMode: isPreset ? "preset" : "free_text",
-      text: input.trim(),
-      productModel: model,
+      taskType,
+      inputMode,
+      text,
+      productModel,
       baseUrl: API_BASE,
       onStatus: (status) => {
         if (operation === operationRef.current) showLiveStatus(status);
@@ -225,6 +181,54 @@ export function DemoWorkbench() {
     });
     if (operation !== operationRef.current) return;
     applyLiveOutcome(outcome);
+    setRunning(false);
+  }
+
+  async function runCase(liveCase: LiveCase) {
+    if (inputLocked) return;
+    const route = selectRunRoute({
+      availability,
+      preflightOnly: liveCase.kind === "boundary",
+    });
+    if (route !== "live") return;
+    await startLiveRun({
+      taskType: liveCase.taskType,
+      inputMode: "preset",
+      text: liveCase.input,
+      productModel: liveCase.model,
+    });
+  }
+
+  async function submitFree() {
+    const text = freeInput.trim();
+    if (inputLocked || !text || freeCount > 500 || !liveReady) return;
+    if (freeTaskType === "ticket" && Array.from(text).length < 8) return;
+    await startLiveRun({
+      taskType: freeTaskType,
+      inputMode: "free_text",
+      text,
+      productModel: freeModel,
+    });
+  }
+
+  async function showReplay(presetId: string) {
+    if (inputLocked) return;
+    const preset = replayPresets.find((item) => item.id === presetId);
+    if (!preset) return;
+    const operation = ++operationRef.current;
+    setRunning(true);
+    clearRun();
+    const stopIndex = preset.stopStageIndex ?? stageNames.length - 1;
+    for (let index = 0; index <= stopIndex; index += 1) {
+      if (operation !== operationRef.current) return;
+      setTrace(stageNames.map((_, itemIndex) => itemIndex < index ? "pass" : itemIndex === index ? "run" : "wait"));
+      await delay(180);
+    }
+    if (operation !== operationRef.current) return;
+    setTrace(preset.result.outcome === "handoff"
+      ? stageNames.map((_, index) => index < stopIndex ? "pass" : index === stopIndex ? "stop" : "wait")
+      : stageNames.map(() => "pass"));
+    setResult(preset.result);
     setRunning(false);
   }
 
@@ -282,27 +286,26 @@ export function DemoWorkbench() {
     setDecisionState(receipt.ok ? "recorded" : "failed");
   }
 
+  function applySuggestion(text: string, model: "CZ-R1" | "CZ-R2") {
+    if (inputLocked) return;
+    operationRef.current += 1;
+    setFreeInput(text);
+    setFreeModel(model);
+    clearRun();
+  }
+
   const availabilityCopy = availability === "checking"
     ? "正在检测实时服务"
     : availability === "available"
-      ? "实时体验可用"
+      ? "实时体验可用 · 每次点击都创建新的运行"
       : availability === "unavailable"
-        ? "实时调用关闭 · 回放可用"
-        : "实时状态未知 · 回放可用";
-  const selectedRoute = selectRunRoute({
-    availability,
-    isPreset,
-    replayOnly: selectedExample.replayOnly,
-  });
-  const canRunPrimary = !inputLocked && Boolean(input.trim()) && inputCount <= 500 && selectedRoute !== "blocked";
+        ? "实时服务不可用 · 不能创建新运行，可查看已验证回放"
+        : "实时状态未知 · 不能创建新运行，可查看已验证回放";
+  const freeTooShort = freeTaskType === "ticket" && freeInput.trim().length > 0 && Array.from(freeInput.trim()).length < 8;
+  const canSubmitFree = !inputLocked && liveReady && Boolean(freeInput.trim()) && freeCount <= 500 && !freeTooShort;
 
   return (
     <div className="workbench">
-      <div className="workbench-tabs" role="tablist" aria-label="体验类型">
-        <button role="tab" aria-selected={mode === "qa"} disabled={inputLocked} onClick={() => changeMode("qa")}>QA 带来源问答</button>
-        <button role="tab" aria-selected={mode === "ticket"} disabled={inputLocked} onClick={() => changeMode("ticket")}>工单处理建议</button>
-      </div>
-
       <div className="live-status" role="status">
         <span className={`live-dot live-${availability}`} aria-hidden="true" />
         <strong>{availabilityCopy}</strong>
@@ -311,25 +314,70 @@ export function DemoWorkbench() {
       </div>
 
       <div className="workbench-grid">
-        <section className="input-panel" aria-label="体验输入">
-          <div className="panel-heading"><span>INPUT CONTRACT</span><strong>{mode === "qa" ? "提问" : "工单描述"}</strong></div>
-          <label htmlFor="product-model">产品型号</label>
-          <select id="product-model" value={model} disabled={inputLocked} onChange={(event) => { operationRef.current += 1; setModel(event.target.value as "CZ-R1" | "CZ-R2"); clearRun(); }}>
-            <option value="CZ-R1">CZ-R1</option><option value="CZ-R2">CZ-R2</option>
-          </select>
-          <label htmlFor="demo-preset">已验证预设</label>
-          <select id="demo-preset" value={selectedExample.id} disabled={inputLocked} onChange={(event) => changePreset(event.target.value)}>
-            {modeExamples.map((example) => <option value={example.id} key={example.id}>{example.label}{example.caseId ? ` · ${example.caseId}` : ""}</option>)}
-          </select>
-          <div className="preset-line"><span>当前预设：{selectedExample.label}{selectedExample.caseId ? ` · ${selectedExample.caseId}` : ""}</span><button type="button" disabled={inputLocked} onClick={resetExample}>恢复预设</button></div>
-          <label htmlFor="demo-input">合成问题或工单</label>
-          <textarea id="demo-input" maxLength={500} value={input} disabled={inputLocked} onChange={(event) => { operationRef.current += 1; setInput(event.target.value); clearRun(); }} />
-          <div className="input-meta"><span className={inputCount > 500 ? "danger-text" : ""}>{inputCount} / 500</span><span>请勿输入个人信息、公司机密或生产数据</span></div>
-          <button className="run-button" type="button" disabled={!canRunPrimary} onClick={run}>
-            {running ? "正在运行检查链…" : selectedRoute === "live" ? "运行实时模型" : selectedRoute === "replay" ? "运行已验证回放" : "实时服务尚未确认"}<span>→</span>
-          </button>
-          {selectedRoute === "live" && isPreset && <button className="replay-button" type="button" disabled={running} onClick={showReplay}>不调用模型，查看已验证回放</button>}
-          <p className="input-boundary">实时路径最多两次 Provider 请求且零自动重试；回放路径不调用模型。两者在结果标签中明确区分。</p>
+        <section className="input-panel" aria-label="运行输入">
+          <div className="panel-heading"><span>LIVE CASES</span><strong>默认案例 · 每次创建新运行</strong></div>
+          <div className="case-list">
+            {liveCases.map((liveCase) => {
+              const runnable = selectRunRoute({ availability, preflightOnly: liveCase.kind === "boundary" }) === "live";
+              return (
+                <article className={`case-card${liveCase.kind === "boundary" ? " case-boundary" : ""}`} key={liveCase.id}>
+                  <div className="case-card-head">
+                    <span>{liveCase.label}{liveCase.caseId ? ` · ${liveCase.caseId}` : ""}</span>
+                    <code>{liveCase.model}</code>
+                  </div>
+                  <p className="case-question">{liveCase.input}</p>
+                  <p className="case-summary">{liveCase.summary}</p>
+                  <button
+                    type="button"
+                    disabled={inputLocked || !runnable}
+                    onClick={() => runCase(liveCase)}
+                  >
+                    {running ? "正在运行…" : "创建新运行"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="free-explore">
+            <div className="panel-heading"><span>FREE EXPLORATION</span><strong>受约束自由探索</strong></div>
+            <div className="workbench-tabs free-tabs" role="tablist" aria-label="自由探索类型">
+              <button role="tab" aria-selected={freeTaskType === "qa"} disabled={inputLocked} onClick={() => { if (!inputLocked) { operationRef.current += 1; setFreeTaskType("qa"); clearRun(); } }}>QA 带来源问答</button>
+              <button role="tab" aria-selected={freeTaskType === "ticket"} disabled={inputLocked} onClick={() => { if (!inputLocked) { operationRef.current += 1; setFreeTaskType("ticket"); clearRun(); } }}>工单处理建议</button>
+            </div>
+            <div className="suggestion-chips" aria-label="推荐问法">
+              {visibleSuggestions.map((item) => (
+                <button type="button" key={item.text} disabled={inputLocked} onClick={() => applySuggestion(item.text, item.model)}>{item.text}</button>
+              ))}
+            </div>
+            <label htmlFor="free-model">产品型号</label>
+            <select id="free-model" value={freeModel} disabled={inputLocked} onChange={(event) => { operationRef.current += 1; setFreeModel(event.target.value as "CZ-R1" | "CZ-R2"); clearRun(); }}>
+              <option value="CZ-R1">CZ-R1</option><option value="CZ-R2">CZ-R2</option>
+            </select>
+            <label htmlFor="free-input">合成问题或工单（限虚构 CZ-R1 / CZ-R2 支持范围）</label>
+            <textarea id="free-input" maxLength={500} value={freeInput} disabled={inputLocked} placeholder="输入一个合成客服问题，或点击上方推荐问法。" onChange={(event) => { operationRef.current += 1; setFreeInput(event.target.value); clearRun(); }} />
+            <div className="input-meta">
+              <span className={freeCount > 500 ? "danger-text" : ""}>{freeCount} / 500</span>
+              <span>请勿输入个人信息、公司机密或生产数据{freeTaskType === "ticket" ? "；工单至少 8 字" : ""}</span>
+            </div>
+            <button className="run-button" type="button" disabled={!canSubmitFree} onClick={submitFree}>
+              {running ? "正在运行检查链…" : liveReady ? "创建新运行" : "实时服务不可用，不能创建新运行"}<span>→</span>
+            </button>
+            <p className="input-boundary">每次运行最多 2 次模型调用、自动重试 0；敏感、越界或证据不足的输入在模型调用前失败关闭。</p>
+          </div>
+
+          <div className="replay-section">
+            <div className="panel-heading"><span>VERIFIED REPLAY</span><strong>已验证回放 · 不创建新运行</strong></div>
+            <p className="replay-hint">回放是历史已验证结果，不调用模型，也绝不冒充本次运行。</p>
+            <ul className="replay-list">
+              {replayPresets.map((preset) => (
+                <li key={preset.id}>
+                  <span>{preset.label}{preset.caseId ? ` · ${preset.caseId}` : ""}</span>
+                  <button type="button" disabled={inputLocked} onClick={() => showReplay(preset.id)}>查看回放</button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <section className="output-panel" aria-live="polite" aria-label="运行结果">
@@ -338,7 +386,7 @@ export function DemoWorkbench() {
           <ol className="progress-list">
             {stageNames.map((name, index) => <li className={`trace-${trace[index]}`} key={name}><b>{String(index + 1).padStart(2, "0")}</b><span>{name}</span><em>{trace[index].toUpperCase()}</em></li>)}
           </ol>
-          {!result && <div className="result-placeholder"><strong>选择真实运行或已验证回放</strong><p>结果会展示客户可见正文、证据、义务和机械门，而不是只有一个答案框。</p></div>}
+          {!result && <div className="result-placeholder"><strong>选择一个默认案例或提交自由探索</strong><p>阶段轨迹只来自服务端持久化状态；结果展示客户可见正文、义务、来源 clause 绑定和机械门，而不是只有一个答案框。</p></div>}
           {result && <ResultView
             result={result}
             runId={runId}
@@ -382,7 +430,11 @@ function ResultView({
       : "HONEST HANDOFF";
   return (
     <div className="result-view">
-      <div className={`mode-badge ${result.outcome === "handoff" ? "badge-handoff" : ""}`}>{modeLabel}</div>
+      <div className="run-meta">
+        <span className={`mode-badge ${result.outcome === "handoff" ? "badge-handoff" : ""}`}>{modeLabel}</span>
+        <span className="provider-calls">Provider 调用：{providerCallCopy(result)}</span>
+        {result.handoff_reason && <code className="handoff-reason">handoff: {result.handoff_reason}</code>}
+      </div>
       <div className="answer-card"><span>CUSTOMER-VISIBLE RESULT</span><p>{result.answer}</p></div>
       {result.actionSteps && <div className="result-block"><h3>处理步骤</h3><ol>{result.actionSteps.map((item) => <li key={item}>{item}</li>)}</ol></div>}
       <div className="result-columns">

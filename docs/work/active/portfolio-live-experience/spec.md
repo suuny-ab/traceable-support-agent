@@ -420,3 +420,73 @@ TRACEABLE
 - 入口面板改为“查看一条回复如何形成”；
 - 次级行动改为“进入工作台”和“工程证据”；
 - 首屏对齐通过前，第二屏及后续页面暂停视觉设计。
+
+---
+
+## 本轮任务：live 主路径工作台（2026-07-24 · Worker Kimi K3）
+
+> 派发来源：用户与 Codex 形成的产品决定，由 Kimi K3 在 `codex/live-llm-workbench` 分支实现。
+>
+> 复杂度：标准（用户可见行为 + 一个有界公开边界规则）；外部风险：`R0` 本地代码 / 测试 /
+> 文档；不触碰产品 Provider、凭据、生产开关、部署与外部写入。
+
+### 任务理解
+
+公开工作台从“回放为主”改为“真实 LLM 新 run 为主路径”：
+
+1. 三个有公开合成来源的默认案例（QA：CZ-R1 局部清扫；工单：CZ-R2 长毛地毯；故障处理：
+   CZ-R2 基站 E310 集尘通道受阻），每次点击都 POST `/api/v1/runs` 创建新的 run；
+2. 受约束自由探索：500 字自由输入 + 型号选择 + 推荐问法，仍由既有敏感内容预检、
+   范围词表、队列 / 预算 / 浏览器软限约束在虚构 CZ-R1/CZ-R2 沙箱内；
+3. `GEN-DEV-IE-001` 作为边界挑战：同样创建真实新 run，但在批准资料不足时于 Provider
+   调用前 handoff，`provider_call_count=0`，不绕过停止门；
+4. 面试官可见：真实服务端阶段（queued→retrieving→planning→generating→validating→终态）、
+   客户可见结果、clause 级来源绑定、机械门、已知时显示 Provider 调用次数、
+   `handoff_reason`，以及人工批准 / 编辑 / 拒绝；
+5. 禁止 Chain of Thought 与伪造的“模型思考”动画；实时失败 / 不可用 / 状态未知时诚实
+   呈现，绝不用回放冒充本次运行。
+
+### 关键实现判断（调研后）
+
+- 后端 live 链完整存在（`DefaultProductRunner` + 两阶段生成 + 投影 + 持久化），缺的只是
+  公网装配点：`http.py main()` 永远不传 `product_runner`。本轮新增 env 门控装配
+  （默认关，生产 compose / Dockerfile 不改）。
+- `GEN-DEV-IE-001` 的 0 调用 handoff 当前无实现：该输入会穿过预检进入真实检索与 2 次
+  Provider 调用。本轮在 `product/boundaries.py` 增加 `unsupported_claim` 确定性规则
+  （无线网络频段能力不在批准来源内），经 preflight → `_insert_blocked_run` 形成新 run、
+  0 调用、不存原文；runner 与 `run_qa` / `run_ticket` 内层自动获得同一拦截。回放预设
+  `qa-insufficient-evidence` 的 note（“实时链尚未实现同一拦截”）同步失效并更新。
+- 第三个默认案例（E310）知识已就绪（`FAULT-CODES/r2-e310-dust-bag`），无已验证回放；
+  live 不可用时该案例只显示“无可用回放”，不伪造。
+- 回放降级为显式次要入口：只有用户主动点击才查看已验证回放，并始终标记
+  `VERIFIED REPLAY`；案例点击不再自动路由到回放。
+- 隐私边界评估：自由输入面不扩大（同一 500 字上限、同一敏感预检、同一 30 天保留），
+  不构成新的隐私 / 安全边界变化，无需停止升级。
+
+### 可观察结果（验收标准）
+
+1. 工作台信息层级：运行身份（live 状态检测）→ 三个默认案例 + 一个边界挑战 → 受约束
+   自由探索（推荐问法）→ 已验证回放次要入口。
+2. live 可用时：点击任一案例创建新 run，阶段轨迹来自服务端状态轮询；终态显示
+   run id、`LIVE MODEL` / handoff 身份、Provider 调用次数（0 / 2 / 未知）、
+   `handoff_reason`、来源 clause、机械门；candidate 可批准 / 编辑 / 拒绝并写入服务端。
+3. 边界挑战创建新 run 并在 Provider 调用前 handoff，`provider_call_count=0`。
+4. live 不可用 / 未知：不能创建新运行，明示原因与“重新检测”；提供查看已验证回放。
+5. 实时超时 / 断连 / 协议错误 / 503：诚实 handoff 文案，不自动重试，可继续查询同一 run。
+6. 生产事实不变：`provider_enabled=false`、`replay_only`、无凭据、无部署。
+
+### 最便宜证伪
+
+- 后端：`pytest` 新增 `unsupported_claim` 边界与投影分支测试、装配门测试；
+  既有 `test_public_api.py` / `test_product_boundaries.py` 回归。
+- 前端：`node --test` 更新 live 路由 / 回放 / 渲染合同测试；`next build`。
+- 本地端到端：`tools/` 新增 dev-only 脚本以检索派生的离线注入 transport 启动
+  `PublicRunService`（不调 Provider、不读凭据），浏览器验证案例点击 → 真实服务端
+  阶段 → candidate / 0 调用 handoff，并截图自验。
+
+### 投入与停止线
+
+- 不新增前端依赖；不另建第二套 Demo；复用 `live-api.mjs`、投影、预算 / 队列 / 预检。
+- 不实现 Stage 12、不重跑未见集、不改变 `product/0.1.0` 语义。
+- Kimi 额度停止线：5 小时剩余 ≤20% 或周剩余 ≤50%，或登录 / 模型 / 额度状态与执行前
+  状态卡不一致时，留下可恢复 checkpoint 并停止。
