@@ -6,7 +6,7 @@
 
 Issue #28 已启动。用户已确认主页结构 v1 和产品命题，但 v1–v3 均未达到首屏预期。
 Moonshot 首屏的可测量参考对齐已经形成；用户进一步确认动态网页应由具备视频视觉能力的
-Worker 主导，而不默认由 Codex 验收。当前开发协作按项目工程规则执行。
+Worker 主导，而不默认由个人 Work 前台验收。当前开发协作按项目工程规则执行。
 
 生产继续保持 `replay_only`，未启用产品 Provider，未读取产品凭据，未修改生产开关或部署
 状态。Kimi Code CLI 的公开参考视觉分析来自当前会话中的 Git 外明确授权，不构成产品
@@ -232,3 +232,45 @@ Provider、推送、合并与部署边界保持不变。下一步：推送集成
 离线注入 transport 只证明服务端链、合同、投影与工作台行为，不证明真实模型质量；
 真实 Provider 仍需独立冻结与授权。生产保持 `replay_only`，本候选未部署、未改变任何
 公开主张。
+
+---
+
+## 本轮结果：三 worktree 基线收敛（2026-07-26 · 项目集成会话）
+
+### 收敛动作
+
+1. **无损备份**：收敛前主 worktree 的 8 个未提交修改固化为本地分支
+   `backup/portfolio-experience-wip-20260726`（`a683dff`），备份树与当时工作区逐文件一致
+   （`git diff` 为空）；恢复方式：`git restore --source=backup/portfolio-experience-wip-20260726 .`。
+2. **D1 `487cec9`**：新多 CLI Conversation 协作规则（`AGENTS.md` 与三个 engineering 文档）
+   单独提交；与集成提交零文件重叠。
+3. **M `edd9044`**：`git merge --no-ff codex/integrate-live-llm-workbench`，零冲突；
+   `e3fc2a5` 与 `71104ee` 两个候选 SHA 原样进入基线祖先链，未重写。
+4. **结构核验**：`git diff e3fc2a5 edd9044` 只含 D1 的 4 个规则文件；
+   `git diff 71104ee edd9044 -- web api` 为空，候选产品代码完整进入基线。
+5. **D2（本提交）**：备份中的 Conversation 措辞回填到集成事实底座；`docs/status.md`
+   更新为收敛后状态。过时的"待集成"状态未重新进入当前事实。
+
+### 收敛后验证（主 worktree 本机复跑，R0，未调 Provider）
+
+- 公开仓库扫描：`check_public_repo.py --scope worktree` passed，177 个文件；
+- API 完整套件（本地固定 BGE 模型，`artifacts/models/fastembed/fast-bge-small-zh-v1.5`）：
+  `106 passed, 20 subtests passed`，无失败；Worker 报告为 110 项，本次收集数为 106，
+  差 4 项原因 `待确认`（无失败、无跳过，疑为计数口径差异）；
+- 工具测试：`71 passed, 7 skipped, 117 subtests passed`（50.2s），与 Worker 报告一致；
+  主 worktree 本机有模型，未复现 Integrator 记录的 23 项缺模型失败；
+- Web：`npm test`（next build + node tests）23/23 通过；`tsc --noEmit` 与 `eslint .`
+  均退出码 0。
+
+### 证据边界
+
+本轮只证明汇合树在本机通过 Fast / Candidate 层检查与结构核验；不构成候选成熟度、
+发布或部署主张。Worker 的本地端到端记录（离线注入 transport）未在本轮复跑，保持
+`待验证`。推送、Draft PR、正式复核、合并与部署仍需用户逐项授权。
+
+### 两个旧 worktree 的退出条件
+
+- `traceable-support-agent-live-workbench`（`71104ee`）：产品代码 diff 为空且验证全绿，
+  **退出条件已满足**，分支保留为历史引用；
+- `traceable-support-agent-live-integration`（`e3fc2a5`）：已原样并入基线历史且验证全绿，
+  **退出条件已满足**。物理移除 worktree / 删除分支是独立的破坏性动作，需单独授权。

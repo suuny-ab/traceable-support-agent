@@ -6,7 +6,7 @@
 >
 > 复杂度：完整
 >
-> 当前阶段：首屏参考对齐 checkpoint；下一产品任务待新会话重新确认
+> 当前阶段：首屏参考对齐 checkpoint；下一产品范围待在长期项目 Conversation 中确认
 >
 > 外部风险：当前为 `R0` 规则、文档与既有原型；旧会话 CLI 授权不继承。产品 Provider、
 > Qoder、凭据、生产开关和部署均未授权
@@ -16,13 +16,14 @@
 ## 本轮主要目标
 
 本轮产品目标仍是完成 Issue #28 的最终作品集视觉与三个固定示例的受控真实体验。当前先
-保留已经形成的首屏参考对齐 checkpoint，不预设下一步一定实现首页 v4；新会话必须先重新
-确认一个可独立验收的任务范围。
+保留已经形成的首屏参考对齐 checkpoint，不预设下一步一定实现首页 v4；在当前长期项目
+Conversation 或用户明确选择的替代 Conversation 中，先确认一个可独立验收的任务范围。
 
 ## 开发协作边界
 
-后续任务遵守 `docs/engineering/agent-workflow.md`。当前 CLI、模型、额度、Worker 选择和
-授权属于对应 Run，不能从旧会话继承。
+后续任务遵守 `docs/engineering/agent-workflow.md`。用户选择主要 CLI Conversation；当前
+项目 Agent自行规划并组织需要的执行角色。Provider、费用、写入和外部动作授权仍属于当前
+具体动作，不能因长期会话延续而继承。
 
 ## 用户结果
 
@@ -136,9 +137,10 @@ Issue #28 后续涉及公共 API、持久化 trace、Provider、费用、生产�
 - 清楚区分已经确定、暂定和待原型验证的内容；
 - 未改变生产、产品 Provider、产品费用、产品凭据或公开状态。
 
-后续开发还必须遵守 `docs/engineering/agent-workflow.md`：Codex 规划讨论、执行前 CLI 状态、
-用户选择 Worker、自然派发、Worker 过程文档所有权、单 worktree 单写入者、双向消息透明、
-交接回执和分层验收都属于当前规则。它们约束执行过程，但不改变本增量的产品完成条件。
+后续开发还必须遵守 `docs/engineering/agent-workflow.md`：个人 Work 整理用户结果和消息、
+用户选择主要 CLI Conversation、项目 Agent技术自治、单 worktree 单写入者、Work 消息与
+Agent 回执透明、恢复 checkpoint 和分层验收都属于当前规则。可见终端仅展示后台进度；
+这些规则约束执行过程，但不改变本增量的产品完成条件。
 
 ## 前端设计合同 v1
 
