@@ -364,14 +364,9 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
     )
     if job_metadata_lines != (
         "  containers:",
-        "    needs: classify",
         "    runs-on: ubuntu-24.04",
         "    timeout-minutes: 30",
-        "    steps:",
-    ) and job_metadata_lines != (
-        "  containers:",
-        "    runs-on: ubuntu-24.04",
-        "    timeout-minutes: 30",
+        "    env:",
         "    steps:",
     ):
         return ["ci_container_job_metadata_invalid"]
@@ -411,21 +406,24 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         if line.strip() and not line.lstrip().startswith("#")
     )
     smoke_contract = (
-        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-web:test)" = "node"',
-        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-api-replay:test)" = "10001:10001"',
+        "set +e",
+        "status=0",
+        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-web:test)" = "node" || { echo "web_image_user_invalid" >&2; status=1; }',
+        'test "$(docker image inspect --format \'{{.Config.User}}\' traceable-api-replay:test)" = "10001:10001" || { echo "api_image_user_invalid" >&2; status=1; }',
         "docker run --rm --entrypoint python --network none traceable-api-replay:test -S -c \\",
-        '"from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None"',
+        '"from traceable_support.api.runs import PublicRunService; assert PublicRunService.live_available is not None" \\',
+        '|| { echo "replay_assembly_failed" >&2; status=1; }',
         "docker run -d --name traceable-api-replay-ci --read-only \\",
         "--tmpfs /tmp:rw,noexec,nosuid,size=64m \\",
         "--tmpfs /var/lib/traceable:rw,noexec,nosuid,uid=10001,gid=10001,size=64m \\",
         "--cap-drop ALL --security-opt no-new-privileges \\",
         "-e TRACEABLE_PUBLIC_ORIGIN=http://127.0.0.1:3000 \\",
         "-e TRACEABLE_PUBLIC_LIVE_ENABLED=false -p 127.0.0.1:8000:8000 \\",
-        "traceable-api-replay:test",
+        'traceable-api-replay:test || { echo "api_container_start_failed" >&2; status=1; }',
         "docker run -d --name traceable-web-ci --read-only \\",
         "--tmpfs /tmp:rw,noexec,nosuid,size=64m \\",
         "--cap-drop ALL --security-opt no-new-privileges \\",
-        "-p 127.0.0.1:3000:3000 traceable-web:test",
+        '-p 127.0.0.1:3000:3000 traceable-web:test || { echo "web_container_start_failed" >&2; status=1; }',
         "trap 'docker rm -f traceable-web-ci traceable-api-replay-ci >/dev/null 2>&1 || true' EXIT",
         "api_ready=false",
         "for attempt in $(seq 1 15); do",
@@ -438,9 +436,11 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         'if [[ "$api_ready" != true ]]; then',
         'echo "api_container_not_ready" >&2',
         "docker logs traceable-api-replay-ci >&2 || true",
-        "exit 1",
+        "status=1",
+        "else",
+        'python -c \'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"\' \\',
+        '|| { echo "health_not_replay_only" >&2; status=1; }',
         "fi",
-        'python -c \'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"\'',
         "web_ready=false",
         "for attempt in $(seq 1 15); do",
         "if curl --fail --silent --show-error --connect-timeout 1 --max-time 1 http://127.0.0.1:3000/ >/dev/null; then",
@@ -452,11 +452,16 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         'if [[ "$web_ready" != true ]]; then',
         'echo "web_container_not_ready" >&2',
         "docker logs traceable-web-ci >&2 || true",
-        "exit 1",
+        "status=1",
         "fi",
         "for route in / /design /app /privacy; do",
-        'curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null',
+        'if ! curl --fail --silent --show-error "http://127.0.0.1:3000$route" >/dev/null; then',
+        'echo "container_route_failed:$route" >&2',
+        "status=1",
+        "fi",
         "done",
+        'python3 tools/ci_proof.py record --claim containers.replay-smoke --category product --exit-code "$status" --proof "$CI_PROOF"',
+        'exit "$status"',
     )
     if script_lines != smoke_contract:
         return ["ci_container_readiness_contract_invalid"]
@@ -860,7 +865,7 @@ def _release_decision_workflow_errors(
     for name in ("web", "api", "containers"):
         job = _yaml_block(ci_jobs or "", name, 2)
         if (
-            "Report governance-only impact" not in (job or "")
+            "Record skipped runtime checks (governance-only change)" not in (job or "")
             or "steps.impact.outputs.classification == 'governance_only'"
             not in (job or "")
             or "steps.impact.outputs.classification == 'runtime'"

@@ -38,11 +38,36 @@ Web 检查：
 ```powershell
 Set-Location web
 npm ci
-npm audit --audit-level=high --registry=https://registry.npmjs.org
 npm run lint
 npm run typecheck
 npm test
 ```
+
+依赖安全与产品功能检查分离：`ci-release` 只在依赖文件（`web/package.json`、
+`web/package-lock.json`、`api/requirements-*.txt/.lock`）变化的候选上执行阻塞性
+`npm audit --audit-level=high`；未改代码时出现的 advisory 漂移由定期审计发现。定期
+审计当前只提供本地入口（在 GitHub 上启用定时运行是独立外部动作，需要单独授权）：
+
+```powershell
+python tools/dependency_audit.py
+```
+
+该入口对 `web/` 执行 npm audit，并在本机装有 `pip-audit` 时对 API 锁定清单执行扫描；
+工具缺失的扫描标记为 skipped，不影响退出码。任何扫描发现 high 及以上 advisory 时退出码为 1。
+
+## CI 证明合同与失败归因
+
+`ci-release` 的每个关键检查都通过 `tools/ci_proof.py` 绑定一条登记主张（claim）和一个
+失败归因类别：
+
+- `product`：候选 diff 破坏了产品合同，修复 diff 后重推；
+- `boundary`：治理、公开安全或依赖安全门停止，修正内容或回退，不得为通过而放松门；
+- `external`：registry、模型来源等第三方获取失败，候选 diff 不是原因，重试或等待。
+
+检查失败时，日志在命令输出之前打印类别、主张和处理入口；每个 job 末尾（`if: always()`）
+把证明条目渲染进 GitHub Job Summary：通过只证明表中明确声明的主张；`governance_only`
+变更下运行时检查记录为“故意跳过”；依赖未变化时依赖审计记录为“故意跳过”；因之前失败
+而未运行的检查列为“未执行”。绿色 Check 只有在表中对应主张为“通过”时才表示已证明。
 
 ## 必需检查
 

@@ -9,6 +9,7 @@ from tools.ci_impact import (
     UNKNOWN_PATH,
     changed_paths_sha256,
     classify_paths,
+    dependency_files_changed,
     normalize_paths,
 )
 from tools.release_decision import (
@@ -75,6 +76,24 @@ class CiImpactTest(unittest.TestCase):
             changed_paths_sha256(("docs/meta/a.md", "docs/meta/b.md")),
         )
         self.assertEqual(normalize_paths(("docs/meta/a.md",)), ("docs/meta/a.md",))
+
+    def test_dependency_files_detected_and_fail_closed(self) -> None:
+        for path in (
+            "web/package.json",
+            "web/package-lock.json",
+            "api/requirements-live.txt",
+            "api/requirements-live.lock",
+            "api/requirements-test.txt",
+            "api/requirements-test.lock",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(dependency_files_changed((path,)))
+                self.assertTrue(dependency_files_changed((path, "docs/meta/a.md")))
+        self.assertFalse(dependency_files_changed(("web/app/page.tsx",)))
+        self.assertFalse(dependency_files_changed(("AGENTS.md",)))
+        self.assertTrue(dependency_files_changed((UNKNOWN_PATH,)))
+        self.assertTrue(dependency_files_changed(()))
+        self.assertTrue(dependency_files_changed(("../escape.txt",)))
 
 
 class ReleaseDecisionTest(unittest.TestCase):
