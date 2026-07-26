@@ -4,7 +4,8 @@
 
 ```text
 计划来源之一：GitHub Issue
-→ Task：控制注册表 + 必要的 docs/work/active/<slug>/
+→ 当前项目 Conversation + 必要的 docs/work/active/<slug>/
+→ 可选：项目 Agent 为隔离、候选或恢复治理建立 Task / Run
 → 候选：Draft PR + 固定 SHA + Checks
 → 外部结果：部署 / 验收回执
 → 稳定事实：PROJECT / engineering / decisions / completed work
@@ -13,8 +14,9 @@
 
 - 已确认但尚未启动的未来工作在 Issue 记录动机、预期结果、优先级、边界和启动条件；
   开发中自然产生且立即执行的 Task 不必先建立 Issue。
-- 进入实施后，控制注册表管理 Task / Run；项目结果、固定候选、阻碍和验证事实由
-  `docs/status.md` 与必要的活动工作文件接管。
+- 进入实施后，当前项目 Conversation Agent 自行规划和执行；只有确有隔离、候选或恢复治理
+  需要时才建立项目 Task / Run。控制系统不为每条开发消息默认登记 Task / Run。
+- 项目结果、固定候选、阻碍和验证事实由 `docs/status.md` 与必要的活动工作文件接管。
 - PR 只绑定候选 diff、Checks、复核和发布回执，不成为稳定产品事实。
 - 所需部署与用户验收齐全后，Agent 回写稳定文档并关闭 Issue。
 - PR 不使用 `Closes`、`Fixes` 等自动关闭关键字。合并不是完成的充分条件。
@@ -23,7 +25,7 @@
 
 GitHub 管：
 
-- 未来任务与优先级；
+- 项目范围内的未来技术结果与项目优先级；
 - 候选 diff 与讨论；
 - required Checks；
 - 发布、部署和外部验收链接。
@@ -36,6 +38,9 @@ GitHub 管：
 
 Issue、评论和标签不授予 Provider、费用、凭据、生产、外部写入或破坏性操作。公开 GitHub
 不得包含 secret、私有 HOLDOUT、Provider 原始内容、本机路径或敏感清单。
+
+Issue 不保存个人 Work 的用户长期计划、跨项目现实顺序、用户精力或 CLI Conversation
+状态，也不能覆盖 `ROADMAP.md` 之外的用户现实安排。
 
 ## 最小标签
 

@@ -18,7 +18,7 @@
 
 - 稳定产品事实：`PROJECT.md`
 - 当前项目状态与候选队列：`docs/status.md`
-- 结果顺序：`ROADMAP.md`
+- 项目内部依赖顺序：`ROADMAP.md`（不代表用户现实执行顺序）
 - 当前架构和公开主张：`docs/product/`
 - 开发、质量、评测、运维和安全：`docs/engineering/`
 - 活动与已完成增量：`docs/work/`
@@ -34,18 +34,24 @@
 
 ## 多 CLI 协作
 
-用户只从个人 Work / Codex 统一入口进入开发。Codex 与用户讨论要形成哪些 Task、依赖和
-Delivery，并在派发前报告当前 CLI、模型、额度和写入状态；用户参与选择执行器。一个 CLI
-可以拥有多个隔离 Run，Task 与项目连续性不能依赖某个 session 存活。
+用户只从个人 Work 统一入口进入开发；可见 Conversation 终端仅展示后台进度，不接受输入。
+个人 Work 只与用户梳理希望获得的结果、现实顺序、主要 CLI 会话和外部边界，并转发用户
+确认的短消息；它不替项目 Agent 制定技术方案、Task、依赖或 Delivery。
 
-每个可写 worktree 同一时刻只有一个写入 Run。Worker 自主阅读仓库、制定常规技术方案、
-维护本 Task 必要的执行记录并形成 commit / 测试 / 回执；独立复核者只读固定候选。Codex
-每次发送消息后向用户逐字公开原文，并对 Worker 回复区分 Worker 报告、已核验和待核验。
+一个开发主线可以对应一个长期 CLI Conversation。当前会话中的项目 Agent自行阅读仓库、
+澄清技术问题、规划、实现、验证和维护项目事实；一条对话消息不自动等于新 Task 或 Run。
+不存在固定或阶段项目主 Agent。新的开发主线、独立复核或不同写入空间使用新的
+Conversation，并由用户重新选择主要 CLI。
 
-本文件是各 CLI 共享的项目规则，当前 Task、Run、角色、worktree、基线和权限由派发消息
-确定；没有明确身份时写入前先询问。不得用 `/init` 或类似命令覆盖现有 `AGENTS.md`。
-完整协作规则见 `docs/engineering/agent-workflow.md`。任何 Task、Run、Issue 或 Git 文件
-都不能授予产品 Provider、凭据、费用、部署或范围外外部写入。
+项目 Agent可以按当前工作需要组织 Worker、Integrator、Reviewer、Task、Run 和隔离
+worktree。每个可写 worktree 同一时刻仍只有一个写入者；独立复核者只读固定候选。个人
+Work 对外区分 Agent 报告、已核验和待核验，并公开实际发送的消息。
+
+本文件是各 CLI 共享的项目规则。长期 Conversation 可以保存工作上下文，但技术事实、
+commit、测试和 checkpoint 必须写回仓库或项目运行记录，确保会话丢失后仍可恢复。没有
+明确写入空间时先询问。不得用 `/init` 或类似命令覆盖现有 `AGENTS.md`。完整协作规则见
+`docs/engineering/agent-workflow.md`。任何 Conversation、Task、Run、Issue 或 Git 文件都
+不能授予产品 Provider、凭据、费用、部署或范围外外部写入。
 
 ## 异步 Task 与项目候选
 
@@ -59,7 +65,8 @@ Task 可以共同服务一个产品结果，一个 Task 也可以支撑多个 Is
 Task 必须说明用户新增得到什么或消除了哪个关键未知、最便宜的证伪方法、复用资产、投入 /
 停止线和允许形成的结论。只增加代码、测试、文档、会话或审计数量不算进展。
 
-GitHub Issue 保存已确定但尚未执行的未来规划，也是 Task 来源之一；开发中自然产生且立即
+GitHub Issue 保存项目 Agent 面向未来项目结果的技术规划，也是 Task 来源之一；它不保存
+个人 Work 的用户计划、跨项目优先级、用户精力或 CLI 会话状态。开发中自然产生且立即
 处理的事项可以直接成为 Task，若延期再建立 Issue。PR 绑定候选、Checks 与外部回执；多个
 候选可以 direct、stacked 或 batch 集成，但受保护 `main`、正式复核和生产部署保持串行。
 所需部署和用户验收齐全后回写稳定文档并关闭 Issue。PR 不使用自动关闭关键字。详细生命
@@ -114,8 +121,9 @@ Evals → Product
 任何会改变模型质量、候选成熟度或发布主张的验证，都需要事前验证说明卡。HOLDOUT 永远不是调试工具；已经揭示的材料只能用于回归。
 
 只有元规则、S2 / S3、生产 / 发布、安全、隐私、认证、费用、持久化、公共合同或公开主张
-变化强制正式独立复核。普通 R0/R1 UI 与缺陷修复由自动化和主 Agent 关闭。正式复核只在
-Draft PR 的四项 Checks 全绿后冻结 head SHA、主 Agent 停止写入时调用一次；复核者只读。
+变化强制正式独立复核。普通 R0/R1 UI 与缺陷修复由自动化和负责当前候选的项目 Agent
+关闭。正式复核只在 Draft PR 的四项 Checks 全绿后冻结 head SHA、当前写入会话停止修改时
+调用一次；复核者只读。
 候选变化使旧回执失效，但默认只针对 finding 和覆盖 diff 复核。详细合同见
 `docs/engineering/review.md`。
 
@@ -126,7 +134,7 @@ Draft PR 的四项 Checks 全绿后冻结 head SHA、主 Agent 停止写入时�
 
 本仓库只保留当前 Agent 必须执行的规则。规则为何形成、如何跨项目改善、演化日志和代表性
 案例属于外部 AI 元开发，不在本仓库建立入口、Issue、适配器或升级机制。项目中发现通用
-方法问题时，由统一入口另建元开发 Task；只有最终确实需要本项目执行的最小规则才写回
+方法问题时，由个人 Work 将问题转交元开发记录；只有最终确实需要本项目执行的最小规则才写回
 `AGENTS.md` 或 `docs/engineering/`。
 
 ## 完成与 Git
