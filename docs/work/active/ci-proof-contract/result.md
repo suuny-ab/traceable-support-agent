@@ -1,6 +1,6 @@
 # 结果
 
-> 状态：实施完成，本地验证通过；未推送、未建 PR、未在 GitHub 启用任何新行为。
+> 状态：作者侧事实收口完成。Draft PR #32 已推送，真实 CI 全绿；用户已决定在冻结候选上安排独立只读复核。合并与部署未授权。
 
 ## 实际交付
 
@@ -64,12 +64,13 @@
 
 ## 仍未解决
 
-- GitHub 侧定期依赖审计 workflow 未启用(需用户授权的外部动作)。
+- 定期审计 workflow 已随 PR #32 提交;schedule 只在合并进默认分支后生效,合并与首次
+  周跑未授权。
 - required checks 名称与分支保护未动;新摘要只对点进 run 的读者可见,Checks 列表
   本身不变。
 - README 无 CI 状态入口(与 Issue #29 重叠,留给用户决定)。
 - 四个 job 的分类 shell 片段仍重复(低优先级)。
-- 变更在真实 runner 上未验证,首次 CI 运行可能暴露 runner 环境差异。
+- 各 job 的 Job Summary 证明表内容未逐行核对;Checks 终态已经用户在 run 页面确认。
 
 ## 2026-07-26 续:定期审计接入 GitHub
 
@@ -111,3 +112,16 @@ YAML 解析与 `bash -n` 都无法覆盖这类 GitHub 语义校验,属本增量�
 `"$RUNNER_TEMP/ci-proof.jsonl"` 引用(每个 job 独立 runner,无冲突);扫描器容器
 冒烟钉定与测试夹具同步一行;`quality.md` 登记该验证边界。既有合法 step 级
 `runner.temp` 用法(`TRACEABLE_MODEL_ROOT` 等)保持不变。
+
+## 2026-07-26 续三:作者侧事实收口
+
+- 最小修复(`ead0ba6`)推送后,`pull_request` 触发的 run 30195106004 全部通过:
+  `governance` 14s、`web` 44s、`api` 59s、`containers` 1m19s;`publish` 按 PR 语义
+  跳过(非 `main` push 不发布镜像)。各 Check 终态已经用户在 run 页面核对。
+- 首次失败 run 30194650726(workflow 评估失败)与修复 run 构成完整因果链,见续二。
+- 已知依赖漂移保持未处理:npm 11 个 high advisory(eslint / next 工具链)、test 锁
+  pygments 2.19.2 与 pytest 9.0.2;live 运行时依赖无已知漏洞。锁文件修复是独立
+  依赖工作,由用户决定是否立项。
+- 仍未授权:合并 Draft PR #32(合并进 `main` 将触发 publish 与自动生产部署链)、
+  分支保护或 required checks 变更、依赖漂移修复、README CI 入口(留待 Issue #29)。
+- 用户已决定在冻结候选上安排独立只读复核;复核范围与冻结 SHA 见 `review.md` 续三。
