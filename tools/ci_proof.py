@@ -193,13 +193,14 @@ def load_entries(proof: Path) -> list[dict[str, object]]:
 
 
 def report_failure(claim: str, category: str, exit_code: int) -> None:
-    statement, _boundary, remediation = require_claim(claim)
+    statement, boundary, remediation = require_claim(claim)
     print(
         f"ci_failure category={category} claim={claim} exit={exit_code}",
         file=sys.stderr,
     )
     print(f"主张: {statement}", file=sys.stderr)
     print(f"归因: {CATEGORY_GUIDANCE[category]}", file=sys.stderr)
+    print(f"边界: {boundary}", file=sys.stderr)
     print(f"处理入口: {remediation}", file=sys.stderr)
     print(
         f"::error title=ci[{category}] {claim}::{statement} — {remediation}",
@@ -331,7 +332,9 @@ def render_summary(
             category = "—"
             note = str(entry.get("reason", ""))
         elif status == "fail":
-            note = remediation
+            note = (
+                f"{boundary}；处理入口：{remediation}" if boundary else remediation
+            )
         else:
             note = boundary
         lines.append(

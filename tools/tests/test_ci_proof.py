@@ -80,7 +80,36 @@ class RunCommandTest(unittest.TestCase):
         failure_output = captured.getvalue()
         self.assertIn("ci_failure category=product claim=api.product-tests", failure_output)
         self.assertIn("::error title=ci[product] api.product-tests::", failure_output)
+        self.assertIn("边界: 使用固定本地模型，不构成真实 Provider 质量主张", failure_output)
         self.assertIn("处理入口", failure_output)
+
+    def test_audit_failure_output_includes_claim_boundary(self) -> None:
+        # 审计失败必须输出 claim 的具体边界:pip-audit 无严重度阈值、
+        # 扫描环境错误以输出为准,否则环境故障会被误读为漏洞。
+        with tempfile.TemporaryDirectory() as directory:
+            proof = Path(directory, "proof.jsonl")
+            captured = io.StringIO()
+            with contextlib.redirect_stderr(captured):
+                exit_code = run_command(
+                    "api.dependency-advisory", "boundary", proof, failing_command()
+                )
+            self.assertEqual(exit_code, 3)
+        failure_output = captured.getvalue()
+        self.assertIn("边界: pip-audit 无严重度阈值", failure_output)
+        self.assertIn("扫描环境错误以输出为准", failure_output)
+        self.assertIn("输出为已知漏洞时更新依赖或在 PR 说明例外", failure_output)
+
+    def test_failed_summary_row_shows_boundary_and_remediation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            proof = Path(directory, "proof.jsonl")
+            with contextlib.redirect_stderr(io.StringIO()):
+                run_command(
+                    "web.dependency-advisory", "boundary", proof, failing_command()
+                )
+            text = render_summary("web", load_entries(proof))
+        self.assertIn("只在依赖文件变化的候选上阻塞", text)
+        self.assertIn("registry 与网络错误同样会在本步骤失败", text)
+        self.assertIn("输出为 high+ advisory 时更新依赖或在 PR 说明例外", text)
 
     def test_run_prints_attribution_before_command(self) -> None:
         # fd 级顺序验证:ci_check 必须先于子进程输出到达共享 stdout,

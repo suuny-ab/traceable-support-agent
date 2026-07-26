@@ -41,8 +41,8 @@ release-decision 与 release-manifest 门约束。合同不声称这四类失败
 
 不改动任何产品代码。用 `tools/ci_proof.py` 在本地注入成功 / 失败命令,验证:
 
-- 单命令步骤的 `ci_check` 归因行在 fd 级先于子进程输出;失败块包含归因类别、主张
-  和处理入口;
+- 单命令步骤的 `ci_check` 归因行在 fd 级先于子进程输出;失败块包含归因类别、主张、
+  claim 边界和处理入口;
 - proof JSONL 与 Markdown 摘要正确渲染通过、失败和跳过;
 - `ci_impact.py` 对依赖锁文件变化的检测正确;
 - 改造后的 workflow YAML 语法有效,且每个被包装的步骤都能在本地等价复现。

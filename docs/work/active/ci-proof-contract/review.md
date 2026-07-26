@@ -101,3 +101,13 @@
   pip-audit、定期审计首跑)继续保持,未人为制造失败。
 - 新候选 Checks 全绿后是否再请 Reviewer 复核该 finding 由用户决定,主 Agent 不自行
   启动。
+
+## 2026-07-26 续七:单项复核回执处置
+
+- 回执(turn 0006):候选 `f82e563efad1ab29e378723480074fd0fc3583f7`,结论 not
+  ready;确认续六归因分流、docstring 一致性与无回归。
+- 剩余阻断:失败日志与失败 Job Summary 丢弃 claim boundary。主 Agent 核对成立
+  (`report_failure` 的 `_boundary` 丢弃、fail 行仅显示 remediation),修复见
+  `result.md` 续七,并新增审计失败输出含 boundary 的断言测试。
+- 真实红灯证据(advisory 红灯、环境故障红灯)按回执建议继续延后,未人为制造。
+- 新候选 Checks 全绿后是否再请 Reviewer 做单项复核由用户决定,主 Agent 不自行启动。

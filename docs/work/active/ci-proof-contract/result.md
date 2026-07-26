@@ -203,3 +203,23 @@ governance_only run、API 依赖变化的 pip 审计路径、定期审计首次�
 
 本地验证:55 例相关工具测试全绿;`::error` 泄漏 0;worktree 扫描通过;workflow
 YAML / run 块语法与主张交叉检查通过;`git diff --check` 干净。
+
+## 2026-07-26 续七:失败输出保留 claim 边界
+
+候选 `f82e563` 的单项复核(turn 0006 回执)确认续六的归因分流已解决,剩余一项
+阻断经主 Agent 独立核对成立:`report_failure()` 把 claim 的 boundary 解构为
+`_boundary` 丢弃,失败日志只打印主张 / 类别归因 / 处理入口;失败摘要行同样只显示
+remediation。审计 claim 的决定性边界(如“pip-audit 无严重度阈值、扫描环境错误以
+输出为准”)因此不会出现在真实失败输出中。
+
+最小修复(类别体系与既有合同不变):
+
+- `report_failure()` 失败块新增“边界： ”行,保留并显示 claim boundary。
+- `render_summary` 失败行改为同时显示 boundary 与处理入口(通过行仍只显示边界,
+  跳过 / 未执行行不变)。
+- 新增两个针对性测试:审计失败 stderr 输出包含 pip-audit 边界全文与分流处理入口;
+  失败摘要行包含 web 审计的触发边界与处理入口。既有失败输出测试补“边界： ”断言。
+- `quality.md` 与 spec 证伪项同步为“失败块包含主张、类别归因、claim 边界与处理入口”。
+
+本地验证:ci_proof 20 例(含 2 个新增 boundary 断言用例)等 55 例全绿;worktree
+扫描通过;`git diff --check` 干净。
