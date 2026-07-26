@@ -154,3 +154,28 @@ YAML 解析与 `bash -n` 都无法覆盖这类 GitHub 语义校验,属本增量�
 本地验证:ci_proof 18 例、ci_impact 8 例、dependency_audit 4 例、扫描器 25 例全绿;
 两个 workflow YAML 有效、35 个 run 块 `bash -n` 通过、主张交叉检查零偏差;
 `check_public_repo.py --scope worktree` 通过。
+
+## 2026-07-26 续五:针对性复核四项剩余 finding 的修复
+
+候选 `a19420d` 的针对性复核(回执 SHA-256
+`99d887bf9f303fef5bf72f7e9ddf746c0c463009d0bd526b2fff9ecc1cee343d`)确认上一轮多数
+finding 已解决,剩余四项经主 Agent 独立核对全部成立并修复:
+
+1. 归因行顺序(成立):`print` 在非 TTY 下块缓冲,子进程输出先于 `ci_check` 到达
+   日志——真实 runner 否证了“命令输出前打印”。修复为 `flush=True`,并新增 fd 级
+   顺序测试(`os.dup2` 重定向后断言 `ci_check` 先于子进程输出)。
+2. 归因文字自相矛盾(成立):`CATEGORY_GUIDANCE` 的 `external` 旧文“候选 diff 不是
+   原因”与三条安装 / 下载 claim 的边界矛盾;`product` 旧文与镜像构建 claim 的
+   “拉取属外部”矛盾。两类 guidance 改为不自相矛盾的表述,处理入口保持按 claim
+   区分;quality.md 类别条目同步。
+3. 审计权威文字(成立):`dependency-audit.yml` 摘要改为“1 表示至少一路扫描未通过
+   (npm=high+、pip=任意已知漏洞、亦可能是扫描环境错误,以输出为准)”;quality.md
+   前段改为 web→npm audit、API 锁→pip-audit 的两侧描述;spec 证伪项与审计描述同步。
+4. 合同外边界(成立):spec 用户结果与 quality.md 证明合同一节明确列出合同外四类
+   (checkout、setup actions、artifact 上传、publish job、workflow 评估),不再无条件
+   宣称“每个红灯”可归因。
+
+本地验证:ci_proof 18 例(含新 fd 级顺序用例)等 55 例全绿;worktree 扫描通过;
+workflow YAML 与 run 块语法、主张交叉检查通过。不改动已解决 findings,未制造失败
+或 governance-only run;三个“待验证”项(缺失失败关闭真实红 run、完整
+governance_only run、API 依赖变化的 pip 审计路径、定期审计首次周跑)继续保持。

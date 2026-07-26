@@ -76,3 +76,16 @@
   本地验证见 `result.md` 续四。
 - 新候选 SHA 的四项 Checks 全绿后,按回执建议只对 findings 与覆盖 diff 做针对性
   复核;是否启动该复核由用户决定,主 Agent 不自行安排。
+
+## 2026-07-26 续五:针对性复核回执处置
+
+- 回执:候选 `a19420dd81ef11564b6711de39a6e97875cf33a2`,结论仍不就绪;回执
+  SHA-256 `99d887bf9f303fef5bf72f7e9ddf746c0c463009d0bd526b2fff9ecc1cee343d`。
+- 回执确认已解决:虚假失败注解、缺失失败关闭(代码)、skip 语义真实证据、API
+  候选级审计接线、旧冻结证据绑定。
+- 主 Agent 独立核对:四项剩余 finding 全部成立(归因行未 flush 被真实 runner 否证、
+  类别 guidance 与 claim 边界自相矛盾、审计摘要与权威文字不一致、主合同未收窄
+  “每个红灯”宣称),修复明细见 `result.md` 续五;回执列出的合同外项(Node Action
+  弃用 warning、checkout/setup/publish/workflow 评估包装)未纳入工作。
+- 三个“待验证”项按回执建议保留,未制造失败或 governance-only run。
+- 新候选 Checks 全绿后是否启动下一轮针对性复核由用户决定,主 Agent 不自行安排。

@@ -43,9 +43,10 @@ npm run typecheck
 npm test
 ```
 
-依赖安全与产品功能检查分离：`ci-release` 只在依赖文件（`web/package.json`、
-`web/package-lock.json`、`api/requirements-*.txt/.lock`）变化的候选上执行阻塞性
-`npm audit --audit-level=high`；未改代码时出现的 advisory 漂移由定期审计发现。
+依赖安全与产品功能检查分离：`ci-release` 只在依赖文件变化的候选上执行阻塞性审计——
+`web/package.json` 或 `web/package-lock.json` 变化时执行 `npm audit --audit-level=high`；
+`api/requirements-*.txt/.lock` 变化时执行钉定 `pip-audit==2.10.1 --disable-pip --no-deps`
+对两份锁定清单的审计。未改代码时出现的 advisory 漂移由定期审计发现。
 定期审计由 `.github/workflows/dependency-audit.yml` 每周执行一次（schedule 触发只在
 默认分支 `main` 上运行；分支与 PR 上只能 `workflow_dispatch` 手动触发），同时保留
 本地入口：
@@ -67,9 +68,16 @@ python tools/dependency_audit.py
 `ci-release` 的每个关键检查都通过 `tools/ci_proof.py` 绑定一条登记主张（claim）和一个
 失败归因类别：
 
-- `product`：候选 diff 破坏了产品合同，修复 diff 后重推；
+- `product`：产品合同步骤失败，默认归候选 diff，修复后重推；处理入口会标明例外
+  （如基础镜像拉取属外部依赖）；
 - `boundary`：治理、公开安全或依赖安全门停止，修正内容或回退，不得为通过而放松门；
-- `external`：registry、模型来源等第三方获取失败，候选 diff 不是原因，重试或等待。
+- `external`：外部获取类步骤失败，先核对候选 diff 是否触及该步骤输入（依赖清单、
+  模型清单），未触及则重试或等待外部恢复。
+
+合同覆盖范围：`ci-release` 四个 job 内登记主张的检查步骤。checkout、setup actions、
+artifact 上传、`publish` job 与 workflow 评估失败在合同外——workflow 评估失败由
+GitHub 在 run 页面直接报告（见下方验证边界），`publish` 链由 release-decision 与
+release-manifest 门约束。合同不声称覆盖这四类失败。
 
 检查失败时：单命令步骤（`run`）在命令输出之前打印 `ci_check` 归因行，多行脚本步骤
 （`record`）以稳定 echo 码定位失败点、在步骤末尾打印归因块；两者都发出 `::error`

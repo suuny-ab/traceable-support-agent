@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -82,19 +83,29 @@ class RunCommandTest(unittest.TestCase):
         self.assertIn("处理入口", failure_output)
 
     def test_run_prints_attribution_before_command(self) -> None:
+        # fd 级顺序验证:ci_check 必须先于子进程输出到达共享 stdout,
+        # 即使 stdout 不是 TTY(CI runner 的块缓冲场景)。
         with tempfile.TemporaryDirectory() as directory:
             proof = Path(directory, "proof.jsonl")
-            captured = io.StringIO()
-            with contextlib.redirect_stdout(captured):
-                self.assertEqual(
-                    run_command(
-                        "web.static-contract", "product", proof, passing_command()
-                    ),
-                    0,
-                )
-        lines = captured.getvalue().splitlines()
-        self.assertEqual(len(lines), 1)
-        self.assertTrue(lines[0].startswith("ci_check claim=web.static-contract"))
+            output = Path(directory, "out.txt")
+            saved = os.dup(1)
+            try:
+                with output.open("w", encoding="utf-8") as handle:
+                    os.dup2(handle.fileno(), 1)
+                    try:
+                        run_command(
+                            "web.static-contract", "product", proof, passing_command()
+                        )
+                    finally:
+                        sys.stdout.flush()
+                        os.dup2(saved, 1)
+            finally:
+                os.close(saved)
+            content = output.read_text(encoding="utf-8")
+        self.assertLess(
+            content.index("ci_check claim=web.static-contract"),
+            content.index("ok"),
+        )
 
     def test_unknown_category_and_empty_command_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

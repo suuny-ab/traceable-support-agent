@@ -136,9 +136,9 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
 }
 
 CATEGORY_GUIDANCE = {
-    "product": "候选 diff 破坏了产品合同：修复 diff 后重推。",
+    "product": "产品合同步骤失败：默认归候选 diff，修复后重推；处理入口会标明例外（如基础镜像拉取属外部依赖）。",
     "boundary": "治理 / 公开安全 / 依赖安全门停止：修正内容或回退，不得为通过而放松门。",
-    "external": "第三方获取失败：候选 diff 不是原因，重试运行或等待外部恢复。",
+    "external": "外部获取类步骤失败：先核对候选 diff 是否触及该步骤输入（依赖清单、模型清单）；未触及则重试或等待外部恢复。",
 }
 
 
@@ -210,7 +210,7 @@ def run_command(
     require_category(category)
     if not command:
         raise ProofError("missing_command")
-    print(f"ci_check claim={claim} category={category}: {statement}")
+    print(f"ci_check claim={claim} category={category}: {statement}", flush=True)
     started = time.monotonic()
     completed = subprocess.run(command, check=False)
     duration = round(time.monotonic() - started, 3)
