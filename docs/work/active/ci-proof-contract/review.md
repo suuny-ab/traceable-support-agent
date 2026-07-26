@@ -25,3 +25,15 @@
   类别与摘要会把问题指向具体检查。
 - 若后续在 GitHub 上启用定期审计或调整 required checks,属于新的外部动作,需用户
   独立授权,不从本增量推断。
+
+## 2026-07-26 续:定期审计 workflow 复核
+
+- 用户已明确授权本轮新增 `.github/workflows/dependency-audit.yml`、推送分支与创建
+  Draft PR。新 workflow 为只读姿态:无 secret、`permissions: contents: read`、
+  全部 action 钉定 40 位 SHA、checkout 禁用 persist-credentials、无
+  `pull_request_target`;schedule 只在默认分支运行,每周一次,消耗有界。
+- pip-audit 钉定 `==2.10.1` 并以 `--disable-pip --no-deps` 运行,避免审计工具在
+  runner 上执行未锁定的依赖解析;本机同版本实测两份锁文件通过。
+- 审计发现的依赖漂移(npm 11 个 high、test 锁 2 个)不在本增量修复;定期审计
+  上线后首次周跑预计变红,这是设计内的检测行为,不是回归。
+- 真实 CI 结果与 Draft PR 回执在下一轮用户确认后记录。

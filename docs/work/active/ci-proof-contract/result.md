@@ -70,3 +70,31 @@
 - README 无 CI 状态入口(与 Issue #29 重叠,留给用户决定)。
 - 四个 job 的分类 shell 片段仍重复(低优先级)。
 - 变更在真实 runner 上未验证,首次 CI 运行可能暴露 runner 环境差异。
+
+## 2026-07-26 续:定期审计接入 GitHub
+
+用户授权后追加交付:
+
+- `.github/workflows/dependency-audit.yml`:每周一 07:43 UTC 定期依赖审计
+  (schedule 只在默认分支 `main` 运行;分支与 PR 只能 `workflow_dispatch` 手动
+  触发),`pipx` 安装钉定的 `pip-audit==2.10.1` 后运行 `tools/dependency_audit.py`,
+  完整输出写入 Job Summary,发现 high+ advisory 时 run 变红。
+- `tools/dependency_audit.py`:pip 侧改为 `--disable-pip --no-deps`,直接审计锁定
+  清单的固定版本;已在本机 venv(pip-audit 2.10.1)中对两份锁文件实测通过——
+  原 `--requirement` 直跑会让 pip 重新解析并在哈希锁文件 + 平台标记依赖下失败。
+
+追加验证:新 workflow YAML 解析有效、run 块通过 `bash -n`、`check_public_repo.py
+--scope worktree` 通过、dependency_audit 单测更新后全绿、本机完整跑通
+npm + pip 三路扫描(退出码 1,符合发现语义)。
+
+审计在本机发现的真实依赖漂移(未修复,锁文件更新是独立依赖变更,留待用户决定):
+
+- `web/` npm:11 个 high advisory(brace-expansion / minimatch 链来自 eslint 工具链,
+  postcss 来自 next 构建链);
+- `api/requirements-test.lock`:pygments 2.19.2(PYSEC-2026-2987,修复 2.20.0)、
+  pytest 9.0.2(PYSEC-2026-1845,修复 9.0.3);
+- `api/requirements-live.lock`:无已知漏洞。
+
+上述漂移全部是开发 / 测试 / 构建工具链,live 运行时依赖干净;这同时意味着 main 上
+旧的“每次 runtime 变更阻塞 audit”门今天就会因外部 advisory 变红,本增量的门分离
+正是针对这类不可归因红灯。

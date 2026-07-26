@@ -16,6 +16,10 @@ class BuildScansTest(unittest.TestCase):
         self.assertEqual(npm_scan.cwd, Path("/repo/web"))
         self.assertIn("--audit-level=high", npm_scan.command)
         self.assertEqual(len(scans), 1 + len(API_LOCKS))
+        for pip_scan in scans[1:]:
+            with self.subTest(scan=pip_scan.name):
+                self.assertIn("--disable-pip", pip_scan.command)
+                self.assertIn("--no-deps", pip_scan.command)
 
     def test_missing_tools_become_skips_not_failures(self) -> None:
         with mock.patch("shutil.which", return_value=None):

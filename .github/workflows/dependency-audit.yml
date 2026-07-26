@@ -1,0 +1,51 @@
+name: dependency-audit
+
+# 定期依赖审计:发现未改代码时出现的 advisory 漂移,与每次 PR 的阻塞门分离。
+# schedule 触发只在默认分支(main)上运行;其他分支与 PR 只能通过
+# workflow_dispatch 手动触发。每周一次,保持节制的 Actions 消耗。
+on:
+  schedule:
+    - cron: "43 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.13"
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24.13.0"
+      - name: Install pinned pip-audit
+        run: pipx install pip-audit==2.10.1
+      - name: Run periodic dependency audit
+        run: |
+          set +e
+          python tools/dependency_audit.py 2>&1 | tee "$RUNNER_TEMP/dependency-audit.log"
+          status=${PIPESTATUS[0]}
+          {
+            echo "## 定期依赖审计"
+            echo ""
+            echo '```text'
+            cat "$RUNNER_TEMP/dependency-audit.log"
+            echo '```'
+            echo ""
+            echo "退出码 $status:0 表示无 high 及以上 advisory;1 表示发现 advisory,按 docs/engineering/quality.md 的依赖审计分层处理。"
+          } >>"$GITHUB_STEP_SUMMARY"
+          exit "$status"

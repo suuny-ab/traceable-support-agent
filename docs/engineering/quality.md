@@ -45,15 +45,20 @@ npm test
 
 依赖安全与产品功能检查分离：`ci-release` 只在依赖文件（`web/package.json`、
 `web/package-lock.json`、`api/requirements-*.txt/.lock`）变化的候选上执行阻塞性
-`npm audit --audit-level=high`；未改代码时出现的 advisory 漂移由定期审计发现。定期
-审计当前只提供本地入口（在 GitHub 上启用定时运行是独立外部动作，需要单独授权）：
+`npm audit --audit-level=high`；未改代码时出现的 advisory 漂移由定期审计发现。
+定期审计由 `.github/workflows/dependency-audit.yml` 每周执行一次（schedule 触发只在
+默认分支 `main` 上运行；分支与 PR 上只能 `workflow_dispatch` 手动触发），同时保留
+本地入口：
 
 ```powershell
 python tools/dependency_audit.py
 ```
 
-该入口对 `web/` 执行 npm audit，并在本机装有 `pip-audit` 时对 API 锁定清单执行扫描；
-工具缺失的扫描标记为 skipped，不影响退出码。任何扫描发现 high 及以上 advisory 时退出码为 1。
+该入口对 `web/` 执行 npm audit，并在本机装有 `pip-audit` 时以 `--disable-pip --no-deps`
+对两份 API 锁定清单直接审计固定版本（不让 pip 重新解析，哈希锁文件与平台标记依赖下
+重解析会失败）；工具缺失的扫描标记为 skipped，不影响退出码。任何扫描发现 high 及
+以上 advisory 时退出码为 1。定期审计发现漂移后，锁文件更新是独立的依赖变更，不作为
+本检查的自动修复。
 
 ## CI 证明合同与失败归因
 

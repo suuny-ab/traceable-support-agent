@@ -57,7 +57,12 @@ npm 审计;未改代码时出现的依赖漂移由定期审计发现,本轮只�
 - 不改 `deploy-production.yml` 的部署门。
 - 不改 job 名称(required checks 名称是分支保护外部状态,改名需用户另行授权)。
 - 不新增 README badge 或公开主张(留待 Issue #29 或后续用户决定)。
-- 不在 GitHub 上启用定期审计 workflow,不推送、不建 PR、不重跑 Actions。
+- 不修复审计发现的依赖漂移(锁文件更新是独立的依赖变更,由用户决定)。
+
+> 2026-07-26 更新:用户已在后续轮次授权把定期审计接入 GitHub——新增
+> `.github/workflows/dependency-audit.yml`(每周一次,schedule 只在默认分支运行),
+> 并授权推送 `codex/ci-contract` 与创建以 `main` 为 base 的独立 Draft PR 验证真实
+> runner。上述授权不包含合并、required checks 变更或分支保护修改。
 
 ## 验收条件
 

@@ -62,8 +62,20 @@ def build_scans(root: Path = REPOSITORY) -> list[Scan]:
                 Scan(name, None, root, skip_reason="pip-audit 未安装(可选)")
             )
         else:
+            # --disable-pip --no-deps: 锁定清单已是完整固定闭包,直接审计固定
+            # 版本,不让 pip 重新解析(哈希锁文件与平台标记依赖下重解析会失败)。
             scans.append(
-                Scan(name, (pip_audit, "--requirement", str(root / lock)), root)
+                Scan(
+                    name,
+                    (
+                        pip_audit,
+                        "--disable-pip",
+                        "--no-deps",
+                        "--requirement",
+                        str(root / lock),
+                    ),
+                    root,
+                )
             )
     return scans
 
