@@ -9,13 +9,16 @@ attribution category:
 - ``external``: a third-party fetch, registry or advisory failed. The
   candidate diff is not the cause; retry or wait.
 
-``run`` wraps one command, appends a JSONL proof entry and, on failure,
-prints the category, claim and remediation pointer before the command
-output is inspected. ``record`` lets a multi-line shell step report its
-own exit code with the same attribution. ``skip`` records intentionally
-skipped checks so a green job never silently means "everything passed".
-``summary`` renders the JSONL entries into a Markdown table for the
-GitHub job summary, listing expected checks that never ran as 未执行.
+``run`` prints a ``ci_check`` attribution line before the command
+starts, appends a JSONL proof entry and, on failure, prints the
+category, claim and remediation pointer. ``record`` lets a multi-line
+shell step report its own exit code with the same attribution.
+``skip`` records intentionally skipped checks so a green job never
+silently means "everything passed". ``summary`` renders the JSONL
+entries into a Markdown table for the GitHub job summary, listing
+expected checks that never ran as 未执行, and exits non-zero when any
+expected claim is missing so a green required check can never silently
+cover a check that did not run.
 """
 
 from __future__ import annotations
@@ -57,8 +60,8 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
     ),
     "web.dependencies": (
         "Web 锁定依赖可按 lockfile 干净安装",
-        "npm registry 与网络属外部依赖，失败不归因于候选 diff",
-        "重试运行；持续失败时检查 registry 状态",
+        "registry 与网络失败属外部依赖；package.json 与 lockfile 不一致等候选修改同样在此失败",
+        "先核对 diff 是否触及依赖清单；未触及则按外部依赖重试",
     ),
     "web.dependency-advisory": (
         "依赖文件变化时，Web 依赖无 high 及以上已知漏洞",
@@ -82,13 +85,23 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
     ),
     "api.dependencies": (
         "API 测试与离线 live 依赖可按锁定清单安装",
-        "PyPI 与网络属外部依赖，失败不归因于候选 diff",
-        "重试运行；持续失败时检查 PyPI 状态",
+        "PyPI 与网络失败属外部依赖；错误哈希或不一致锁定清单等候选修改同样在此失败",
+        "先核对 diff 是否触及依赖清单；未触及则按外部依赖重试",
     ),
     "api.model-download": (
         "固定的 BGE 嵌入模型可从白名单来源下载并通过字节校验",
-        "模型来源属外部依赖，失败不归因于候选 diff",
-        "重试运行；持续失败时检查模型来源可用性",
+        "模型来源失败属外部依赖；候选修改模型清单同样在此失败",
+        "先核对 diff 是否触及模型清单；未触及则按外部依赖重试",
+    ),
+    "api.dependency-advisory": (
+        "依赖文件变化时，API 锁定依赖无已知漏洞",
+        "pip-audit 无严重度阈值，退出 1 表示任意已知漏洞；扫描环境错误以输出为准",
+        "更新依赖或在 PR 中说明例外；不得为通过而降级门",
+    ),
+    "api.audit-tool-install": (
+        "候选级 API 依赖审计使用钉定的 pip-audit 版本",
+        "pipx 与 PyPI 属外部依赖，安装失败不归因于候选 diff",
+        "重试运行；持续失败时检查 PyPI 状态",
     ),
     "api.product-tests": (
         "公开 API、产品链、预算、SQLite、来源与生成前边界测试通过",
@@ -193,10 +206,11 @@ def run_command(
     proof: Path,
     command: list[str],
 ) -> int:
-    require_claim(claim)
+    statement, _boundary, _remediation = require_claim(claim)
     require_category(category)
     if not command:
         raise ProofError("missing_command")
+    print(f"ci_check claim={claim} category={category}: {statement}")
     started = time.monotonic()
     completed = subprocess.run(command, check=False)
     duration = round(time.monotonic() - started, 3)
@@ -261,6 +275,13 @@ def record_skip(claims: list[str], proof: Path, reason: str) -> int:
 
 
 STATUS_LABEL = {"pass": "通过", "fail": "失败", "skipped": "跳过", "missing": "未执行"}
+
+
+def missing_expected(
+    entries: list[dict[str, object]], expected: list[str]
+) -> list[str]:
+    recorded = {str(entry["claim"]) for entry in entries}
+    return [claim for claim in expected if claim not in recorded]
 
 
 def render_summary(
@@ -364,11 +385,25 @@ def main(argv: list[str] | None = None) -> int:
         if args.command_name == "record":
             return record_result(args.claim, args.category, args.exit_code, args.proof)
         if args.command_name == "summary":
-            text = render_summary(args.job, load_entries(args.proof), args.expect)
+            entries = load_entries(args.proof)
+            text = render_summary(args.job, entries, args.expect)
             print(text)
             if args.step_summary is not None:
                 with args.step_summary.open("a", encoding="utf-8", newline="\n") as handle:
                     handle.write(text + "\n")
+            missing = missing_expected(entries, args.expect)
+            if missing:
+                print(
+                    "ci_failure category=product claim=proof-summary "
+                    f"exit=1 missing={','.join(missing)}",
+                    file=sys.stderr,
+                )
+                print(
+                    "归因: 期望的检查未执行却得到绿灯是失败关闭违反;"
+                    "检查步骤条件或步骤遗漏。",
+                    file=sys.stderr,
+                )
+                return 1
             return 0
         text = "\n".join(
             f"{claim}: {CLAIMS[claim][0]}" for claim in sorted(CLAIMS)

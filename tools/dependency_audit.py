@@ -8,8 +8,19 @@ catch advisory drift in code that has not changed.
 This is a local entry point only. Enabling a scheduled GitHub workflow
 for it is an external action that requires explicit user authorization.
 
-Exit code is 0 when every executed scan passes, 1 when any scan reports
-high or critical advisories, and 2 on usage or environment errors.
+Exit code is 0 when every executed scan passes, 1 when any scan fails,
+and 2 on usage or environment errors. Failure semantics are tool
+specific and must be stated honestly:
+
+- npm audit exits non-zero on advisories at or above the ``high``
+  threshold;
+- pip-audit has no severity threshold: exit 1 means *any* known
+  vulnerability in the pinned versions;
+- a non-zero exit can also mean the scan itself failed (registry,
+  network or tool environment). ``fail(exit N)`` therefore means "scan
+  did not pass"; the scan output is the source of truth for whether
+  advisories or an environment error caused it.
+
 Skipped scans (tool not installed) are reported but do not fail the run.
 """
 

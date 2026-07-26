@@ -168,7 +168,7 @@ jobs:
             --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm ci
       - name: Audit dependencies (blocking only on dependency changes)
-        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.dependency_files_changed == 'true'
+        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.web_dependency_files_changed == 'true'
         run: |
           python3 ../tools/ci_proof.py run \
             --claim web.dependency-advisory \
@@ -176,7 +176,7 @@ jobs:
             --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             npm audit --audit-level=high --registry=https://registry.npmjs.org
       - name: Record skipped dependency audit (dependencies unchanged)
-        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.dependency_files_changed == 'false'
+        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.web_dependency_files_changed == 'false'
         run: |
           python3 ../tools/ci_proof.py skip \
             --claim web.dependency-advisory \
@@ -285,6 +285,8 @@ jobs:
           python3 tools/ci_proof.py skip \
             --claim api.dependencies \
             --claim api.model-download \
+            --claim api.audit-tool-install \
+            --claim api.dependency-advisory \
             --claim api.product-tests \
             --claim api.eval-runner-tests \
             --claim api.replay-assembly-boundary \
@@ -312,6 +314,35 @@ jobs:
             --category external \
             --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pip install --disable-pip-version-check --no-deps --require-hashes --requirement api/requirements-live.lock
+      - name: Install pinned pip-audit for candidate audit
+        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.api_dependency_files_changed == 'true'
+        run: |
+          python3 tools/ci_proof.py run \
+            --claim api.audit-tool-install \
+            --category external \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
+            pipx install pip-audit==2.10.1
+      - name: Audit API dependency locks (blocking only on dependency changes)
+        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.api_dependency_files_changed == 'true'
+        run: |
+          python3 tools/ci_proof.py run \
+            --claim api.dependency-advisory \
+            --category boundary \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
+            pip-audit --disable-pip --no-deps --requirement api/requirements-live.lock
+          python3 tools/ci_proof.py run \
+            --claim api.dependency-advisory \
+            --category boundary \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
+            pip-audit --disable-pip --no-deps --requirement api/requirements-test.lock
+      - name: Record skipped dependency audit (dependencies unchanged)
+        if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.api_dependency_files_changed == 'false'
+        run: |
+          python3 tools/ci_proof.py skip \
+            --claim api.audit-tool-install \
+            --claim api.dependency-advisory \
+            --reason dependencies_unchanged \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
       - name: Download and verify the pinned embedding model
         if: steps.impact.outputs.classification == 'runtime'
         run: |
@@ -363,6 +394,8 @@ jobs:
             --step-summary "$GITHUB_STEP_SUMMARY" \
             --expect api.dependencies \
             --expect api.model-download \
+            --expect api.audit-tool-install \
+            --expect api.dependency-advisory \
             --expect api.product-tests \
             --expect api.eval-runner-tests \
             --expect api.replay-assembly-boundary

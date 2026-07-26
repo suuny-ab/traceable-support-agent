@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -13,6 +15,7 @@ from tools.ci_proof import (
     ProofError,
     load_entries,
     main,
+    missing_expected,
     record_result,
     render_summary,
     require_claim,
@@ -64,13 +67,34 @@ class RunCommandTest(unittest.TestCase):
     def test_failure_records_and_propagates_exit_code(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             proof = Path(directory, "proof.jsonl")
-            exit_code = run_command(
-                "api.product-tests", "product", proof, failing_command()
-            )
+            captured = io.StringIO()
+            with contextlib.redirect_stderr(captured):
+                exit_code = run_command(
+                    "api.product-tests", "product", proof, failing_command()
+                )
             self.assertEqual(exit_code, 3)
             entry = load_entries(proof)[0]
         self.assertEqual(entry["status"], "fail")
         self.assertEqual(entry["exit_code"], 3)
+        failure_output = captured.getvalue()
+        self.assertIn("ci_failure category=product claim=api.product-tests", failure_output)
+        self.assertIn("::error title=ci[product] api.product-tests::", failure_output)
+        self.assertIn("处理入口", failure_output)
+
+    def test_run_prints_attribution_before_command(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            proof = Path(directory, "proof.jsonl")
+            captured = io.StringIO()
+            with contextlib.redirect_stdout(captured):
+                self.assertEqual(
+                    run_command(
+                        "web.static-contract", "product", proof, passing_command()
+                    ),
+                    0,
+                )
+        lines = captured.getvalue().splitlines()
+        self.assertEqual(len(lines), 1)
+        self.assertTrue(lines[0].startswith("ci_check claim=web.static-contract"))
 
     def test_unknown_category_and_empty_command_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -86,17 +110,22 @@ class RecordResultTest(unittest.TestCase):
     def test_record_pass_and_fail(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             proof = Path(directory, "proof.jsonl")
-            self.assertEqual(
-                record_result("containers.image-build", "product", 0, proof), 0
-            )
-            self.assertEqual(
-                record_result("containers.replay-smoke", "product", 1, proof), 1
-            )
+            captured = io.StringIO()
+            with contextlib.redirect_stderr(captured):
+                self.assertEqual(
+                    record_result("containers.image-build", "product", 0, proof), 0
+                )
+                self.assertEqual(
+                    record_result("containers.replay-smoke", "product", 1, proof), 1
+                )
             entries = load_entries(proof)
         self.assertEqual(
             [entry["status"] for entry in entries], ["pass", "fail"]
         )
         self.assertEqual(entries[1]["exit_code"], 1)
+        self.assertIn(
+            "::error title=ci[product] containers.replay-smoke::", captured.getvalue()
+        )
 
     def test_record_rejects_unknown_category(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -134,7 +163,8 @@ class SkipAndSummaryTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             proof = Path(directory, "proof.jsonl")
             run_command("web.static-contract", "product", proof, passing_command())
-            run_command("api.product-tests", "product", proof, failing_command())
+            with contextlib.redirect_stderr(io.StringIO()):
+                run_command("api.product-tests", "product", proof, failing_command())
             text = render_summary("mixed", load_entries(proof))
         self.assertIn("证明=1", text)
         self.assertIn("失败=1", text)
@@ -148,7 +178,8 @@ class SkipAndSummaryTest(unittest.TestCase):
     def test_expected_claims_never_run_are_listed_as_missing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             proof = Path(directory, "proof.jsonl")
-            run_command("web.static-contract", "product", proof, failing_command())
+            with contextlib.redirect_stderr(io.StringIO()):
+                run_command("web.static-contract", "product", proof, failing_command())
             text = render_summary(
                 "web",
                 load_entries(proof),
@@ -157,6 +188,78 @@ class SkipAndSummaryTest(unittest.TestCase):
         self.assertIn("未执行", text)
         self.assertIn("未执行=2", text)
         self.assertIn("没有证明任何东西", text)
+
+    def test_missing_expected_counts_only_unrecorded(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            proof = Path(directory, "proof.jsonl")
+            main(
+                [
+                    "skip",
+                    "--claim",
+                    "web.routes",
+                    "--reason",
+                    "governance_only",
+                    "--proof",
+                    str(proof),
+                ]
+            )
+            entries = load_entries(proof)
+        self.assertEqual(
+            missing_expected(entries, ["web.routes", "web.static-contract"]),
+            ["web.static-contract"],
+        )
+
+    def test_summary_cli_fails_closed_on_missing_expected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            proof = Path(directory, "proof.jsonl")
+            run_command("web.static-contract", "product", proof, passing_command())
+            captured = io.StringIO()
+            with contextlib.redirect_stderr(captured):
+                exit_code = main(
+                    [
+                        "summary",
+                        "--job",
+                        "web",
+                        "--proof",
+                        str(proof),
+                        "--expect",
+                        "web.static-contract",
+                        "--expect",
+                        "web.routes",
+                    ]
+                )
+            self.assertEqual(exit_code, 1)
+            self.assertIn("missing=web.routes", captured.getvalue())
+
+    def test_summary_cli_passes_when_all_expected_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            proof = Path(directory, "proof.jsonl")
+            run_command("web.static-contract", "product", proof, passing_command())
+            main(
+                [
+                    "skip",
+                    "--claim",
+                    "web.routes",
+                    "--reason",
+                    "governance_only",
+                    "--proof",
+                    str(proof),
+                ]
+            )
+            exit_code = main(
+                [
+                    "summary",
+                    "--job",
+                    "web",
+                    "--proof",
+                    str(proof),
+                    "--expect",
+                    "web.static-contract",
+                    "--expect",
+                    "web.routes",
+                ]
+            )
+            self.assertEqual(exit_code, 0)
 
     def test_summary_cli_writes_step_summary(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -26,16 +26,21 @@ GOVERNANCE_PREFIXES = (
 )
 UNKNOWN_PATH = "__classification_unknown__"
 
-DEPENDENCY_PATHS = frozenset(
+WEB_DEPENDENCY_PATHS = frozenset(
     {
         "web/package.json",
         "web/package-lock.json",
+    }
+)
+API_DEPENDENCY_PATHS = frozenset(
+    {
         "api/requirements-live.txt",
         "api/requirements-live.lock",
         "api/requirements-test.txt",
         "api/requirements-test.lock",
     }
 )
+DEPENDENCY_PATHS = WEB_DEPENDENCY_PATHS | API_DEPENDENCY_PATHS
 
 
 def normalize_paths(paths: list[str] | tuple[str, ...]) -> tuple[str, ...]:
@@ -88,11 +93,14 @@ def changed_paths_sha256(paths: list[str] | tuple[str, ...]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-def dependency_files_changed(paths: list[str] | tuple[str, ...]) -> bool:
+def dependency_files_changed(
+    paths: list[str] | tuple[str, ...],
+    dependency_paths: frozenset[str] = DEPENDENCY_PATHS,
+) -> bool:
     normalized = normalize_paths(paths)
     if not normalized or UNKNOWN_PATH in normalized:
         return True
-    return any(path in DEPENDENCY_PATHS for path in normalized)
+    return any(path in dependency_paths for path in normalized)
 
 
 def git_changed_paths(base: str, head: str) -> tuple[str, ...]:
@@ -144,6 +152,12 @@ def main() -> int:
         "changed_path_count": str(len(paths)),
         "dependency_files_changed": (
             "true" if dependency_files_changed(paths) else "false"
+        ),
+        "web_dependency_files_changed": (
+            "true" if dependency_files_changed(paths, WEB_DEPENDENCY_PATHS) else "false"
+        ),
+        "api_dependency_files_changed": (
+            "true" if dependency_files_changed(paths, API_DEPENDENCY_PATHS) else "false"
         ),
     }
     output = args.github_output

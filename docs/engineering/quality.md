@@ -56,9 +56,11 @@ python tools/dependency_audit.py
 
 该入口对 `web/` 执行 npm audit，并在本机装有 `pip-audit` 时以 `--disable-pip --no-deps`
 对两份 API 锁定清单直接审计固定版本（不让 pip 重新解析，哈希锁文件与平台标记依赖下
-重解析会失败）；工具缺失的扫描标记为 skipped，不影响退出码。任何扫描发现 high 及
-以上 advisory 时退出码为 1。定期审计发现漂移后，锁文件更新是独立的依赖变更，不作为
-本检查的自动修复。
+重解析会失败）；工具缺失的扫描标记为 skipped，不影响退出码。退出码语义按工具如实
+区分：npm audit 非零表示 high 及以上 advisory；pip-audit 无严重度阈值，退出 1 表示
+任意已知漏洞；任何非零也可能是扫描环境错误（registry、网络、工具），`fail(exit N)`
+只表示“扫描未通过”，以扫描输出为准。定期审计发现漂移后，锁文件更新是独立的依赖
+变更，不作为本检查的自动修复。
 
 ## CI 证明合同与失败归因
 
@@ -69,10 +71,18 @@ python tools/dependency_audit.py
 - `boundary`：治理、公开安全或依赖安全门停止，修正内容或回退，不得为通过而放松门；
 - `external`：registry、模型来源等第三方获取失败，候选 diff 不是原因，重试或等待。
 
-检查失败时，日志在命令输出之前打印类别、主张和处理入口；每个 job 末尾（`if: always()`）
-把证明条目渲染进 GitHub Job Summary：通过只证明表中明确声明的主张；`governance_only`
-变更下运行时检查记录为“故意跳过”；依赖未变化时依赖审计记录为“故意跳过”；因之前失败
-而未运行的检查列为“未执行”。绿色 Check 只有在表中对应主张为“通过”时才表示已证明。
+检查失败时：单命令步骤（`run`）在命令输出之前打印 `ci_check` 归因行，多行脚本步骤
+（`record`）以稳定 echo 码定位失败点、在步骤末尾打印归因块；两者都发出 `::error`
+注解。每个 job 末尾（`if: always()`）把证明条目渲染进 GitHub Job Summary：通过只
+证明表中明确声明的主张；`governance_only` 变更下运行时检查记录为“故意跳过”；依赖
+未变化时依赖审计记录为“故意跳过”；因之前失败或条件错误而未运行的检查列为“未执行”
+并使摘要步骤失败关闭——绿色 required Check 不能掩盖一次未执行的检查。绿色 Check
+只有在表中对应主张为“通过”时才表示已证明。
+
+依赖文件变化时的候选级阻塞审计分两侧：`web/` 依赖变化触发 npm audit；API 锁定清单
+变化触发钉定 `pip-audit==2.10.1 --disable-pip --no-deps` 对两份锁文件的审计（pip
+审计发现任意已知漏洞即红，不限 high）。测试通过 `contextlib.redirect_stderr` 隔离
+`::error` workflow command，绿色 Check 不携带测试夹具产生的虚假失败注解。
 
 验证边界（2026-07-26 由 Draft PR #32 首次运行暴露）：本地 YAML 解析和 `bash -n` 只能
 证明 workflow 的语法有效，不能覆盖 GitHub 对 context 使用位置的语义限制——例如

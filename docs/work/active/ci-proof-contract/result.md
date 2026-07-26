@@ -125,3 +125,32 @@ YAML 解析与 `bash -n` 都无法覆盖这类 GitHub 语义校验,属本增量�
 - 仍未授权:合并 Draft PR #32(合并进 `main` 将触发 publish 与自动生产部署链)、
   分支保护或 required checks 变更、依赖漂移修复、README CI 入口(留待 Issue #29)。
 - 用户已决定在冻结候选上安排独立只读复核;复核范围与冻结 SHA 见 `review.md` 续三。
+
+## 2026-07-26 续四:独立复核 findings 的最小修复
+
+冻结候选 `2e544ee` 的独立只读复核(回执 SHA-256
+`0f02b9fb956dcee102793d18cfdaba52be1fd6f7c9e8f4e259bd18995bd1fdd6`)判定不就绪,
+主 Agent 独立核对后确认五项阻断中四项半成立,按已批准边界修复:
+
+1. 绿色 Check 虚假失败注解(成立):测试用 `contextlib.redirect_stderr` 隔离
+   `::error` workflow command 并转为断言;测试套件 stderr 中 `::error` 行数降为 0。
+2. “未执行”不阻断(成立):`summary` 在 `--expect` 存在缺失主张时失败关闭(exit 1),
+   跳过不触发;绿色 required Check 不再能掩盖未执行的检查。
+3. 红灯归因(核心成立):`run` 在命令执行前打印 `ci_check claim=… category=…` 归因行;
+   `web.dependencies`、`api.dependencies`、`api.model-download` 的诚实边界改为承认
+   候选修改(锁不一致、错误哈希、模型清单变更)同样在此失败,先核对 diff 再按外部
+   依赖重试。checkout / setup / publish / workflow 评估失败维持合同外,属声明边界。
+4. 依赖审计合同(成立):退出码语义按工具如实表述(npm=high+、pip=任意已知漏洞、
+   非零亦可能是扫描环境错误);`ci_impact` 拆分 `web/api_dependency_files_changed`;
+   api job 新增候选级阻塞 pip 审计(钉定 `pip-audit==2.10.1 --disable-pip --no-deps`),
+   依赖未变化时记录跳过。
+5. 冻结证据一致性(成立):冻结 SHA `2e544ee` 的验证 run 为 30195548284(四项 Checks
+   全绿、publish 跳过),续三对 `ead0ba6` / run 30195106004 的引用仅为修复前历史;
+   `ROADMAP.md` 当前一节已同步为本活动增量。
+
+复核回执中不成立的部分:把 checkout / setup / publish / workflow 评估纳入证明合同
+超出当前合同声明范围,按边界处理而非修复项。
+
+本地验证:ci_proof 18 例、ci_impact 8 例、dependency_audit 4 例、扫描器 25 例全绿;
+两个 workflow YAML 有效、35 个 run 块 `bash -n` 通过、主张交叉检查零偏差;
+`check_public_repo.py --scope worktree` 通过。
