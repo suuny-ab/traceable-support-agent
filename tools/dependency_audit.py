@@ -1,9 +1,10 @@
 """Local periodic dependency audit.
 
 Dependency security is deliberately split from the per-PR blocking
-path: ``ci-release`` runs the blocking npm audit only when dependency
-files change, while this entry point scans the current lockfiles to
-catch advisory drift in code that has not changed.
+path: ``ci-release`` runs the blocking npm audit only when web
+dependency files change, and a pinned pip-audit only when API lockfiles
+change, while this entry point scans the current lockfiles to catch
+advisory drift in code that has not changed.
 
 This is a local entry point only. Enabling a scheduled GitHub workflow
 for it is an external action that requires explicit user authorization.

@@ -3,11 +3,18 @@
 Every meaningful CI step is bound to a stated claim and a failure
 attribution category:
 
-- ``product``: the candidate diff broke a product contract. Fix the diff.
-- ``boundary``: a governance / public-safety / security gate stopped the
-  run. Fix the content or revert; never weaken the gate to make it pass.
-- ``external``: a third-party fetch, registry or advisory failed. The
-  candidate diff is not the cause; retry or wait.
+- ``product``: a product-contract step failed. The candidate diff is the
+  default owner; the claim's remediation names documented exceptions
+  (for example base image pulls are external).
+- ``boundary``: a governance / public-safety / dependency-security gate
+  stopped the run. Content or dependency problems require fixing the
+  content or reverting; scan environment errors (registry / network /
+  tooling) are external and call for retry or waiting. Never weaken a
+  gate to make it pass.
+- ``external``: a third-party fetch step failed. Check whether the
+  candidate diff touched the step's inputs (dependency manifests, model
+  manifest, pinned tool versions) first; if it did, treat it as a
+  candidate problem, otherwise retry or wait.
 
 ``run`` prints a ``ci_check`` attribution line before the command
 starts, appends a JSONL proof entry and, on failure, prints the
@@ -65,8 +72,8 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
     ),
     "web.dependency-advisory": (
         "依赖文件变化时，Web 依赖无 high 及以上已知漏洞",
-        "只在依赖文件变化的候选上阻塞；未改代码时的漂移由定期审计发现",
-        "更新依赖或在 PR 中说明例外；不得为通过而降级门",
+        "只在依赖文件变化的候选上阻塞；未改代码时的漂移由定期审计发现；registry 与网络错误同样会在本步骤失败",
+        "输出为 high+ advisory 时更新依赖或在 PR 说明例外；输出为 registry / 网络错误时重试或等待；不得为通过而降级门",
     ),
     "web.static-contract": (
         "Web 通过 ESLint 与 TypeScript 检查",
@@ -96,12 +103,12 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
     "api.dependency-advisory": (
         "依赖文件变化时，API 锁定依赖无已知漏洞",
         "pip-audit 无严重度阈值，退出 1 表示任意已知漏洞；扫描环境错误以输出为准",
-        "更新依赖或在 PR 中说明例外；不得为通过而降级门",
+        "输出为已知漏洞时更新依赖或在 PR 说明例外；输出为扫描环境错误时重试或等待；不得为通过而降级门",
     ),
     "api.audit-tool-install": (
         "候选级 API 依赖审计使用钉定的 pip-audit 版本",
-        "pipx 与 PyPI 属外部依赖，安装失败不归因于候选 diff",
-        "重试运行；持续失败时检查 PyPI 状态",
+        "安装失败通常属 pipx / PyPI 外部故障；候选修改钉定工具版本同样会导致失败",
+        "先核对 diff 是否触及钉定工具版本；未触及则按外部依赖重试或等待",
     ),
     "api.product-tests": (
         "公开 API、产品链、预算、SQLite、来源与生成前边界测试通过",
@@ -137,8 +144,8 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
 
 CATEGORY_GUIDANCE = {
     "product": "产品合同步骤失败：默认归候选 diff，修复后重推；处理入口会标明例外（如基础镜像拉取属外部依赖）。",
-    "boundary": "治理 / 公开安全 / 依赖安全门停止：修正内容或回退，不得为通过而放松门。",
-    "external": "外部获取类步骤失败：先核对候选 diff 是否触及该步骤输入（依赖清单、模型清单）；未触及则重试或等待外部恢复。",
+    "boundary": "治理 / 公开安全 / 依赖安全门停止：输出为内容或依赖问题时修正内容或回退；输出为扫描环境错误（registry / 网络 / 工具）时按外部故障重试或等待；不得为通过而放松门。",
+    "external": "外部获取类步骤失败：先核对候选 diff 是否触及该步骤输入（依赖清单、模型清单、钉定工具版本）；未触及则重试或等待外部恢复。",
 }
 
 

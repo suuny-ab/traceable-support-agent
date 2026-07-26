@@ -179,3 +179,27 @@ finding 已解决,剩余四项经主 Agent 独立核对全部成立并修复:
 workflow YAML 与 run 块语法、主张交叉检查通过。不改动已解决 findings,未制造失败
 或 governance-only run;三个“待验证”项(缺失失败关闭真实红 run、完整
 governance_only run、API 依赖变化的 pip 审计路径、定期审计首次周跑)继续保持。
+
+## 2026-07-26 续六:审计失败归因的最终定向复核修复
+
+候选 `811e7a1` 的最终定向复核(turn 0005 回执)确认输出顺序、合同范围、审计权威
+文字均已解决,剩余一项阻断经主 Agent 独立核对成立:
+
+- 候选级 npm / pip 审计固定标为 `boundary`,失败块只打印通用“修正内容或回退”与
+  “更新依赖”,registry / 网络 / 工具环境故障会被错误归因给候选并给出错误行动建议;
+  `api.audit-tool-install` 旧边界绝对排除候选(候选改钉定版本同样会导致安装失败)。
+
+最小一致修复(不改类别体系、不加新类别):
+
+- `boundary` guidance 改为按输出区分:内容或依赖问题修正内容或回退;扫描环境错误
+  (registry / 网络 / 工具)按外部故障重试或等待;不得放松门。quality.md 类别条目同步。
+- `web.dependency-advisory` / `api.dependency-advisory` 的边界承认 registry / 网络 /
+  扫描环境错误同步骤失败,处理入口按输出分流(advisory→更新依赖或说明例外;环境
+  错误→重试或等待)。
+- `api.audit-tool-install` 边界改为“通常属 pipx / PyPI 外部故障;候选修改钉定版本
+  同样会导致失败”,处理入口为先核对 diff 再按外部依赖重试。
+- 顺带清理两处直接相关的过时 docstring:`ci_proof.py` 模块 docstring 的三类描述
+  (旧的 external 绝对表述)与 `dependency_audit.py` 的“只有 npm audit 阻塞”描述。
+
+本地验证:55 例相关工具测试全绿;`::error` 泄漏 0;worktree 扫描通过;workflow
+YAML / run 块语法与主张交叉检查通过;`git diff --check` 干净。

@@ -89,3 +89,15 @@
   弃用 warning、checkout/setup/publish/workflow 评估包装)未纳入工作。
 - 三个“待验证”项按回执建议保留,未制造失败或 governance-only run。
 - 新候选 Checks 全绿后是否启动下一轮针对性复核由用户决定,主 Agent 不自行安排。
+
+## 2026-07-26 续六:最终定向复核回执处置
+
+- 回执(turn 0005):候选 `811e7a1f41e8837a83d2db5eef3bcc00396e78d0`,结论 not
+  ready;确认输出顺序、合同范围、审计权威文字已解决且无回归。
+- 剩余阻断:审计失败固定 `boundary` 导致外部故障被错误归因给候选、行动建议不区分
+  两类失败;`api.audit-tool-install` 绝对排除候选影响。主 Agent 核对成立,修复见
+  `result.md` 续六;两处过时 docstring 与本次修复直接相关,已一并清理。
+- 回执列出的待验证项(真实缺失红灯、完整 governance-only run、API 锁触发的
+  pip-audit、定期审计首跑)继续保持,未人为制造失败。
+- 新候选 Checks 全绿后是否再请 Reviewer 复核该 finding 由用户决定,主 Agent 不自行
+  启动。
