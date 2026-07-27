@@ -7,18 +7,18 @@
 | 字段 | 内容 |
 | --- | --- |
 | `state` | `developing` |
-| 更新时间 | `2026-07-26` |
+| 更新时间 | `2026-07-27` |
 | 当前产品目标 | Issue #28：完成最终作品集视觉与三个固定示例的受控真实体验 |
-| 当前集成任务 | 冻结产品候选已同步到新基线 `95f0bcb`（含 CI 证明合同）；待授权推送后由新合同重新核验 PR #31 |
+| 当前集成任务 | 候选经复核阻断修正后四项 required checks 全绿，已冻结 `f873906`，等待针对原 finding 与覆盖 diff 的针对性复核 |
 | 复杂度 | 完整；候选涉及前端、API、持久化和受控 live 路径 |
 | 风险 / 成熟度 | 当前候选核验为 `R0`；产品保持 `S1 公开 Beta`，实时 Provider、费用、凭据、生产开关和部署仍需独立授权 |
-| 产品候选 | `codex/portfolio-experience`（Draft PR #31）：Worker 候选 `71104ee` → 集成 `e3fc2a5` → 收敛 `8819408` → 同步 `95f0bcb` |
+| 产品候选 | `codex/portfolio-experience`（Draft PR #31）@ `f873906`：Worker 候选 `71104ee` → 集成 `e3fc2a5` → 收敛 `8819408` → 同步 `95f0bcb` → 公开合同修正 `f873906` |
 | 项目基线 | `origin/main` @ `95f0bcb`（唯一权威位置：主 worktree `traceable-support-agent`） |
 | 活动工作 | `docs/work/active/portfolio-live-experience/` |
 | 最近完成 | `docs/work/completed/ci-proof-contract/`（CI 证明合同，统一基线 `df81ccd` 已部署并验收） |
 | 阻碍 | npm 依赖漂移（11 high、test 锁 2 个）为已登记缺口，修复与否待用户立项；候选触碰依赖锁文件时会被新阻塞审计拦下，属设计内检测 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
-| 下一检查点 | 经用户授权推送同步后的候选，由新 CI 合同重新核验 PR #31 并冻结 SHA 进入正式独立复核；定期依赖审计首跑（周一 07:43 UTC）预计变红告警，届时按分层处理 |
+| 下一检查点 | 针对性复核回执（原 finding + 覆盖 diff `932b28f..f873906`）；通过后由用户决定转 Ready、合并与部署；定期依赖审计首跑（周一 07:43 UTC）预计变红告警，届时按分层处理 |
 
 ## 当前队列
 

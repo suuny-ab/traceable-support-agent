@@ -73,6 +73,15 @@ test("boundary challenge copy declares the live-off exception honestly", async (
   assert.match(pageSource, /唯一的例外是固定边界挑战/);
   assert.match(pageSource, /Provider 调用为 0/);
   assert.doesNotMatch(pageSource, /不可用时不能创建新运行/);
+
+  // 规格不得再保留两处旧概括原文（实时不可用时不能创建任何新运行）。
+  const specSource = await readFile(
+    new URL("../../docs/work/active/portfolio-live-experience/spec.md", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(specSource, /只明确说明不能创建新的运行/);
+  assert.doesNotMatch(specSource, /不能创建新运行，明示原因/);
+  assert.match(specSource, /固定边界挑战/);
 });
 
 test("suggested questions stay inside the synthetic sandbox and input limits", () => {
