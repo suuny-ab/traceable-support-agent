@@ -274,3 +274,41 @@ Provider、推送、合并与部署边界保持不变。下一步：推送集成
   **退出条件已满足**，分支保留为历史引用；
 - `traceable-support-agent-live-integration`（`e3fc2a5`）：已原样并入基线历史且验证全绿，
   **退出条件已满足**。物理移除 worktree / 删除分支是独立的破坏性动作，需单独授权。
+
+---
+
+## 本轮结果：冻结候选同步到 CI 合同基线（2026-07-26 · 项目集成会话）
+
+### 同步动作
+
+1. `git merge --no-ff origin/main`（`95f0bcb`，含 PR #32 CI 证明合同与 PR #33 归档）进入
+   `codex/portfolio-experience`，merge 提交 `b8208cf`。
+2. 冲突两处，均按语义合并：`ROADMAP.md`（保留 Issue #28 活动条目并更新为收敛后状态，
+   保留对方 CI 合同完成记录与依赖漂移登记）；`docs/status.md`（产品收敛事实与 CI 合同
+   事实合并：Provider 计费明细、最近完成归档、依赖漂移缺口、定期审计首跑预告）。
+3. `tools/ci_impact.py` 自动合并正确，已核验同时保留两侧变更：治理路径表新增
+   `docs/engineering/agent-workflow.md`、移除 `docs/meta/`，以及依赖文件分类输出
+   （`dependency_files_changed` 等三项）。
+
+### 结构核验
+
+- `git diff 71104ee b8208cf -- web api` 为空：候选产品代码完整无损；
+- `git diff 8819408 b8208cf` 只含基线侧 CI 合同变化（17 文件 +1990/-84）；
+- 新合同分类实测：`classification=runtime`、`dependency_files_changed=false`（72 个变更
+  路径不含任何依赖锁文件）——PR #31 不触发新阻塞审计。
+
+### 同步后验证（主 worktree 本机复跑，R0，未调 Provider）
+
+- 公开仓库扫描：passed，186 个文件；
+- API 完整套件（本地固定 BGE 模型）：`106 passed, 20 subtests passed`，与同步前一致；
+- Web：`tsc` 与 `eslint` 退出码 0，`npm test`（next build + node tests）23/23；
+- tools（CI 口径 `unittest discover`）：`Ran 104 tests, OK (skipped=7)`；
+- 备注：同一套件在 `pytest` 下 `test_run_prints_attribution_before_command` 失败——该
+  测试用 fd 级重定向验证输出顺序，与 pytest 的 `sys.stdout` 捕获对象不兼容，属测试
+  运行器口径差异，不是产品或合同回归；CI 对该套件使用 unittest 入口。
+
+### 证据边界
+
+同步只证明合并树在本机通过 Fast / Candidate 层检查；PR #31 在新 CI 合同下的实际运行、
+正式独立复核、合并与部署仍需推送后发生并单独授权。npm 依赖漂移（11 high、test 锁 2 个）
+为已登记缺口，本轮未处理；真实 Provider 仍未授权。
