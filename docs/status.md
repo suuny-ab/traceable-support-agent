@@ -9,21 +9,22 @@
 | `state` | `developing` |
 | 更新时间 | `2026-07-26` |
 | 当前产品目标 | Issue #28：完成最终作品集视觉与三个固定示例的受控真实体验 |
-| 当前集成任务 | live workbench 集成已汇合入基线（merge `edd9044`）；等待 Draft PR 与 CI |
+| 当前集成任务 | 冻结产品候选已同步到新基线 `95f0bcb`（含 CI 证明合同）；待授权推送后由新合同重新核验 PR #31 |
 | 复杂度 | 完整；候选涉及前端、API、持久化和受控 live 路径 |
 | 风险 / 成熟度 | 当前候选核验为 `R0`；产品保持 `S1 公开 Beta`，实时 Provider、费用、凭据、生产开关和部署仍需独立授权 |
-| 产品候选 | 已汇合：Worker 候选 `71104ee` → 集成提交 `e3fc2a5` → merge `edd9044` 进入基线 |
-| 项目基线 | `codex/portfolio-experience`（唯一权威位置：主 worktree `traceable-support-agent`） |
+| 产品候选 | `codex/portfolio-experience`（Draft PR #31）：Worker 候选 `71104ee` → 集成 `e3fc2a5` → 收敛 `8819408` → 同步 `95f0bcb` |
+| 项目基线 | `origin/main` @ `95f0bcb`（唯一权威位置：主 worktree `traceable-support-agent`） |
 | 活动工作 | `docs/work/active/portfolio-live-experience/` |
-| 阻碍 | 无工程阻碍 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；历史账单事实不提供当前调用授权 |
-| 下一检查点 | 经用户授权后推送基线并创建 Draft PR；不自动启用 Provider、合并或部署 |
+| 最近完成 | `docs/work/completed/ci-proof-contract/`（CI 证明合同，统一基线 `df81ccd` 已部署并验收） |
+| 阻碍 | npm 依赖漂移（11 high、test 锁 2 个）为已登记缺口，修复与否待用户立项；候选触碰依赖锁文件时会被新阻塞审计拦下，属设计内检测 |
+| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
+| 下一检查点 | 经用户授权推送同步后的候选，由新 CI 合同重新核验 PR #31 并冻结 SHA 进入正式独立复核；定期依赖审计首跑（周一 07:43 UTC）预计变红告警，届时按分层处理 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `TASK-TRACEABLE-LIVE-WORKBENCH` | `converged` | Worker 候选 `71104ee` 经集成提交 `e3fc2a5` 汇合入基线 `edd9044`；收敛验证记录见 result.md |
+| `TASK-TRACEABLE-LIVE-WORKBENCH` | `converged` | Worker 候选 `71104ee` 经集成提交 `e3fc2a5` 汇合入基线，并已同步到 CI 合同基线 `95f0bcb`；验证记录见 result.md |
 
 Task 可以并行，进入受保护 `main`、正式复核、部署和用户验收仍按依赖串行。
 
@@ -48,5 +49,6 @@ Task 可以并行，进入受保护 `main`、正式复核、部署和用户验�
 
 - 产品事实：`PROJECT.md`
 - 结果路线：`ROADMAP.md`
+- 最近完成记录：`docs/work/completed/ci-proof-contract/`
 - 工程规则：`docs/engineering/`
 - Agent 协作规则：`docs/engineering/agent-workflow.md`

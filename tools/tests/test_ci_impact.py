@@ -6,9 +6,12 @@ import tempfile
 import unittest
 
 from tools.ci_impact import (
+    API_DEPENDENCY_PATHS,
     UNKNOWN_PATH,
+    WEB_DEPENDENCY_PATHS,
     changed_paths_sha256,
     classify_paths,
+    dependency_files_changed,
     normalize_paths,
 )
 from tools.release_decision import (
@@ -77,6 +80,45 @@ class CiImpactTest(unittest.TestCase):
             changed_paths_sha256(("docs/work/a.md", "docs/work/b.md")),
         )
         self.assertEqual(normalize_paths(("docs/work/a.md",)), ("docs/work/a.md",))
+
+    def test_dependency_files_detected_and_fail_closed(self) -> None:
+        for path in (
+            "web/package.json",
+            "web/package-lock.json",
+            "api/requirements-live.txt",
+            "api/requirements-live.lock",
+            "api/requirements-test.txt",
+            "api/requirements-test.lock",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(dependency_files_changed((path,)))
+                self.assertTrue(dependency_files_changed((path, "docs/meta/a.md")))
+        self.assertFalse(dependency_files_changed(("web/app/page.tsx",)))
+        self.assertFalse(dependency_files_changed(("AGENTS.md",)))
+        self.assertTrue(dependency_files_changed((UNKNOWN_PATH,)))
+        self.assertTrue(dependency_files_changed(()))
+        self.assertTrue(dependency_files_changed(("../escape.txt",)))
+
+    def test_web_and_api_dependency_outputs_are_split(self) -> None:
+        self.assertTrue(
+            dependency_files_changed(("web/package-lock.json",), WEB_DEPENDENCY_PATHS)
+        )
+        self.assertFalse(
+            dependency_files_changed(("web/package-lock.json",), API_DEPENDENCY_PATHS)
+        )
+        self.assertTrue(
+            dependency_files_changed(
+                ("api/requirements-live.lock",), API_DEPENDENCY_PATHS
+            )
+        )
+        self.assertFalse(
+            dependency_files_changed(
+                ("api/requirements-live.lock",), WEB_DEPENDENCY_PATHS
+            )
+        )
+        self.assertTrue(
+            dependency_files_changed(("docs/meta/a.md", UNKNOWN_PATH), WEB_DEPENDENCY_PATHS)
+        )
 
 
 class ReleaseDecisionTest(unittest.TestCase):
