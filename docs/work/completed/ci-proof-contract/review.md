@@ -137,8 +137,11 @@
   `CONVERSATION-KIMI-TRACEABLE-CI-CONTRACT-20260726` / Turn
   `TURN-5cbcf680-b3da-41fd-bacf-bc4a2dbfc0b1` 的 message.md,SHA-256
   `e39511443219e930401b188e1254a21e34f44c24a90710400e434cc1aa3cb3e5` 与给定值
-  逐字节一致,回执内容经本机核验与所述验收事实一致(正文不进入公开仓库)。
+  逐字节一致,回执内容经本机核验与所述验收事实一致(当前树与重写后的活动可达
+  历史不含该正文)。
   事实分类为 `user_confirmed_external`:验收已发生并保持为事实,其证据可由本机
   个人 Work 控制记录核验,但不是 GitHub、
-  CI、自动化或公开证据。公开仓库只记录 opaque ID、哈希、confirmation_ref 与证据
-  边界,不复制任何个人 Work 正文或路径。
+  CI、自动化或公开证据。当前树与重写后的活动可达历史只记录 opaque ID、哈希、
+  confirmation_ref 与证据
+  边界,不含任何个人 Work 正文或路径;旧 GitHub 对象、缓存、PR 时间线事件与
+  既有克隆在缓存过期前仍可能暂时保留旧内容,不作绝对擦除声明。
