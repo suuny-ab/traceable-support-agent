@@ -93,7 +93,8 @@ export default function Home() {
           <div className="proof-copy">
             <p className="section-kicker">当前公开能力</p>
             <h2>把边界讲清楚，<br />比把 Demo 说大更重要。</h2>
-            <p>当前公网体验固定为已验证回放，Provider 关闭。真实模型主链已在本地固定场景验证，
+            <p>当前公网体验以已验证回放为主，Provider 关闭。唯一的例外是固定边界挑战：它在模型
+              调用前由确定性规则转人工，Provider 调用为 0。真实模型主链已在本地固定场景验证，
               但不据此宣称生产级高可用、SLA 或 product/0.1.0 已发布。</p>
             <Link className="text-link" href="/privacy">查看完整运行边界 →</Link>
           </div>

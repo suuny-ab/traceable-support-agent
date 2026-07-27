@@ -38,7 +38,7 @@
       "label": "边界挑战 · 证据不足",
       "model": "CZ-R1",
       "input": "CZ-R1只支持2.4GHz还是也支持5GHz无线网络？",
-      "summary": "批准资料未覆盖无线频段；确定性边界在模型调用前停止，Provider 调用为 0。",
+      "summary": "批准资料未覆盖无线频段；确定性边界在模型调用前停止，Provider 调用为 0；实时不可用时仍可创建。",
       "replayPresetId": "qa-insufficient-evidence"
     }
   ],

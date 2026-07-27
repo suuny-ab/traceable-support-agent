@@ -73,4 +73,7 @@ test("renders explicit live-health and replay choices", async () => {
   assert.match(html, /受约束自由探索/);
   assert.match(html, /已验证回放/);
   assert.match(html, /GEN-DEV-IE-001/);
+  assert.match(html, /唯一的例外是固定边界挑战/);
+  assert.match(html, /Provider 调用为 0/);
+  assert.doesNotMatch(html, /不可用时不能创建新运行/);
 });

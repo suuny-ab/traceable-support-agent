@@ -473,7 +473,9 @@ TRACEABLE
    run id、`LIVE MODEL` / handoff 身份、Provider 调用次数（0 / 2 / 未知）、
    `handoff_reason`、来源 clause、机械门；candidate 可批准 / 编辑 / 拒绝并写入服务端。
 3. 边界挑战创建新 run 并在 Provider 调用前 handoff，`provider_call_count=0`。
-4. live 不可用 / 未知：不能创建新运行，明示原因与“重新检测”；提供查看已验证回放。
+4. live 不可用 / 未知：普通案例与自由探索不创建新运行，明示原因与“重新检测”；固定边界挑战
+   例外——仍可创建 0 次模型调用的确定性转人工运行；提供查看已验证回放。公开说明（主页、
+   工作台状态行、案例卡）必须与该合同一致，不得笼统声称“不能创建新运行”。
 5. 实时超时 / 断连 / 协议错误 / 503：诚实 handoff 文案，不自动重试，可继续查询同一 run。
 6. 生产事实不变：`provider_enabled=false`、`replay_only`、无凭据、无部署。
 

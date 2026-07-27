@@ -299,8 +299,8 @@ export function DemoWorkbench() {
     : availability === "available"
       ? "实时体验可用 · 每次点击都创建新的运行"
       : availability === "unavailable"
-        ? "实时服务不可用 · 不能创建新运行，可查看已验证回放"
-        : "实时状态未知 · 不能创建新运行，可查看已验证回放";
+        ? "实时服务不可用 · 普通运行不可用；边界挑战仍创建 0 次模型调用的确定性转人工，另可查看已验证回放"
+        : "实时状态未知 · 普通运行不可用；边界挑战仍创建 0 次模型调用的确定性转人工，另可查看已验证回放";
   const freeTooShort = freeTaskType === "ticket" && freeInput.trim().length > 0 && Array.from(freeInput.trim()).length < 8;
   const canSubmitFree = !inputLocked && liveReady && Boolean(freeInput.trim()) && freeCount <= 500 && !freeTooShort;
 

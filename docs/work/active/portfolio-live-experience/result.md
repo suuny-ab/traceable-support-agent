@@ -312,3 +312,40 @@ Provider、推送、合并与部署边界保持不变。下一步：推送集成
 同步只证明合并树在本机通过 Fast / Candidate 层检查；PR #31 在新 CI 合同下的实际运行、
 正式独立复核、合并与部署仍需推送后发生并单独授权。npm 依赖漂移（11 high、test 锁 2 个）
 为已登记缺口，本轮未处理；真实 Provider 仍未授权。
+
+---
+
+## 本轮结果：复核阻断修正——统一的公开运行合同（2026-07-27 · 项目集成会话）
+
+### 复核 finding
+
+独立复核对冻结候选 `932b28f` 给出 BLOCKED，唯一阻断：公开的 `replay_only` 说明声称
+"不能创建新运行"，但固定边界挑战（`GEN-DEV-IE-001`）按设计在 live 关闭时仍创建一次
+不调用 Provider 的确定性转人工运行，公开能力说明与实际行为不一致。
+
+### 修正（用户决定保留边界挑战的展示价值，只修合同一致性）
+
+统一公开合同：**普通 live 运行当前不可用；固定边界挑战例外——即使实时不可用，仍创建
+一次 Provider 调用为 0 的确定性转人工运行。**
+
+- `web/app/app/page.tsx`：工作台页首说明改为"普通运行和自由探索只在实时可用时创建；
+  唯一例外是固定边界挑战，Provider 调用为 0 的确定性转人工运行"；
+- `web/app/page.tsx`：主页"当前公开能力"从"固定为已验证回放"改为"以已验证回放为主 +
+  边界挑战例外"；
+- `web/app/components/DemoWorkbench.tsx`：实时不可用 / 未知的状态行改为"普通运行不可用；
+  边界挑战仍创建 0 次模型调用的确定性转人工，另可查看已验证回放"；自由探索提交按钮的
+  "不能创建新运行"仅指向自由运行本身，准确，保留；
+- `web/app/lib/live-cases.json`：边界挑战案例卡补充"实时不可用时仍可创建"；
+- `docs/work/active/portfolio-live-experience/spec.md`：验收标准第 4 条更新为该合同。
+
+### 验收证据
+
+- 新增测试 `boundary challenge copy declares the live-off exception honestly`：钉住案例卡、
+  工作台状态行和页首说明三处合同文案，并禁止笼统的"不能创建新运行"表述回归；
+- `renders explicit live-health and replay choices` 增加页首合同断言；
+- 本机复跑：tsc / eslint 退出码 0，`npm test` 24/24 通过（含 next build 与 SSR HTML 断言）。
+
+### 证据边界
+
+行为本身未变（边界挑战自候选起就是 0 调用确定性转人工）；本轮只改变公开说明与验收钉
+子，使说明与既有行为一致。未触碰依赖漂移、其他复核非阻断项、Provider 与生产开关。

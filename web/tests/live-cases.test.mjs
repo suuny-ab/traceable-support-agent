@@ -52,6 +52,29 @@ test("the three default cases cover QA, ticket, and fault handling", () => {
   assert.match(defaults[2].input, /E310/);
 });
 
+test("boundary challenge copy declares the live-off exception honestly", async () => {
+  const boundary = liveCaseData.cases.find((item) => item.kind === "boundary");
+  assert.match(boundary.summary, /Provider 调用为 0/);
+  assert.match(boundary.summary, /实时不可用时仍可创建/);
+
+  const workbenchSource = await readFile(
+    new URL("../app/components/DemoWorkbench.tsx", import.meta.url),
+    "utf8",
+  );
+  // 实时不可用 / 未知时，状态行必须同时说明普通运行不可用和边界挑战例外，
+  // 不得再笼统声称“不能创建新运行”。
+  assert.match(workbenchSource, /普通运行不可用；边界挑战仍创建 0 次模型调用的确定性转人工/);
+  assert.doesNotMatch(workbenchSource, /不能创建新运行，可查看已验证回放/);
+
+  const pageSource = await readFile(
+    new URL("../app/app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(pageSource, /唯一的例外是固定边界挑战/);
+  assert.match(pageSource, /Provider 调用为 0/);
+  assert.doesNotMatch(pageSource, /不可用时不能创建新运行/);
+});
+
 test("suggested questions stay inside the synthetic sandbox and input limits", () => {
   assert.ok(liveCaseData.suggested_questions.length >= 4);
   for (const item of liveCaseData.suggested_questions) {
