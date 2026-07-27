@@ -111,3 +111,37 @@
   `result.md` 续七,并新增审计失败输出含 boundary 的断言测试。
 - 真实红灯证据(advisory 红灯、环境故障红灯)按回执建议继续延后,未人为制造。
 - 新候选 Checks 全绿后是否再请 Reviewer 做单项复核由用户决定,主 Agent 不自行启动。
+
+## 2026-07-26 终态:复核链收口
+
+- 复核链:turn 0003 不就绪(五项)→ turn 0004 不就绪(四项)→ turn 0005 不就绪
+  (一项)→ turn 0006 不就绪(一项)→ turn 0007 ready、零阻断。每轮 finding 均经
+  主 Agent 独立核对后在已批准边界内修复,见 result.md 续四至续七。
+- 统一基线 `df81ccd` 的 main CI、publish、生产部署与公网健康回执见 result.md 终态
+  一节;用户验收为 `user_confirmed_external` 外部回执(坐标与核验边界见
+  result.md 终态,非 GitHub / 自动化证据)。
+- 待验证边界按 result.md 末节保留,由自然事件提供证据;不视为已完成。
+
+## 2026-07-26 归档复核补记
+
+- 归档 PR #33 的独立只读复核(turn 0008)指出三项归档一致性问题,均成立并已修正:
+  status.md 权威来源的最近完成指针与表内字段矛盾(已统一指向本增量);完整
+  governance_only 运行仍列待验证(run 30213776085 已提供证据,移出待验证清单);
+  用户验收原写为无来源事实(已统一改为“用户本人在会话中确认,GitHub 与自动化无
+  独立回执”,见 result.md 终态、status.md、ROADMAP.md)。
+
+## 2026-07-27 归档复核补记二:用户验收回执坐标
+
+- 归档复核确认权威指针与 governance_only 证据闭环后,唯一剩余阻塞是用户验收缺少
+  可定位、可校验的外部回执坐标。本机个人 Work 已核验回执:Conversation
+  `CONVERSATION-KIMI-TRACEABLE-CI-CONTRACT-20260726` / Turn
+  `TURN-5cbcf680-b3da-41fd-bacf-bc4a2dbfc0b1` 的 message.md,SHA-256
+  `e39511443219e930401b188e1254a21e34f44c24a90710400e434cc1aa3cb3e5` 与给定值
+  逐字节一致,回执内容经本机核验与所述验收事实一致(当前树与重写后的活动可达
+  历史不含该正文)。
+  事实分类为 `user_confirmed_external`:验收已发生并保持为事实,其证据可由本机
+  个人 Work 控制记录核验,但不是 GitHub、
+  CI、自动化或公开证据。当前树与重写后的活动可达历史只记录 opaque ID、哈希、
+  confirmation_ref 与证据
+  边界,不含任何个人 Work 正文或路径;旧 GitHub 对象、缓存、PR 时间线事件与
+  既有克隆在缓存过期前仍可能暂时保留旧内容,不作绝对擦除声明。

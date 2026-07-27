@@ -1,6 +1,6 @@
 # 增量说明
 
-> 状态：`active`
+> 状态：`closed_ready_archived`
 >
 > 复杂度：标准
 >

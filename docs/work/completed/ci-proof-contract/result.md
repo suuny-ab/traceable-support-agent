@@ -223,3 +223,36 @@ remediation。审计 claim 的决定性边界(如“pip-audit 无严重度阈值
 
 本地验证:ci_proof 20 例(含 2 个新增 boundary 断言用例)等 55 例全绿;worktree
 扫描通过;`git diff --check` 干净。
+
+## 2026-07-26 终态:统一基线、部署与验收回执
+
+- 独立复核:turn 0007 回执对候选 `c001e08` 结论 ready、剩余阻断为零;候选 SHA、
+  PR head 与全绿 run 30212050262 一致。
+- 合并:合并前实时复核(head、CLEAN、Checks、main 未前进)全部成立,PR #32 转
+  Ready 后 squash 合并;统一基线为 `df81ccd81ee908f557c5896e1bbacfc859cc4ae7`。
+- main CI:run 30212844769 四项 Checks 全绿;publish 成功,镜像
+  `traceable-support-agent-web@sha256:358ae37b…07736fc` 与
+  `traceable-support-agent-api-replay@sha256:e563ba91…b414981`(GHCR,带
+  provenance / SBOM)。
+- 生产部署:run 30212923995 自动触发,preflight 与 deploy 双成功,无回滚;
+  release-manifest 经本地 `--verify` 绑定合并 SHA、run ID 与镜像摘要,
+  `provider_enabled=false`、`provider_calls_during_build=0`。
+- 公网健康:`/api/v1/health` 为 `replay_only`;/、/design、/app、/privacy 均 200。
+- 用户线上体验验收(`user_confirmed_external`):用户本人于 2026-07-26 明确确认
+  通过。外部回执坐标:Conversation `CONVERSATION-KIMI-TRACEABLE-CI-CONTRACT-20260726`,
+  Turn `TURN-5cbcf680-b3da-41fd-bacf-bc4a2dbfc0b1`,message SHA-256
+  `e39511443219e930401b188e1254a21e34f44c24a90710400e434cc1aa3cb3e5`,
+  confirmation_ref
+  `work:2026-07-27:user-confirmed-kimi-project-facts-closeout-research-message-13`。
+  该回执可由本机个人 Work 控制记录核验;它不是 GitHub、CI、自动化或公开证据。
+- 治理-only 真实运行证据:归档 PR #33 的 run 30213776085 分类为
+  `classification=governance_only`,web / api / containers 各 5-6 秒显式跳过并记录
+  `故意跳过: governance_only`(摘要失败关闭逻辑下,未记录的缺失会使 job 变红),
+  publish 跳过,未触发任何部署运行。
+
+## 保留的待验证边界(由未来自然事件提供证据,非已完成)
+
+- 真实 advisory 红灯与环境故障(registry / 网络 / 工具)红灯的实际输出。
+- 缺失主张导致真实 Actions 红灯的失败关闭。
+- API 锁文件变化触发的候选级 pip-audit 真实路径(含 pipx 安装)。
+- 定期 dependency-audit 的首次默认分支周跑(预计因已知漂移变红,属设计内检测)。
