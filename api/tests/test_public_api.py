@@ -284,6 +284,7 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertEqual(value["result"]["mode"], "live")
         self.assertEqual(value["result"]["provider_call_count"], 2)
         self.assertEqual([item["id"] for item in value["result"]["evidence"]], ["E1"])
+        self.assertIsNone(service.load_run_evidence(submission.run_id))
         self.assertEqual(
             service.decide(submission.run_id, {"decision": "approve"}),
             {"status": "recorded", "decision": "approve"},
@@ -291,6 +292,55 @@ class PublicRunServiceTests(unittest.TestCase):
         with self.assertRaises(PublicApiError) as repeated:
             service.decide(submission.run_id, {"decision": "reject"})
         self.assertEqual(repeated.exception.status_code, 409)
+
+    def test_provider_observations_persist_internally_without_public_leak(self) -> None:
+        observations = [
+            {
+                "schema_version": "tg07c0-safe-transport-observation-v1",
+                "sequence": 1,
+                "execution_mode": "authorized_real",
+                "transport_kind": "official_https",
+                "outcome": "succeeded",
+                "http_status": 200,
+            }
+        ]
+
+        def runner(_row: dict[str, object], _stage: object) -> tuple[dict[str, object], int]:
+            package = _candidate_package()
+            package["provider_observations"] = observations
+            return package, 2
+
+        service = self._service(live_enabled=True, product_runner=_product_runner(runner))
+        submission = service.submit(_payload(), browser_token=None)
+        value = _wait_for_terminal(service, submission.run_id)
+        self.assertEqual(value["status"], "completed")
+        self.assertEqual(
+            set(value["result"]),
+            {
+                "mode",
+                "outcome",
+                "title",
+                "answer",
+                "obligations",
+                "evidence",
+                "gates",
+                "note",
+                "handoff_reason",
+                "provider_call_count",
+            },
+        )
+        self.assertEqual(service.load_run_evidence(submission.run_id), observations)
+
+        with closing(sqlite3.connect(self.database)) as connection:
+            connection.execute(
+                "UPDATE runs SET created_at=? WHERE run_id=?",
+                ("2020-01-01T00:00:00+00:00", submission.run_id),
+            )
+            connection.commit()
+        service.cleanup_expired()
+        with self.assertRaises(PublicApiError):
+            service.get_run(submission.run_id)
+        self.assertIsNone(service.load_run_evidence(submission.run_id))
 
     def test_ticket_public_adapter_uses_valid_classifier_input(self) -> None:
         service = self._service(

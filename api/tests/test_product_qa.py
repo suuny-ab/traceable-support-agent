@@ -107,6 +107,15 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
     assert len(package["evidence"]) == 10
     assert len(package["usage"]) == 2
     observations = transport.safe_observations()
+    assert package["provider_observations"] == observations
+    assert len(package["provider_observations"]) == 2
+    assert all(
+        observation["schema_version"] == "tg07c0-safe-transport-observation-v1"
+        and observation["execution_mode"] == "offline_injected"
+        and observation["network_attempted"] is False
+        and observation["credential_read_attempted"] is False
+        for observation in package["provider_observations"]
+    )
     assert STEP1_MAX_OUTPUT_TOKENS == 16384
     assert package["worst_cost_cny_nanos"] == (
         sum(observation["request_bytes"] * 3000 for observation in observations)
@@ -125,6 +134,22 @@ def test_run_qa_candidate_package_and_persistence_roundtrip():
         record_qa_decision(connection, run_id="test-run-1", decision="reject", decision_text=None)
     runs = list_qa_runs(connection)
     assert runs[0]["run_id"] == "test-run-1"
+
+
+def test_provider_observations_duck_typed_guard():
+    from traceable_support.product.qa import _provider_observations
+
+    class WithoutObservations:
+        pass
+
+    class WithObservations:
+        def safe_observations(self):
+            return [{"sequence": 1, "outcome": "succeeded"}]
+
+    assert _provider_observations(WithoutObservations()) == []
+    assert _provider_observations(WithObservations()) == [
+        {"sequence": 1, "outcome": "succeeded"}
+    ]
 
 
 def test_run_qa_rejects_forged_customer_visible_span():

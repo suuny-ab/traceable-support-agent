@@ -58,8 +58,10 @@ def test_historic_prompt_and_provider_identities_remain_frozen() -> None:
             "1c1ec10b1cb8ff2e9b1b6f0c52ee909b08eb6f969bd2ed28db48e193d149dc59"
         ),
     }
+    # The active manifest diverged from the frozen migration identity when the
+    # transcript contract learned authorized_real; pin the new active value.
     assert build_manifest()["manifest_sha256"] == (
-        "c45786f67ac6e5957a622c5a42cc7e3ca8b2412cf6279cf3c55b3396dc4773bf"
+        "2efdaad06f5f0f261cd7e01a842b61478239b8dad8e9b724260071427a5f78b4"
     )
 
 

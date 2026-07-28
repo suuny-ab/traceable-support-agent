@@ -1,0 +1,490 @@
+{
+  "cases": {
+    "GEN-DEV-QA-003": [
+      {
+        "json": {
+          "ignored_clause_ids": [
+            "c012",
+            "c013",
+            "c014",
+            "c015",
+            "c016",
+            "c017",
+            "c018",
+            "c019",
+            "c020",
+            "c021",
+            "c022",
+            "c023",
+            "c024",
+            "c025",
+            "c026",
+            "c027",
+            "c028",
+            "c029",
+            "c030",
+            "c031",
+            "c032",
+            "c033",
+            "c034",
+            "c035",
+            "c036",
+            "c037",
+            "c038",
+            "c039",
+            "c040",
+            "c041",
+            "c042",
+            "c043",
+            "c044",
+            "c045",
+            "c046",
+            "c047",
+            "c048",
+            "c049",
+            "c050",
+            "c051",
+            "c052",
+            "c053",
+            "c054",
+            "c055",
+            "c056",
+            "c057",
+            "c058",
+            "c059",
+            "c060",
+            "c061",
+            "c062",
+            "c063",
+            "c064",
+            "c065",
+            "c066",
+            "c067",
+            "c068",
+            "c069",
+            "c070"
+          ],
+          "obligations": [
+            {
+              "clause_ids": [
+                "c001",
+                "c002",
+                "c003",
+                "c004",
+                "c005"
+              ],
+              "description": "覆盖来源 section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909",
+              "obligation_id": "o1"
+            },
+            {
+              "clause_ids": [
+                "c006",
+                "c007",
+                "c008",
+                "c009",
+                "c010",
+                "c011"
+              ],
+              "description": "覆盖来源 section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604",
+              "obligation_id": "o2"
+            }
+          ],
+          "schema_version": "obligation-checklist-v4"
+        },
+        "kind": "response"
+      },
+      {
+        "json": {
+          "content": {
+            "answer": {
+              "text": "先确认主机没有被手动搬动，并清理轮组与传感器。；主机处于暂停状态时，同时按住回充键和清扫键五秒，听到两声提示音后松开。；主机处于暂停状态时,；先确认主机没有被手动搬动,"
+            },
+            "claims": [
+              {
+                "claim_id": "c1",
+                "customer_visible_span_text": "主机处于暂停状态时,",
+                "evidence_ids": [
+                  "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+                ],
+                "exact_span_text": "主机处于暂停状态时,",
+                "obligation_ids": [
+                  "o1"
+                ]
+              },
+              {
+                "claim_id": "c2",
+                "customer_visible_span_text": "先确认主机没有被手动搬动,",
+                "evidence_ids": [
+                  "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+                ],
+                "exact_span_text": "先确认主机没有被手动搬动,",
+                "obligation_ids": [
+                  "o2"
+                ]
+              }
+            ],
+            "insufficient_evidence": false,
+            "kind": "qa_answer"
+          },
+          "schema_version": "retrieved-top10-qa-result-v4",
+          "task_type": "qa"
+        },
+        "kind": "response"
+      }
+    ],
+    "GEN-DEV-QA-006": [
+      {
+        "json": {
+          "ignored_clause_ids": [
+            "c009",
+            "c010",
+            "c011",
+            "c012",
+            "c013",
+            "c014",
+            "c015",
+            "c016",
+            "c017",
+            "c018",
+            "c019",
+            "c020",
+            "c021",
+            "c022",
+            "c023",
+            "c024",
+            "c025",
+            "c026",
+            "c027",
+            "c028",
+            "c029",
+            "c030",
+            "c031",
+            "c032",
+            "c033",
+            "c034",
+            "c035",
+            "c036",
+            "c037",
+            "c038",
+            "c039",
+            "c040",
+            "c041",
+            "c042",
+            "c043",
+            "c044",
+            "c045",
+            "c046",
+            "c047",
+            "c048",
+            "c049",
+            "c050",
+            "c051",
+            "c052",
+            "c053",
+            "c054",
+            "c055",
+            "c056",
+            "c057",
+            "c058",
+            "c059",
+            "c060"
+          ],
+          "obligations": [
+            {
+              "clause_ids": [
+                "c001",
+                "c002",
+                "c003",
+                "c004",
+                "c005",
+                "c006",
+                "c007",
+                "c008"
+              ],
+              "description": "覆盖来源 section_0a956ee2cb2d64846ab8a7aaebdae13b730ff4b024e4660abfa728704344a25f",
+              "obligation_id": "o1"
+            }
+          ],
+          "schema_version": "obligation-checklist-v4"
+        },
+        "kind": "response"
+      },
+      {
+        "json": {
+          "content": {
+            "answer": {
+              "text": "断开基站电源，检查集尘袋是否装满、舱盖是否闭合以及进尘口是否堵塞。恢复供电后只执行一次集尘测试。；若基站仍显示橙色指示灯，应保留故障码并转人工，不得连续触发集尘。；仅适用 CZ-R2。"
+            },
+            "claims": [
+              {
+                "claim_id": "c1",
+                "customer_visible_span_text": "仅适用 CZ-R2。",
+                "evidence_ids": [
+                  "section_0a956ee2cb2d64846ab8a7aaebdae13b730ff4b024e4660abfa728704344a25f"
+                ],
+                "exact_span_text": "仅适用 CZ-R2。",
+                "obligation_ids": [
+                  "o1"
+                ]
+              }
+            ],
+            "insufficient_evidence": false,
+            "kind": "qa_answer"
+          },
+          "schema_version": "retrieved-top10-qa-result-v4",
+          "task_type": "qa"
+        },
+        "kind": "response"
+      }
+    ],
+    "GEN-DEV-TK-001": [
+      {
+        "json": {
+          "ignored_clause_ids": [
+            "c001",
+            "c002",
+            "c003",
+            "c004",
+            "c005",
+            "c006",
+            "c007",
+            "c008",
+            "c009",
+            "c016",
+            "c017",
+            "c018",
+            "c019",
+            "c020",
+            "c021",
+            "c022",
+            "c023",
+            "c024",
+            "c025",
+            "c026",
+            "c027",
+            "c028",
+            "c029",
+            "c030",
+            "c031",
+            "c032",
+            "c033",
+            "c039",
+            "c040",
+            "c041",
+            "c042",
+            "c043",
+            "c044",
+            "c045",
+            "c046",
+            "c047",
+            "c048",
+            "c049",
+            "c050",
+            "c051",
+            "c052",
+            "c053",
+            "c054",
+            "c055",
+            "c056",
+            "c057",
+            "c058",
+            "c059",
+            "c060",
+            "c061",
+            "c062",
+            "c063",
+            "c064",
+            "c065",
+            "c066",
+            "c067",
+            "c068",
+            "c069",
+            "c070",
+            "c071"
+          ],
+          "obligations": [
+            {
+              "clause_ids": [
+                "c010",
+                "c011",
+                "c012",
+                "c013",
+                "c014",
+                "c015"
+              ],
+              "description": "覆盖来源 section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604",
+              "obligation_id": "o1"
+            },
+            {
+              "clause_ids": [
+                "c034",
+                "c035",
+                "c036",
+                "c037",
+                "c038"
+              ],
+              "description": "覆盖来源 section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909",
+              "obligation_id": "o2"
+            }
+          ],
+          "schema_version": "obligation-checklist-v4"
+        },
+        "kind": "response"
+      },
+      {
+        "json": {
+          "content": {
+            "action_steps": [
+              "先确认主机没有被手动搬动,；主机处于暂停状态时,"
+            ],
+            "claims": [
+              {
+                "claim_id": "c1",
+                "customer_visible_span_text": "先确认主机没有被手动搬动,",
+                "evidence_ids": [
+                  "section_b1eb7925637b98c373e758bd06186b711429ef3a32d9e916c2314e6c254b1604"
+                ],
+                "exact_span_text": "先确认主机没有被手动搬动,",
+                "obligation_ids": [
+                  "o1"
+                ]
+              },
+              {
+                "claim_id": "c2",
+                "customer_visible_span_text": "主机处于暂停状态时,",
+                "evidence_ids": [
+                  "section_bce8924d0caa783477c8caa99f6de37a93014ce456551484ba844baa60168909"
+                ],
+                "exact_span_text": "主机处于暂停状态时,",
+                "obligation_ids": [
+                  "o2"
+                ]
+              }
+            ],
+            "draft_reply": "先确认主机没有被手动搬动,；主机处于暂停状态时,",
+            "insufficient_evidence": false,
+            "kind": "ticket_proposal"
+          },
+          "schema_version": "ticket-proposal-result-v3",
+          "task_type": "ticket"
+        },
+        "kind": "response"
+      }
+    ],
+    "GEN-DEV-TK-006": [
+      {
+        "json": {
+          "ignored_clause_ids": [
+            "c006",
+            "c007",
+            "c008",
+            "c009",
+            "c010",
+            "c011",
+            "c012",
+            "c013",
+            "c014",
+            "c015",
+            "c016",
+            "c017",
+            "c018",
+            "c019",
+            "c020",
+            "c021",
+            "c022",
+            "c023",
+            "c024",
+            "c025",
+            "c026",
+            "c027",
+            "c028",
+            "c029",
+            "c030",
+            "c031",
+            "c032",
+            "c033",
+            "c034",
+            "c035",
+            "c036",
+            "c037",
+            "c038",
+            "c039",
+            "c040",
+            "c041",
+            "c042",
+            "c043",
+            "c044",
+            "c045",
+            "c046",
+            "c047",
+            "c048",
+            "c049",
+            "c050",
+            "c051",
+            "c052",
+            "c053",
+            "c054",
+            "c055",
+            "c056",
+            "c057",
+            "c058",
+            "c059",
+            "c060",
+            "c061",
+            "c062",
+            "c063",
+            "c064",
+            "c065",
+            "c066",
+            "c067"
+          ],
+          "obligations": [
+            {
+              "clause_ids": [
+                "c001",
+                "c002",
+                "c003",
+                "c004",
+                "c005"
+              ],
+              "description": "覆盖来源 section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8",
+              "obligation_id": "o1"
+            }
+          ],
+          "schema_version": "obligation-checklist-v4"
+        },
+        "kind": "response"
+      },
+      {
+        "json": {
+          "content": {
+            "action_steps": [
+              "任务结束并回到基站后,"
+            ],
+            "claims": [
+              {
+                "claim_id": "c1",
+                "customer_visible_span_text": "任务结束并回到基站后,",
+                "evidence_ids": [
+                  "section_4912427add955099cf0cf0e381a1975e8bb078d5d2c9aa2a288ccf65cd2636c8"
+                ],
+                "exact_span_text": "任务结束并回到基站后,",
+                "obligation_ids": [
+                  "o1"
+                ]
+              }
+            ],
+            "draft_reply": "任务结束并回到基站后,",
+            "insufficient_evidence": false,
+            "kind": "ticket_proposal"
+          },
+          "schema_version": "ticket-proposal-result-v3",
+          "task_type": "ticket"
+        },
+        "kind": "response"
+      }
+    ]
+  },
+  "purpose": "Synthetic scripted two-stage responses for the fixed public probe cases; no Provider output, no credentials.",
+  "schema_version": "generation-contract-probe-offline-v1"
+}

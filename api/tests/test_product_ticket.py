@@ -189,6 +189,12 @@ def test_run_ticket_candidate_and_persistence_roundtrip():
     assert package["gates"]["completeness_gate"]["pass"] is True
     assert package["ticket_id"] == "T-001"
     observations = transport.safe_observations()
+    assert package["provider_observations"] == observations
+    assert all(
+        observation["schema_version"] == "tg07c0-safe-transport-observation-v1"
+        and observation["execution_mode"] == "offline_injected"
+        for observation in package["provider_observations"]
+    )
     assert STEP1_MAX_OUTPUT_TOKENS == 16384
     assert package["worst_cost_cny_nanos"] == (
         sum(observation["request_bytes"] * 3000 for observation in observations)
