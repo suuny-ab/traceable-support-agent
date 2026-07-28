@@ -2,11 +2,12 @@
 
 > Issue：[#28](https://github.com/suuny-ab/traceable-support-agent/issues/28)
 >
-> 状态：`developing`
+> 状态：`closed_not_planned`（视觉、回放体验与生产验收完成；公开真实 Provider 目标按
+> 求职取舍明确停止）
 >
 > 复杂度：完整
 >
-> 当前阶段：首屏参考对齐 checkpoint；下一产品范围待在长期项目 Conversation 中确认
+> 当前阶段：最终生产体验验收 `PASS`；待用户以 `not planned` 说明关闭 Issue #28 后归档
 >
 > 外部风险：当前为 `R0` 规则、文档与既有原型；旧会话 CLI 授权不继承。产品 Provider、
 > Qoder、凭据、生产开关和部署均未授权
