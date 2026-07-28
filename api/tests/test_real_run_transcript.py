@@ -86,7 +86,8 @@ def _succeeded_record(
     network_attempted: bool,
     dns_attempted: bool,
     credential_read_attempted: bool,
-    paid_call_performed: bool,
+    paid_call_performed: bool | None,
+    actual_paid_cost_cny_nanos: int | None = None,
     automatic_retry_count: int = 0,
 ) -> dict:
     manifest = build_manifest()
@@ -122,8 +123,62 @@ def _succeeded_record(
         dns_attempted=dns_attempted,
         credential_read_attempted=credential_read_attempted,
         paid_call_performed=paid_call_performed,
-        actual_paid_cost_cny_nanos=0,
+        actual_paid_cost_cny_nanos=actual_paid_cost_cny_nanos,
         cost_semantics="usage_pricing_estimate_not_invoice",
+    )
+
+
+def _failed_record(
+    *,
+    prepared,
+    sequence: int,
+    previous: str | None,
+    execution_mode: str,
+    transport_kind: str,
+    failure_code: str,
+    network_attempted: bool,
+    dns_attempted: bool,
+    credential_read_attempted: bool,
+    paid_call_performed: bool | None,
+    actual_paid_cost_cny_nanos: int | None = None,
+    transport_attempted: bool = True,
+    http_status: int | None = None,
+    response_received: bool = False,
+) -> dict:
+    manifest = build_manifest()
+    return build_attempt_record(
+        status="failed",
+        provider=PROVIDER,
+        model=MODEL,
+        config_sha256=manifest["manifest_sha256"],
+        prompt_version=manifest["prompt_versions"][prepared.stage],
+        output_schema_version=manifest["output_schema_versions"][prepared.stage],
+        stage=prepared.stage,
+        object_id=OBJECT_ID,
+        run_id=RUN_ID,
+        sequence=sequence,
+        transport_attempted=transport_attempted,
+        automatic_retry_count=0,
+        timeout_ms=prepared.safe_projection["timeout_ms"],
+        http_status=http_status,
+        provider_response_received=response_received,
+        latency_ms=0,
+        request_safe_projection=prepared.safe_projection,
+        response_safe_projection=None,
+        structured_result=None,
+        structured_result_sha256=None,
+        usage=None,
+        cost=None,
+        failure_code=failure_code,
+        previous_record_sha256=previous,
+        execution_mode=execution_mode,
+        transport_kind=transport_kind,
+        network_attempted=network_attempted,
+        dns_attempted=dns_attempted,
+        credential_read_attempted=credential_read_attempted,
+        paid_call_performed=paid_call_performed,
+        actual_paid_cost_cny_nanos=actual_paid_cost_cny_nanos,
+        cost_semantics=None,
     )
 
 
@@ -134,7 +189,7 @@ def _real_records(**kwargs) -> list[dict]:
         "network_attempted": True,
         "dns_attempted": True,
         "credential_read_attempted": True,
-        "paid_call_performed": True,
+        "paid_call_performed": None,
     }
     facts.update(kwargs)
     first = _succeeded_record(
@@ -213,8 +268,9 @@ def test_coherent_authorized_real_transcript_validates() -> None:
     assert transcript["network_attempt_count"] == 2
     assert transcript["dns_attempt_count"] == 2
     assert transcript["credential_read_count"] == 2
-    assert transcript["paid_call_count"] == 2
+    assert transcript["paid_call_count"] == 0
     assert transcript["actual_paid_cost_cny_nanos"] == 0
+    assert all(record["paid_call_performed"] is None for record in transcript["records"])
     assert _validate(transcript) == transcript
 
 
@@ -286,7 +342,7 @@ def test_authorized_real_records_under_offline_transcript_mode_are_rejected() ->
 
 def test_transcript_counters_must_match_record_facts() -> None:
     transcript = _real_transcript()
-    transcript["paid_call_count"] = 0
+    transcript["paid_call_count"] = 1
     _assert_invalid(_resign(transcript), "provider_transcript_invalid")
     transcript = _real_transcript()
     transcript["credential_read_count"] = 1
@@ -297,3 +353,145 @@ def test_offline_transcript_with_nonzero_counters_is_rejected() -> None:
     transcript = _offline_transcript()
     transcript["network_attempt_count"] = 1
     _assert_invalid(_resign(transcript), "provider_transcript_invalid")
+
+
+def _real_finalize(records: list[dict]) -> dict:
+    return finalize_transcript(
+        object_id=OBJECT_ID,
+        run_id=RUN_ID,
+        records=records,
+        execution_mode="authorized_real",
+        transport_kind="official_https",
+    )
+
+
+def _validate_single(transcript: dict) -> dict:
+    return validate_transcript(
+        transcript,
+        expected_object_id=OBJECT_ID,
+        expected_run_id=RUN_ID,
+        expected_calls=[EXPECTED_CALLS[0]],
+        trusted_transcript_sha256=transcript["transcript_sha256"],
+    )
+
+
+def test_real_paid_call_marker_must_be_none() -> None:
+    _assert_invalid(_real_transcript(paid_call_performed=True), "provider_attempt_invalid")
+    _assert_invalid(_real_transcript(paid_call_performed=False), "provider_attempt_invalid")
+
+
+def test_real_actual_paid_cost_is_none_or_zero_only() -> None:
+    assert _validate(_real_transcript(actual_paid_cost_cny_nanos=0))
+    _assert_invalid(
+        _real_transcript(actual_paid_cost_cny_nanos=5), "provider_attempt_invalid"
+    )
+
+
+def test_real_credential_missing_transcript_validates() -> None:
+    record = _failed_record(
+        prepared=_prepared(STAGE_PLAN),
+        sequence=1,
+        previous=None,
+        execution_mode="authorized_real",
+        transport_kind="official_https",
+        failure_code="provider_credential_missing",
+        network_attempted=False,
+        dns_attempted=False,
+        credential_read_attempted=True,
+        paid_call_performed=None,
+    )
+    transcript = _real_finalize([record])
+    assert transcript["network_attempt_count"] == 0
+    assert transcript["credential_read_count"] == 1
+    assert transcript["paid_call_count"] == 0
+    assert _validate_single(transcript) == transcript
+
+
+def test_real_transport_error_before_network_attempt_validates() -> None:
+    record = _failed_record(
+        prepared=_prepared(STAGE_PLAN),
+        sequence=1,
+        previous=None,
+        execution_mode="authorized_real",
+        transport_kind="official_https",
+        failure_code="provider_transport_error",
+        network_attempted=False,
+        dns_attempted=False,
+        credential_read_attempted=True,
+        paid_call_performed=None,
+    )
+    assert _validate_single(_real_finalize([record]))
+
+
+def test_real_timeout_without_network_attempt_is_rejected() -> None:
+    record = _failed_record(
+        prepared=_prepared(STAGE_PLAN),
+        sequence=1,
+        previous=None,
+        execution_mode="authorized_real",
+        transport_kind="official_https",
+        failure_code="provider_timeout",
+        network_attempted=False,
+        dns_attempted=False,
+        credential_read_attempted=True,
+        paid_call_performed=None,
+    )
+    transcript = _real_finalize([record])
+    with pytest.raises(Tg07aContractError) as caught:
+        _validate_single(transcript)
+    assert caught.value.code == "provider_attempt_invalid"
+
+
+def test_real_response_too_large_shapes_validate() -> None:
+    discarded = _failed_record(
+        prepared=_prepared(STAGE_PLAN),
+        sequence=1,
+        previous=None,
+        execution_mode="authorized_real",
+        transport_kind="official_https",
+        failure_code="provider_response_too_large",
+        network_attempted=True,
+        dns_attempted=True,
+        credential_read_attempted=True,
+        paid_call_performed=None,
+        http_status=None,
+        response_received=False,
+    )
+    assert _validate_single(_real_finalize([discarded]))
+    received = _failed_record(
+        prepared=_prepared(STAGE_PLAN),
+        sequence=1,
+        previous=None,
+        execution_mode="authorized_real",
+        transport_kind="official_https",
+        failure_code="provider_response_too_large",
+        network_attempted=True,
+        dns_attempted=True,
+        credential_read_attempted=True,
+        paid_call_performed=None,
+        http_status=200,
+        response_received=True,
+    )
+    assert _validate_single(_real_finalize([received]))
+
+
+def test_offline_response_too_large_without_response_is_rejected() -> None:
+    record = _failed_record(
+        prepared=_prepared(STAGE_PLAN),
+        sequence=1,
+        previous=None,
+        execution_mode="offline_injected",
+        transport_kind="local_injected",
+        failure_code="provider_response_too_large",
+        network_attempted=False,
+        dns_attempted=False,
+        credential_read_attempted=False,
+        paid_call_performed=False,
+        actual_paid_cost_cny_nanos=0,
+    )
+    transcript = finalize_transcript(
+        object_id=OBJECT_ID, run_id=RUN_ID, records=[record]
+    )
+    with pytest.raises(Tg07aContractError) as caught:
+        _validate_single(transcript)
+    assert caught.value.code == "provider_attempt_invalid"
