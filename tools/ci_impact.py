@@ -14,6 +14,7 @@ GOVERNANCE_EXACT_PATHS = frozenset(
         "ROADMAP.md",
         "docs/status.md",
         "docs/engineering/development-flow.md",
+        "docs/engineering/agent-workflow.md",
         "docs/engineering/github-lifecycle.md",
         "docs/engineering/quality.md",
         "docs/engineering/review.md",
@@ -21,7 +22,6 @@ GOVERNANCE_EXACT_PATHS = frozenset(
 )
 GOVERNANCE_PREFIXES = (
     ".github/ISSUE_TEMPLATE/",
-    "docs/meta/",
     "docs/work/",
 )
 UNKNOWN_PATH = "__classification_unknown__"

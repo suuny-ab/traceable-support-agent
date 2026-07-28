@@ -231,3 +231,66 @@ def test_public_safety_expectation_is_enforced_with_matching_sources():
     assert package["priority"] == expected["priority"]
     assert package["boundary_sources"] == expected["source_sections"]
     assert execution.provider_call_count == expected["provider_call_count"]
+
+
+def test_public_unsupported_claim_expectation_is_enforced_with_zero_calls():
+    suite = json.loads(
+        (REPOSITORY / "evals" / "public-regression-v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    case = next(
+        item for item in suite["cases"] if item["case_id"] == "GEN-DEV-IE-001"
+    )
+    expected = case["expected"]
+    decision = evaluate_generation_boundary(case["input"], case["product_model"])
+    assert decision is not None
+    assert decision.reason == expected["handoff_reason"]
+    assert decision.source_sections == tuple(expected["source_sections"])
+
+    runner = DefaultProductRunner(
+        transport_factory=lambda: (_ for _ in ()).throw(
+            AssertionError("transport factory must not be called")
+        ),
+        transport_mode="offline_injected",
+        dependencies_ready=True,
+    )
+    execution = runner.execute(
+        RunInput(
+            case["case_id"],
+            case["task_type"],
+            case["input"],
+            case["product_model"],
+            1,
+        ),
+        lambda _stage, _status: None,
+    )
+    package = execution.package
+    assert package["outcome"] == expected["outcome"]
+    assert package["handoff_reason"] == expected["handoff_reason"]
+    assert package["boundary_sources"] == expected["source_sections"]
+    assert package["usage"] == []
+    assert package["worst_cost_cny_nanos"] == 0
+    assert execution.provider_call_count == expected["provider_call_count"]
+
+
+def test_unsupported_capability_rule_does_not_catch_approved_topics():
+    allowed = (
+        ("CZ-R1 怎么开始局部清扫？", "CZ-R1"),
+        ("CZ-R2 基站提示 E310 集尘通道受阻，应该如何排查？", "CZ-R2"),
+        ("客户反馈 CZ-R2 扫拖时遇到长毛、边缘松散的地毯，应该怎么处理？", "CZ-R2"),
+        ("CZ-R1 支持 WiFi 连接吗？", "CZ-R1"),
+        ("CZ-R2 的清水箱可以加清洁剂吗？", "CZ-R2"),
+    )
+    for text, model in allowed:
+        assert evaluate_generation_boundary(text, model) is None
+
+    unsupported = (
+        ("CZ-R1只支持2.4GHz还是也支持5GHz无线网络？", "CZ-R1"),
+        ("CZ-R2 支持 5GHz WiFi 吗？", "CZ-R2"),
+        ("CZ-R1 无线网络频段是多少？", "CZ-R1"),
+    )
+    for text, model in unsupported:
+        decision = evaluate_generation_boundary(text, model)
+        assert decision is not None
+        assert decision.reason == "unsupported_claim"

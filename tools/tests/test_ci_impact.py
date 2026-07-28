@@ -28,10 +28,10 @@ class CiImpactTest(unittest.TestCase):
             "AGENTS.md",
             "ROADMAP.md",
             "docs/status.md",
-            "docs/meta/evolution-log.md",
+            "docs/engineering/agent-workflow.md",
             "docs/work/completed/example/result.md",
             "docs/engineering/review.md",
-            ".github/ISSUE_TEMPLATE/meta.yml",
+            ".github/ISSUE_TEMPLATE/product.yml",
             ".github/pull_request_template.md",
         )
         self.assertEqual(classify_paths(paths), "governance_only")
@@ -58,26 +58,28 @@ class CiImpactTest(unittest.TestCase):
         for path in (
             " AGENTS.md",
             "AGENTS.md ",
-            " docs/meta/a.md",
-            "docs/meta/a.md ",
-            "docs\\meta\\a.md",
-            "./docs/meta/a.md",
-            "docs//meta/a.md",
-            "docs/meta/a.md\n",
+            " docs/work/a.md",
+            "docs/work/a.md ",
+            "docs\\work\\a.md",
+            "./docs/work/a.md",
+            "docs//work/a.md",
+            "docs/work/a.md\n",
         ):
             with self.subTest(path=path):
                 self.assertEqual(classify_paths((path,)), "runtime")
 
     def test_mixed_change_is_runtime_and_hash_is_canonical(self) -> None:
         self.assertEqual(
-            classify_paths(("docs/meta/a.md", "web/app/page.tsx")),
+            classify_paths(
+                ("docs/engineering/agent-workflow.md", "web/app/page.tsx")
+            ),
             "runtime",
         )
         self.assertEqual(
-            changed_paths_sha256(("docs/meta/b.md", "docs/meta/a.md")),
-            changed_paths_sha256(("docs/meta/a.md", "docs/meta/b.md")),
+            changed_paths_sha256(("docs/work/b.md", "docs/work/a.md")),
+            changed_paths_sha256(("docs/work/a.md", "docs/work/b.md")),
         )
-        self.assertEqual(normalize_paths(("docs/meta/a.md",)), ("docs/meta/a.md",))
+        self.assertEqual(normalize_paths(("docs/work/a.md",)), ("docs/work/a.md",))
 
     def test_dependency_files_detected_and_fail_closed(self) -> None:
         for path in (

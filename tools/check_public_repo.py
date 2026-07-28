@@ -990,20 +990,24 @@ def _active_increment_errors(entries: list[Entry]) -> list[str]:
         errors.append("active_increment_layout_invalid")
     if active_paths and not active_slugs:
         errors.append("active_increment_file_set_invalid")
-    elif len(active_slugs) > 1:
-        errors.append(f"active_increment_count:{len(active_slugs)}")
-    elif len(active_slugs) == 1:
-        slug = next(iter(active_slugs))
-        expected = {
-            PurePosixPath(f"docs/work/active/{slug}/{name}")
-            for name in ("spec.md", "plan.md", "result.md", "review.md")
-        }
-        if active_paths != expected:
-            errors.append("active_increment_file_set_invalid")
+    else:
+        for slug in active_slugs:
+            actual = {
+                path
+                for path in active_paths
+                if len(path.parts) == 5 and path.parts[3] == slug
+            }
+            expected = {
+                PurePosixPath(f"docs/work/active/{slug}/{name}")
+                for name in ("spec.md", "plan.md", "result.md", "review.md")
+            }
+            if actual != expected:
+                errors.append(f"active_increment_file_set_invalid:{slug}")
     try:
         status = _read(mapped, "docs/status.md")
-        if active_slugs and f"docs/work/active/{next(iter(active_slugs))}/" not in status:
-            errors.append("status_does_not_link_active_increment")
+        for slug in active_slugs:
+            if f"docs/work/active/{slug}/" not in status:
+                errors.append(f"status_does_not_link_active_increment:{slug}")
         if not active_paths and not (
             "| `state` | `ready` |" in status
             and "| 活动工作 | 无 |" in status

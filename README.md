@@ -99,7 +99,6 @@ npm run dev
 | [`data/knowledge/`](data/knowledge/) | 六份合成知识资料 |
 | [`docs/product/`](docs/product/) | [架构](docs/product/architecture.md)、[设计](docs/product/design.md)、[限制](docs/product/limitations.md)和[公开主张证据](docs/product/evidence-map.md) |
 | [`docs/engineering/`](docs/engineering/) | 开发、质量、评测、运维和安全协议 |
-| [`docs/meta/`](docs/meta/) | 元开发定义、原则、演进记录和精选案例 |
 | [`deploy/`](deploy/) | 容器、Caddy、发布清单和回滚部署 |
 
 稳定产品事实以 [`PROJECT.md`](PROJECT.md) 为准，唯一开发状态以 [`docs/status.md`](docs/status.md) 为准，结果路线以 [`ROADMAP.md`](ROADMAP.md) 为准。

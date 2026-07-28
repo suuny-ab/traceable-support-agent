@@ -69,7 +69,11 @@ test("renders explicit live-health and replay choices", async () => {
   const response = await fetch(`${baseUrl}/app`);
   const html = await response.text();
   assert.match(html, /正在检测实时服务/);
-  assert.match(html, /实时路径最多两次 Provider 请求/);
-  assert.match(html, /运行已验证回放/);
-  assert.match(html, /CZ-R1 证据不足转人工/);
+  assert.match(html, /创建新运行/);
+  assert.match(html, /受约束自由探索/);
+  assert.match(html, /已验证回放/);
+  assert.match(html, /GEN-DEV-IE-001/);
+  assert.match(html, /唯一的例外是固定边界挑战/);
+  assert.match(html, /Provider 调用为 0/);
+  assert.doesNotMatch(html, /不可用时不能创建新运行/);
 });
