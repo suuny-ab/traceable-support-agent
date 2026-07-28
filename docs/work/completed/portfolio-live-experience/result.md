@@ -1,12 +1,12 @@
 # 结果记录
 
-> 状态：`developing`
+> 状态：`closed_not_planned`
 
 ## 当前阶段
 
 最终事实（2026-07-28）：作品集视觉、公开回放体验与生产验收已经完成；公开真实
-Provider 目标已按求职取舍停止且从未启用；生产保持 `replay_only`；Issue #28 仍为
-OPEN，等待未来按 `not planned` 关闭。交付与验收证据见本文件后部“最终结果：求职交付
+Provider 目标已按求职取舍停止且从未启用；生产保持 `replay_only`；Issue #28 已于
+2026-07-28 以 `not planned` 关闭。交付与验收证据见本文件后部“最终结果：求职交付
 部署与生产体验验收”一节。
 
 以下为历史阶段记录：Issue #28 启动时，用户已确认主页结构 v1 和产品命题，但 v1–v3 均未
@@ -414,3 +414,13 @@ Provider、推送、合并与部署边界保持不变。下一步：推送集成
 
 范围副作用：`PROJECT.md` 不在治理分类清单内，本候选分类变为 `runtime`，完整检查正常
 运行；是否接受合并时同内容再部署由用户决定。
+
+---
+
+## Issue #28 关闭记录（2026-07-28）
+
+- 关闭动作前已核对：Issue #28 仍为 OPEN，`origin/main` 为 `4b3d46f`，生产健康
+  `status=ok` / `replay_only`，项目事实无漂移；
+- 关闭评论（唯一公开坐标）：<https://github.com/suuny-ab/traceable-support-agent/issues/28#issuecomment-5100053653>（内容即上一节“拟议的 Issue #28 关闭说明”原文）；
+- 关闭原因：`not planned`（GitHub `stateReason=NOT_PLANNED`，关闭时间 2026-07-28T04:43:41Z）；
+- 本工作记录随关闭归档至 `docs/work/completed/portfolio-live-experience/`。
