@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { after, before, test } from "node:test";
 
 const port = 32000 + (process.pid % 1000);
@@ -76,4 +76,22 @@ test("renders explicit live-health and replay choices", async () => {
   assert.match(html, /唯一的例外是固定边界挑战/);
   assert.match(html, /Provider 调用为 0/);
   assert.doesNotMatch(html, /不可用时不能创建新运行/);
+});
+
+test("homepage preview answer matches the verified replay and approved clause", async () => {
+  const replayData = JSON.parse(await readFile(
+    new URL("../app/lib/replay-presets.json", import.meta.url),
+    "utf8",
+  ));
+  const preset = replayData.presets.find((item) => item.id === "qa-local-clean");
+  const response = await fetch(`${baseUrl}/`);
+  const html = await response.text();
+  // 首页预览标记 VERIFIED REPLAY，同一客户问题的建议回复必须与已验证回放逐字一致，
+  // 并且与批准来源 KB-CZR1-014 的动作（长按三秒）保持同一语义。
+  assert.ok(html.includes(preset.input));
+  assert.ok(html.includes(preset.result.answer));
+  assert.match(html, /KB-CZR1-014/);
+  assert.match(preset.result.answer, /长按清扫键三秒/);
+  assert.match(preset.result.evidence[0].text, /长按三秒/);
+  assert.doesNotMatch(html, /短按局部清扫键/);
 });

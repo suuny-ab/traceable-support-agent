@@ -50,7 +50,7 @@ export default function Home() {
             </div>
             <div className="preview-answer">
               <span>建议回复</span>
-              <p>将设备放到需要清扫的区域，短按局部清扫键；设备会在当前区域执行局部清扫。</p>
+              <p>请在主机停止状态下长按清扫键三秒，CZ-R1 会围绕当前位置清扫约两平方米后停止。如果需要提前结束，可再次短按清扫键暂停。</p>
             </div>
             <div className="preview-evidence">
               <div><span>批准来源</span><strong>KB-CZR1-014 · 清扫模式</strong></div>
