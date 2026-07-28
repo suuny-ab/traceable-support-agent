@@ -2,8 +2,8 @@
 
 > Issue：[#28](https://github.com/suuny-ab/traceable-support-agent/issues/28)
 >
-> 状态：`developing`（视觉、公开回放体验与生产验收部分已完成；公开真实 Provider 范围
-> 已按求职取舍停止且从未启用；Issue #28 仍为 OPEN，待用户按 `not planned` 关闭后再归档）
+> 状态：`closed_not_planned`（视觉、公开回放体验与生产验收部分已完成；公开真实 Provider
+> 范围已按求职取舍停止且从未启用；Issue #28 已于 2026-07-28 以 `not planned` 关闭）
 >
 > 复杂度：完整
 >
@@ -18,8 +18,8 @@
 ## 本轮主要目标
 
 （历史阶段记录）本轮产品目标曾是完成 Issue #28 的最终作品集视觉与三个固定示例的受控
-真实体验。当前事实：作品集视觉、公开回放体验与生产验收已经完成；公开真实 Provider
-范围已按求职取舍停止且从未启用；Issue #28 仍为 OPEN，待用户按 `not planned` 关闭。
+真实体验。最终事实：作品集视觉、公开回放体验与生产验收已经完成；公开真实 Provider
+范围已按求职取舍停止且从未启用；Issue #28 已于 2026-07-28 以 `not planned` 关闭。
 
 ## 开发协作边界
 

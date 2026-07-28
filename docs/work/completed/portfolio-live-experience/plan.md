@@ -1,6 +1,6 @@
 # 实施计划
 
-> 状态：`developing`
+> 状态：`closed_not_planned`（随 Issue #28 于 2026-07-28 关闭归档）
 
 ## 已完成：设计研究
 
