@@ -7,39 +7,42 @@
 | 字段 | 内容 |
 | --- | --- |
 | `state` | `developing` |
-| 更新时间 | `2026-07-27` |
-| 当前产品目标 | Issue #28：完成最终作品集视觉与三个固定示例的受控真实体验 |
-| 当前集成任务 | 最后定向复核已确认规格、PR 描述、保护测试与四项 required checks 通过，无产品代码回归；等待最终复核回执 |
-| 复杂度 | 完整；候选涉及前端、API、持久化和受控 live 路径 |
-| 风险 / 成熟度 | 当前候选核验为 `R0`；产品保持 `S1 公开 Beta`，实时 Provider、费用、凭据、生产开关和部署仍需独立授权 |
-| 产品候选 | `codex/portfolio-experience`（Draft PR #31，候选以分支当前 head 为准，本文件不固定 head SHA 以避免自引用失效）：Worker 候选 `71104ee` → 集成 `e3fc2a5` → 收敛 `8819408` → 同步 `95f0bcb` → 公开合同修正 → 残余一致性收口（当前 head） |
-| 项目基线 | `origin/main` @ `95f0bcb`（唯一权威位置：主 worktree `traceable-support-agent`） |
-| 活动工作 | `docs/work/active/portfolio-live-experience/` |
-| 最近完成 | `docs/work/completed/ci-proof-contract/`（CI 证明合同，统一基线 `df81ccd` 已部署并验收） |
-| 阻碍 | npm 依赖漂移（11 high、test 锁 2 个）为已登记缺口，修复与否待用户立项；候选触碰依赖锁文件时会被新阻塞审计拦下，属设计内检测 |
+| 更新时间 | `2026-07-28` |
+| 当前产品目标 | 求职交付收口：公开 Beta 回放版已部署并通过最终生产体验验收 |
+| 当前集成任务 | 无活动产品集成任务；无产品代码修复阻断 |
+| 复杂度 | 轻量；仅项目事实与工作记录 |
+| 风险 / 成熟度 | 产品保持 `S1 公开 Beta`、生产 `replay_only`；真实 Provider、费用、凭据和生产开关均未启用 |
+| 产品候选 | 无活动候选；当前已部署产品版本 `34079d7`（PR #31 / #34） |
+| 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
+| 活动工作 | `docs/work/active/portfolio-live-experience/`（验收记录完整；Issue #28 仍为 OPEN，待用户按 `not planned` 关闭后归档） |
+| 最近完成 | PR #31 live 优先工作台 + PR #34 首页来源一致性修正：main CI、镜像发布与生产部署成功并绑定 `34079d7`，Codex 独立最终生产体验验收 `PASS`；`docs/work/completed/ci-proof-contract/` |
+| 阻碍 | 无产品代码修复阻断；Issue #28 生命周期收口（按 `not planned` 关闭）是用户动作；npm 依赖漂移（11 high、test 锁 2 个）继续登记 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
-| 下一检查点 | 最终复核回执；通过后由用户决定转 Ready、合并与部署；定期依赖审计首跑（周一 07:43 UTC）预计变红告警，届时按分层处理 |
+| 下一检查点 | 用户按拟议说明以 `not planned` 关闭 Issue #28 并启动 Issue #29；Issue #14 继续后置；定期依赖审计变红告警按分层处理 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `TASK-TRACEABLE-LIVE-WORKBENCH` | `converged` | Worker 候选 `71104ee` 经集成提交 `e3fc2a5` 汇合入基线，并已同步到 CI 合同基线 `95f0bcb`；验证记录见 result.md |
+| `TASK-TRACEABLE-LIVE-WORKBENCH` | `delivered` | PR #31 合并部署，最终生产体验验收 `PASS`；首页一致性由 PR #34 修正 |
 
 Task 可以并行，进入受保护 `main`、正式复核、部署和用户验收仍按依赖串行。
 
 ## 当前产品事实
 
 - 方向 B 的公开回放体验位于 <https://47.84.34.86/>。
-- 健康状态必须保持 `replay_only`；实时 Provider 不因控制系统启用而获得授权。
+- 当前求职交付是已经部署并通过最终体验验收的公开 Beta 回放版；健康状态保持
+  `replay_only`，真实 Provider、凭据和费用均未启用。
 - `product/0.1.0` 尚未发布；Stage 12 已执行一次（19/24、9 通过），Issue #21 已修复当时的
   两条边界缺陷但未重跑未见集；Issue #22 已以部分结果和已知限制收口，不形成成功率主张。
-- 结果顺序仍为 Issue #28 最终网站与受控真实演示、Issue #29 仓库展示、Issue #14 发布或
-  保持 Beta 判断；并行 Task 不自动改变产品依赖。
+- Issue #28 的视觉、公开回放体验与生产验收**部分**已完成；其原始范围中的公开真实
+  Provider 与实时 candidate 验收门没有完成，已按求职取舍停止（从未启用）；Issue 仍为
+  OPEN，待用户按 `not planned` 关闭，不得表述为全部验收门通过。
+- Issue #29 保留为下一项 GitHub 求职展示工作；Issue #14 发布或保持 Beta 判断继续后置。
 - 当前工作树和公开 GitHub 仓库是产品唯一权威开发来源。
-- 唯一权威开发位置为主 worktree `traceable-support-agent`（分支 `codex/portfolio-experience`）；
-  `traceable-support-agent-live-workbench` 与 `traceable-support-agent-live-integration` 已退出
-  当前事实来源，物理移除仍需单独授权。
+- 唯一权威开发位置为主 worktree `traceable-support-agent`；
+  `traceable-support-agent-live-workbench`、`traceable-support-agent-live-integration` 与
+  `traceable-support-agent-ci-contract` 已退出当前事实来源，物理移除仍需单独授权。
 - 收敛前主 worktree 未提交修改完整保存在本地分支 `backup/portfolio-experience-wip-20260726`
   （`a683dff`），可用 `git restore --source=backup/portfolio-experience-wip-20260726 .` 恢复。
 - 旧仓和临时回滚材料不是权威来源；删除仍是未经授权的独立破坏性动作。

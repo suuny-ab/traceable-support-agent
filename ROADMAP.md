@@ -17,19 +17,14 @@
 - [x] 用 Issue #21 建立 QA、工单与公网 API 共用的生成前确定性安全 / 型号边界，并通过固定候选复核、自动部署和用户验收。
 - [x] 用 Issue #22 建立两阶段失败分类、宿主机械投影和 clause 级来源绑定，关闭正式复核发现的来源越界；原真实模型候选质量完成门未满足，v15 兼容性保持未知并停止开放域调优。
 - [x] 用独立增量建立 CI 证明合同：每个 Check 绑定登记主张，绿灯区分已证明 / 故意跳过 / 未执行并失败关闭，红灯按产品 / 治理边界 / 外部依赖归因；依赖安全与产品功能分离（依赖变化时阻塞审计 + 周频定期审计）；经五轮独立复核、统一基线 `df81ccd` 自动部署；用户验收为 `user_confirmed_external` 外部回执（坐标与核验边界见归档记录，非 GitHub / 自动化证据）。
-
 ## 当前
 
-- [ ] [Issue #28：打造可真实运行、视觉有记忆点的公开作品集](https://github.com/suuny-ab/traceable-support-agent/issues/28)。
-  设计简报、参考矩阵、主页结构 v1 与产品命题已经用户确认；`Evidence Lens` v1–v3 均未
-  达到用户预期，Moonshot 桌面 / 手机首屏已形成可测量对齐合同。live workbench 候选
-  `71104ee` 已收敛并入基线（Draft PR #31），正在与新 CI 证明合同同步后重新核验。
-  Provider、生产开关与部署仍未授权；npm 依赖漂移为已登记缺口。
+- [ ] [Issue #28：打造可真实运行、视觉有记忆点的公开作品集](https://github.com/suuny-ab/traceable-support-agent/issues/28)：作品集视觉、公开回放体验与生产验收**部分**已完成并上线（PR #31 / #34，部署绑定 `34079d7`，独立最终生产体验验收 `PASS`）；原始范围中的公开真实 Provider 目标按求职取舍已停止且从未启用。Issue 仍为 OPEN，待用户按 `not planned` 关闭；不作为全部验收门通过记录。
 
 ## 下一步
 
-- [ ] [Issue #29：以面试官视角完成 GitHub 仓库展示改造](https://github.com/suuny-ab/traceable-support-agent/issues/29)。
-- [ ] [Issue #14：评估并收口 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)。
+- [ ] [Issue #29：以面试官视角完成 GitHub 仓库展示改造](https://github.com/suuny-ab/traceable-support-agent/issues/29)（下一项求职展示工作）。
+- [ ] [Issue #14：评估并收口 `product/0.1.0`](https://github.com/suuny-ab/traceable-support-agent/issues/14)（继续后置）。
 
 ## 长期范围外
 
