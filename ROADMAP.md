@@ -21,7 +21,11 @@
 
 ## 当前
 
-- 当前没有活动增量。仓库处于 `ready`，等待用户启动下一项工作。
+- [ ] `real-run-evidence` 真实运行证据持久化增量（`R0`，不启用实时模式）：transcript
+  合同接受 `authorized_real`、控制面内部持久化 transport 观察、提交探针离线夹具。候选
+  分支 `codex/real-run-evidence` 已本地提交，收口顺序为推送、Draft PR、CI 全绿、冻结
+  head 后正式独立复核；合并、部署与真实 Provider 调用均保持未授权。工作记录：
+  `docs/work/active/real-run-evidence/`。
 
 ## 下一步
 

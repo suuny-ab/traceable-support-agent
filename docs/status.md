@@ -18,13 +18,14 @@
 | 最近完成 | Issue #28 于 2026-07-28 以 `not planned` 关闭（视觉、回放体验与生产验收完成；公开真实 Provider 范围停止且从未启用）；PR #35 项目事实收口已合并部署（`4b3d46f`）；`docs/work/completed/ci-proof-contract/` |
 | 阻碍 | 无工程阻碍；npm 依赖漂移（11 high、test 锁 2 个）继续登记，修复与否待用户立项 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
-| 下一检查点 | 用户启动 Issue #29（GitHub 仓库展示改造）；Issue #14 继续后置；定期依赖审计变红告警按分层处理 |
+| 下一检查点 | 推送 `codex/real-run-evidence`、创建 Draft PR、CI 全绿后冻结 head 并进入正式独立复核；Issue #29（本地未推送展示分支保留）与 Issue #14 继续后置；定期依赖审计变红告警按分层处理 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
 | `TASK-TRACEABLE-LIVE-WORKBENCH` | `delivered` | PR #31 合并部署，最终生产体验验收 `PASS`；首页一致性由 PR #34 修正；Issue #28 已关闭归档 |
+| `TASK-REAL-RUN-EVIDENCE` | `candidate` | 本地提交 `def6072`（`codex/real-run-evidence`）；推送、Draft PR、CI 与正式复核待执行；不启用实时模式，生产 `replay_only` 不变 |
 
 Task 可以并行，进入受保护 `main`、正式复核、部署和用户验收仍按依赖串行。
 

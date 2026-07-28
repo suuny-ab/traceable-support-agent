@@ -1,6 +1,8 @@
 # 结果记录
 
-> 状态：作者侧实现与本地验证完成；未提交、未推送、未复核关闭。
+> 状态：作者侧实现与本地验证完成；已本地提交 `def6072`（分支
+> `codex/real-run-evidence`，基于 `origin/main` `79892eb`）；推送、Draft PR、CI
+> 与冻结 head 后的正式独立复核尚未执行。
 
 ## 实际交付
 
@@ -51,7 +53,7 @@
   `artifacts/models/...`）：119 项全部通过，无失败。
 - `python -m unittest discover -s tools/tests -p "test_*.py"`：105 项，
   `OK (skipped=7)`（环境门跳过，如 pip-audit 未安装）。
-- `python tools/check_public_repo.py --scope worktree`：`passed`，188 文件。
+- `python tools/check_public_repo.py --scope worktree`：`passed`，192 文件。
 - `python tools/generation_contract_probe.py --mode offline --offline-responses
   evals/fixtures/generation-contract-probe-offline-v1.json`：`cases=4/4 calls=8/8
   passed=true`，零 Provider 调用。
