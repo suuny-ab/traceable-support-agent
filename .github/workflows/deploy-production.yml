@@ -176,12 +176,54 @@ jobs:
           git fetch --no-tags origin main
           git merge-base --is-ancestor HEAD origin/main
           python tools/release_manifest.py --verify "$RELEASE_MANIFEST"
-      - name: Build public deployment package
+      - name: Build live API image on the production host
+        id: live_image
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          # The live API image carries offline model assets and is built on the
+          # production host (no registry publish; the manifest pins the local
+          # image ID). The provider credential is never touched here: the host
+          # already holds /opt/traceable-support/provider.env (0600).
+          ssh_dir="$RUNNER_TEMP/traceable-live-ssh"
+          install -d -m 700 "$ssh_dir"
+          python3 -c 'import os,sys; v=os.environ["DEPLOY_SSH_KEY"].replace("\\n","\n"); sys.stdout.write(v if v.endswith("\n") else v+"\n")' > "$ssh_dir/key"
+          chmod 600 "$ssh_dir/key"
+          python3 -c 'import os,sys; v=os.environ["DEPLOY_KNOWN_HOSTS"].replace("\\n","\n"); sys.stdout.write(v if v.endswith("\n") else v+"\n")' > "$ssh_dir/known_hosts"
+          chmod 600 "$ssh_dir/known_hosts"
+          port="${DEPLOY_PORT:-22}"
+          ssh_opts=(-F /dev/null -i "$ssh_dir/key" -o BatchMode=yes -o ConnectionAttempts=1 -o ConnectTimeout=15 -o IdentitiesOnly=yes -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$ssh_dir/known_hosts" -p "$port")
+          destination="$DEPLOY_USER@$DEPLOY_HOST"
+          git archive HEAD | ssh "${ssh_opts[@]}" "$destination" 'rm -rf /tmp/ts-live-build && mkdir -m 700 -p /tmp/ts-live-build && tar -x -C /tmp/ts-live-build'
+          image_id="$(ssh "${ssh_opts[@]}" "$destination" 'cd /tmp/ts-live-build && DOCKER_BUILDKIT=1 docker build --quiet --target live -t traceable-local/traceable-support-agent-api-live:staging -f api/Dockerfile . >/dev/null 2>&1 && docker image inspect --format "{{.Id}}" traceable-local/traceable-support-agent-api-live:staging; status=$?; rm -rf /tmp/ts-live-build; exit $status')"
+          case "$image_id" in sha256:*) ;; *) echo "live_image_id_invalid" >&2; exit 1;; esac
+          echo "image_ref=traceable-local/traceable-support-agent-api-live@${image_id}" >> "$GITHUB_OUTPUT"
+      - name: Generate and verify the live (v2) release manifest
         env:
           RELEASE_MANIFEST: ${{ runner.temp }}/traceable-release-artifact/release-manifest.json
         run: |
+          set -Eeuo pipefail
+          web_image="$(python3 -c 'import json, os; print(json.load(open(os.environ["RELEASE_MANIFEST"]))["images"]["web"])')"
+          python tools/release_manifest.py --experience live \
+            --git-sha "$(git rev-parse HEAD)" \
+            --web-image "$web_image" \
+            --api-image "${{ steps.live_image.outputs.image_ref }}" \
+            --built-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --github-run-id "$PUBLISH_RUN_ID" \
+            --github-run-attempt "${PUBLISH_RUN_ATTEMPT:-1}" \
+            --output "$RUNNER_TEMP/release-manifest-live.json"
+          python tools/release_manifest.py --verify "$RUNNER_TEMP/release-manifest-live.json"
+      - name: Build public deployment package
+        env:
+          LIVE_RELEASE_MANIFEST: ${{ runner.temp }}/release-manifest-live.json
+        run: |
           mkdir -p release-staging/deploy release-staging/tools
-          cp "$RELEASE_MANIFEST" release-staging/release-manifest.json
+          cp "$LIVE_RELEASE_MANIFEST" release-staging/release-manifest.json
           cp deploy/compose.production.yaml deploy/release-lib.sh deploy/activate-release.sh \
             deploy/rollback-release.sh deploy/switch_release_state.py \
             deploy/install_release.py release-staging/deploy/
