@@ -192,13 +192,15 @@ jobs:
           # already holds /opt/traceable-support/provider.env (0600).
           ssh_dir="$RUNNER_TEMP/traceable-live-ssh"
           install -d -m 700 "$ssh_dir"
-          python3 -c 'import os,sys; v=os.environ["DEPLOY_SSH_KEY"].replace("\\n","\n"); sys.stdout.write(v if v.endswith("\n") else v+"\n")' > "$ssh_dir/key"
+          python3 -c 'import os,sys; v=os.environ["DEPLOY_SSH_KEY"].lstrip("\ufeff").replace("\\n","\n").replace("\r\n","\n").replace("\r","\n"); sys.stdout.write(v.rstrip("\n")+"\n")' > "$ssh_dir/key"
           chmod 600 "$ssh_dir/key"
-          python3 -c 'import os,sys; v=os.environ["DEPLOY_KNOWN_HOSTS"].replace("\\n","\n"); sys.stdout.write(v if v.endswith("\n") else v+"\n")' > "$ssh_dir/known_hosts"
+          python3 -c 'import os,sys; v=os.environ["DEPLOY_KNOWN_HOSTS"].lstrip("\ufeff").replace("\\n","\n").replace("\r\n","\n").replace("\r","\n"); sys.stdout.write(v.rstrip("\n")+"\n")' > "$ssh_dir/known_hosts"
           chmod 600 "$ssh_dir/known_hosts"
-          port="${DEPLOY_PORT:-22}"
+          host="$(python3 -c 'import os; print(os.environ["DEPLOY_HOST"].strip("\ufeff \t\r\n"))')"
+          user="$(python3 -c 'import os; print(os.environ["DEPLOY_USER"].strip("\ufeff \t\r\n"))')"
+          port="$(python3 -c 'import os; print(os.environ.get("DEPLOY_PORT", "").strip("\ufeff \t\r\n") or "22")')"
           ssh_opts=(-F /dev/null -i "$ssh_dir/key" -o BatchMode=yes -o ConnectionAttempts=1 -o ConnectTimeout=15 -o IdentitiesOnly=yes -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$ssh_dir/known_hosts" -p "$port")
-          destination="$DEPLOY_USER@$DEPLOY_HOST"
+          destination="$user@$host"
           git archive HEAD | ssh "${ssh_opts[@]}" "$destination" 'rm -rf /tmp/ts-live-build && mkdir -m 700 -p /tmp/ts-live-build && tar -x -C /tmp/ts-live-build'
           image_id="$(ssh "${ssh_opts[@]}" "$destination" 'cd /tmp/ts-live-build && DOCKER_BUILDKIT=1 docker build --quiet --target live -t traceable-local/traceable-support-agent-api-live:staging -f api/Dockerfile . >/dev/null 2>&1 && docker image inspect --format "{{.Id}}" traceable-local/traceable-support-agent-api-live:staging; status=$?; rm -rf /tmp/ts-live-build; exit $status')"
           case "$image_id" in sha256:*) ;; *) echo "live_image_id_invalid" >&2; exit 1;; esac
