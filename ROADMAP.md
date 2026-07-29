@@ -23,10 +23,11 @@
 
 - [ ] `real-run-evidence` 真实运行证据持久化增量（`R0`，不启用实时模式）：transcript
   合同接受 `authorized_real`（账单未知三态与 transport 观察一致）、控制面内部持久化
-  transport 观察、提交探针离线夹具。Draft PR #37 修复与同步 head `b49e379` 四项
-  Checks 绿（run 30421455186）；第 2 轮定向复核确认代码语义修复通过，唯一剩余
-  阻断为 PR 说明与项目事实未同步（本轮文档与 PR 说明收口）；合并、部署与真实
-  Provider 调用均保持未授权。工作记录：
+  transport 观察、提交探针离线夹具。Draft PR #37：第 2 轮定向复核（复核时 head
+  `b49e379`，run 30421455186 绿）确认代码语义修复通过；事实收口 `f5a0971`
+  （run 30422565893 绿）与本轮 plan.md / 引用修正构成当前候选，产品代码自
+  `9c7ed59` 起未变，各推送 head Checks 均绿，最新状态以 PR 页面为准；合并、
+  部署与真实 Provider 调用均保持未授权。工作记录：
   `docs/work/active/real-run-evidence/`。
 
 ## 下一步

@@ -4,8 +4,10 @@
 2. `provider/contract.py`：
    - 新增 `_validate_attempt_mode_facts`，按 `offline_injected` / `authorized_real`
      分派 attempt 事实校验；offline 分支逐条保留原全零约束；
-   - `validate_transcript` 按模式分派计数约束，real 要求 `network_attempt_count>=1`、
-     `credential_read_count>=1`，并强制转录计数与记录事实一致、记录模式与转录模式一致；
+   - `validate_transcript` 按模式分派计数约束，real 要求 `credential_read_count>=1`
+     （每次调用必读凭据）；`network_attempt_count` 不设下界——按第 1 轮复核结论，
+     transport 可忠实产生零 network 的 credential_missing，下界会拒绝忠实记录；
+     并强制转录计数与记录事实一致、记录模式与转录模式一致；
    - `finalize_transcript` 增加 `execution_mode` / `transport_kind` 参数（默认 offline，
      行为不变），计数从记录事实求和，拒绝模式 / kind 错配；
    - manifest 更新 `tg07a_execution_mode` 与 `real_transport_wiring_status`，

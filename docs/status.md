@@ -12,20 +12,20 @@
 | 当前集成任务 | `real-run-evidence`：真实运行证据持久化候选（transcript 合同接受 `authorized_real`、运行包与控制面内部持久化 transport 观察、提交探针离线夹具）；不改变公开合同、公开响应、预算常量与生产 `replay_only` 姿态 |
 | 复杂度 | 标准 |
 | 风险 / 成熟度 | 增量 `R0`；产品保持 `S1 公开 Beta`、生产 `replay_only`；真实 Provider、费用、凭据和生产开关均未启用 |
-| 产品候选 | `codex/real-run-evidence` Draft PR #37：第 1 轮正式复核两项阻断已修复（`9c7ed59`）并同步，当前 head `b49e379` 四项 Checks 绿（run 30421455186）；第 2 轮定向复核确认代码语义修复通过，结论 `BLOCKED`——唯一阻断为 PR 说明与项目事实未同步，本轮收口处理；当前已部署产品版本 `34079d7`（PR #31 / #34），仓库基线为 `origin/main` 当前 head |
+| 产品候选 | `codex/real-run-evidence` Draft PR #37：第 1 轮两项阻断已修复（`9c7ed59`）；第 2 轮定向复核（复核时 head `b49e379`，run 30421455186 绿）确认代码语义通过、`BLOCKED` 仅剩事实同步；事实收口 `f5a0971`（run 30422565893 绿）与本轮 plan.md / 引用修正构成当前候选，产品代码自 `9c7ed59` 起未变，各推送 head 四项 Checks 均绿，最新状态以 PR #37 为准；当前已部署产品版本 `34079d7`（PR #31 / #34），仓库基线为 `origin/main` 当前 head |
 | 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | `docs/work/active/real-run-evidence/` |
 | 最近完成 | Issue #28 于 2026-07-28 以 `not planned` 关闭（视觉、回放体验与生产验收完成；公开真实 Provider 范围停止且从未启用）；PR #35 项目事实收口已合并部署（`4b3d46f`）；`docs/work/completed/ci-proof-contract/` |
 | 阻碍 | 无工程阻碍；npm 依赖漂移（11 high、test 锁 2 个）继续登记，修复与否待用户立项 |
 | Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
-| 下一检查点 | PR #37 事实收口推送且四项 Checks 全绿后，由复核者确认同步无误以解除 `BLOCKED`；合并、部署与真实 Provider 授权仍为独立用户决定；Issue #29（本地未推送展示分支保留）与 Issue #14 继续后置；定期依赖审计变红告警按分层处理 |
+| 下一检查点 | PR #37 事实收口（含 plan.md 旧约束修正与 PR 说明收窄）推送且四项 Checks 全绿后，由 Codex 定向独立复核确认同步无误以解除 `BLOCKED`；合并、部署与真实 Provider 授权仍为独立用户决定；Issue #29（本地未推送展示分支保留）与 Issue #14 继续后置；定期依赖审计变红告警按分层处理 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
 | `TASK-TRACEABLE-LIVE-WORKBENCH` | `delivered` | PR #31 合并部署，最终生产体验验收 `PASS`；首页一致性由 PR #34 修正；Issue #28 已关闭归档 |
-| `TASK-REAL-RUN-EVIDENCE` | `candidate` | Draft PR #37：head `b49e379` 四项 Checks 绿（run 30421455186）；第 1 轮两项阻断（合同账单 / 失败事实不忠实、候选文档滞后）已修复，第 2 轮定向复核确认代码语义通过，结论 `BLOCKED`（唯一阻断：事实未同步，本轮收口）；不启用实时模式，生产 `replay_only` 不变 |
+| `TASK-REAL-RUN-EVIDENCE` | `candidate` | Draft PR #37：第 1 轮两项阻断已修复；第 2 轮定向复核（复核时 head `b49e379`，run 30421455186 绿）确认代码语义通过，`BLOCKED` 唯一事由为事实未同步；已由 `f5a0971`（run 30422565893 绿）与本轮 plan.md / 引用修正收口，产品代码自 `9c7ed59` 未变；不启用实时模式，生产 `replay_only` 不变 |
 
 Task 可以并行，进入受保护 `main`、正式复核、部署和用户验收仍按依赖串行。
 

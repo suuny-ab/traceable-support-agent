@@ -67,7 +67,7 @@
 
 ## 正式独立复核回执（第 2 轮，定向）
 
-- `candidate_sha`：`b49e379a45ca0b99d38c152eff60e543deb78274`（PR #37 当前
+- `candidate_sha`：`b49e379a45ca0b99d38c152eff60e543deb78274`（复核时 PR #37
   head；代码修复为 `9c7ed59`，其上仅文档同步）。
 - 复核范围：仅两项原 finding 与覆盖 diff（`contract.py`、
   `test_real_run_transcript.py`、本目录与状态 / 路线文档）；未触及部分不重复
@@ -87,6 +87,9 @@
      实际账单恒 0"、11 例 / 119 项），结论真实性要求先完成事实收口。
 - 收口动作与边界：本轮同步 `review.md` / `result.md` / `docs/status.md` /
   `ROADMAP.md` 并更新 PR #37 说明为当前事实；产品代码自 `9c7ed59` 起未变。
+  收口后自查发现 `plan.md` 残留旧计划约束（real `network_attempt_count>=1`，
+  与已评审合同冲突）与状态材料自指 head / CI 引用，已随本轮一并修正；PR
+  说明的持久化表述同步收窄为仅 `provider_observations`。
   阻断解除以复核者确认同步无误为准；合并、部署与真实 Provider 授权仍为用户
   独立决定。
 
