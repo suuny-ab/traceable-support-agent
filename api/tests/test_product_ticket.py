@@ -52,7 +52,7 @@ def _evidence():
     return {"evidence_id": hit.unit_id, "text": hit.text}
 
 
-def _fixture(*, valid=True, gate_pass=True):
+def _fixture(*, valid=True, gate_pass=True, unknown_evidence=False):
     from traceable_support.generation.checklist import build_clause_inventory
     from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
 
@@ -87,6 +87,7 @@ def _fixture(*, valid=True, gate_pass=True):
             {"kind": "response", "status_code": 200,
              "body": json_response({"schema_version": "wrong"}, usage=USAGE, response_id="fx-1")},
         ])
+    claim_evidence_ids = ["E-unknown"] if unknown_evidence else [ev["evidence_id"]]
     proposal = {
         "schema_version": "ticket-proposal-result-v3",
         "task_type": "ticket",
@@ -97,7 +98,7 @@ def _fixture(*, valid=True, gate_pass=True):
             "claims": [
                 {"claim_id": "c1", "exact_span_text": selected["text"],
                  "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
-                 "evidence_ids": [ev["evidence_id"]], "obligation_ids": ["o1"]}
+                 "evidence_ids": claim_evidence_ids, "obligation_ids": ["o1"]}
             ],
             "insufficient_evidence": False,
         },
@@ -209,6 +210,41 @@ def test_run_ticket_candidate_and_persistence_roundtrip():
     assert loaded["package"]["ticket_id"] == "T-001"
     record_ticket_decision(connection, run_id="ticket-run-1", decision="edit", decision_text="人工修改后的回复")
     assert load_ticket_run(connection, "ticket-run-1")["decision_text"] == "人工修改后的回复"
+
+
+def test_run_ticket_accepts_wording_drift_with_valid_binding():
+    # 客户片段措辞漂移（不逐字位于草稿）但绑定真实有效：新语义下应为 candidate
+    package = run_ticket(
+        ticket=TICKET,
+        transport=_fixture(gate_pass=False),
+        mode="offline_injected",
+        run_id="ticket-run-1b",
+        worst_cost_limit_cny_nanos=500_000_000,
+    )
+    assert package["outcome"] == "candidate"
+    assert package["gates"]["step2_contract"] == "passed"
+    assert package["gates"]["completeness_gate"]["pass"] is True
+
+
+def test_run_ticket_rejects_unknown_evidence_binding():
+    # 绑定存在性底线：claim 引用不存在的证据 ID → fail closed 转人工
+    package = run_ticket(
+        ticket=TICKET,
+        transport=_fixture(unknown_evidence=True),
+        mode="offline_injected",
+        run_id="ticket-run-1c",
+        worst_cost_limit_cny_nanos=500_000_000,
+    )
+    assert package["outcome"] == "handoff"
+    assert package["handoff_reason"] == (
+        "generation_contract_failure:ticket_v2_claim_invalid"
+    )
+
+    connection = sqlite3.connect(":memory:")
+    create_ticket_tables(connection)
+    save_ticket_run(connection, package)
+    with pytest.raises(Exception, match="product_qa_decision_requires_candidate"):
+        record_ticket_decision(connection, run_id="ticket-run-1c", decision="approve", decision_text=None)
 
 
 def test_run_ticket_handoff_on_contract_failure_and_no_decision():

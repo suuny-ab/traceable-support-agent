@@ -29,7 +29,8 @@ USAGE = {
 }
 
 
-def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> OfflineInjectedTransport:
+def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True,
+             unknown_evidence: bool = False) -> OfflineInjectedTransport:
     from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
     from traceable_support.generation.checklist import build_clause_inventory
 
@@ -60,6 +61,7 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
             ],
         }
         answer_text = f"回答。{first}" if gate_pass else "回答。不含要素"
+        claim_evidence_ids = ["E-unknown"] if unknown_evidence else [evidence_id]
         result_obj = {
             "schema_version": "retrieved-top10-qa-result-v4",
             "task_type": "qa",
@@ -69,7 +71,7 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True) -> Of
                 "claims": [
                     {"claim_id": "c1", "exact_span_text": selected["text"],
                      "customer_visible_span_text": first if gate_pass else "不存在的客户片段",
-                     "evidence_ids": [evidence_id], "obligation_ids": ["o1"]}
+                     "evidence_ids": claim_evidence_ids, "obligation_ids": ["o1"]}
                 ],
                 "insufficient_evidence": False,
             },
@@ -152,7 +154,8 @@ def test_provider_observations_duck_typed_guard():
     ]
 
 
-def test_run_qa_rejects_forged_customer_visible_span():
+def test_run_qa_accepts_wording_drift_with_valid_binding():
+    # 客户片段措辞漂移（不逐字位于正文）但绑定真实有效：新语义下应为 candidate
     package = run_qa(
         question="CZ-R1 怎么开始局部清扫？",
         product_model="CZ-R1",
@@ -161,18 +164,39 @@ def test_run_qa_rejects_forged_customer_visible_span():
         run_id="test-run-2",
         worst_cost_limit_cny_nanos=500_000_000,
     )
+    assert package["outcome"] == "candidate"
+    assert package["gates"]["step2_contract"] == "passed"
+    assert package["gates"]["completeness_gate"]["pass"] is True
+
+    connection = sqlite3.connect(":memory:")
+    create_qa_tables(connection)
+    save_qa_run(connection, package)
+    record_qa_decision(connection, run_id="test-run-2", decision="approve", decision_text=None)
+    assert load_qa_run(connection, "test-run-2")["decision"] == "approve"
+
+
+def test_run_qa_rejects_unknown_evidence_binding():
+    # 绑定存在性底线：claim 引用不存在的证据 ID → fail closed 转人工
+    package = run_qa(
+        question="CZ-R1 怎么开始局部清扫？",
+        product_model="CZ-R1",
+        transport=_fixture("CZ-R1 怎么开始局部清扫？", unknown_evidence=True),
+        mode="offline_injected",
+        run_id="test-run-2b",
+        worst_cost_limit_cny_nanos=500_000_000,
+    )
     assert package["outcome"] == "handoff"
     assert package["handoff_reason"] == (
-        "generation_contract_failure:top10_v7_customer_span_invalid"
+        "generation_contract_failure:top10_v6_claim_invalid"
     )
-    assert package["failure_classification"]["family"] == "semantic_coverage"
+    assert package["failure_classification"]["family"] == "other"
     assert package["answer"] is None
 
     connection = sqlite3.connect(":memory:")
     create_qa_tables(connection)
     save_qa_run(connection, package)
     with pytest.raises(LlmQaError, match="product_qa_decision_requires_candidate"):
-        record_qa_decision(connection, run_id="test-run-2", decision="approve", decision_text=None)
+        record_qa_decision(connection, run_id="test-run-2b", decision="approve", decision_text=None)
 
 
 def test_run_qa_enumeration_contract_failure_handoffs_without_answer():
