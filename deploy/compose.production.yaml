@@ -40,7 +40,10 @@ services:
       TRACEABLE_PUBLIC_PORT: "8000"
       TRACEABLE_PUBLIC_DB: /var/lib/traceable/public.sqlite3
       TRACEABLE_PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN is required}
-      TRACEABLE_PUBLIC_LIVE_ENABLED: "false"
+      TRACEABLE_PUBLIC_LIVE_ENABLED: ${TRACEABLE_PUBLIC_LIVE_ENABLED:-false}
+    env_file:
+      - path: /opt/traceable-support/provider.env
+        required: false
     volumes:
       - traceable-data:/var/lib/traceable
     ports:

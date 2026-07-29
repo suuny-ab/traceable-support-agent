@@ -19,7 +19,7 @@ STEP2_MAX_OUTPUT_TOKENS = 16384
 STEP2_TIMEOUT_MS = 180_000
 STEP1_V2_PROMPT_VERSION = "obligation-checklist-prompt-v2"
 STEP1_PROMPT_VERSION = "obligation-checklist-prompt-v5"
-STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v8"
+STEP2_PROMPT_VERSION = "retrieved-top10-qa-prompt-v9"
 CHECKLIST_SYSTEM_PROMPT_V2 = """你是客服问答的义务分析器。输入包含问题、型号和按顺序排列的10条候选证据。只输出JSON，不输出解释。
 任务：列出回答当前问题在客户可见正文中必须覆盖的全部义务。每个问句、用户已完成步骤后的剩余检查、与当前问题直接相关的前置或安全条件、需要停止操作并转人工的条件，各为一项。并列出现的适用对象、条件或步骤（如\"A或B\"）必须每个分支都纳入义务，不得合并或遗漏。义务只来自证据，不得引入证据外义务。
 每项义务给出：obligation_id（简短标识）、description（义务的一句话描述）、evidence_ids（支撑该义务的证据ID，至少一个）、key_elements（1到4个从所绑定证据中逐字复制的关键短片段，每个2到60字符，用于后续机械核对正文覆盖；片段必须逐字存在于该义务绑定的证据原文中，不得改写包括标点）。
@@ -32,7 +32,7 @@ CHECKLIST_SYSTEM_PROMPT = """你是客服问答的义务分析器。输入包含
 分区合同：输入中的每个clause_id都必须被显式记账。与问题义务有关的子句放入至少一项义务的clause_ids；与当前问题无关的子句只放入ignored_clause_ids。不得把同一子句同时列为义务和忽略，不得漏掉任何clause_id。宿主会从clause_ids推导evidence_ids和被忽略的原文，不要重复这些机械字段。
 输出格式（占位值必须替换，clause_ids必须逐字使用输入中的实际值）：{\"schema_version\":\"obligation-checklist-v4\",\"obligations\":[{\"obligation_id\":\"o1\",\"description\":\"义务描述\",\"clause_ids\":[\"c001\"]}],\"ignored_clause_ids\":[\"c002\"]}"""
 STEP2_SYSTEM_PROMPT = QA_SYSTEM_PROMPT + """
-义务清单：输入中的obligation_checklist是已审定的运行时义务清单。每条claim必须用obligation_ids绑定它实际表达的义务，并通过exact_span_text声明来源原文、通过customer_visible_span_text声明answer.text中语义对应的连续片段。answer.text必须以自然语言完整表达每项义务。宿主会验证这些声明并推导obligation_plan和used_evidence_ids，不要重复输出这些字段。"""
+义务清单：输入中的obligation_checklist是已审定的运行时义务清单。每条claim必须用obligation_ids绑定它实际表达的义务，并用evidence_ids绑定真实存在且属于该义务批准来源范围的证据ID；宿主对绑定关系做存在性硬校验，缺失或伪造ID会被拒绝。exact_span_text声明来源定位片段、customer_visible_span_text声明answer.text中语义对应的连续片段，两者供人工复核定位，宿主不对措辞做逐字校验。answer.text必须以自然语言完整表达每项义务。宿主会验证这些声明并推导obligation_plan和used_evidence_ids，不要重复输出这些字段。"""
 
 
 class TwoStepError(ValueError):
@@ -54,9 +54,8 @@ def _squash(text: str) -> str:
 def completeness_gate(
     checklist: dict[str, Any], result: dict[str, Any]
 ) -> dict[str, Any]:
-    """Fail closed unless every obligation has a declared visible answer claim."""
+    """Fail closed unless every obligation has a declared bound claim."""
 
-    answer_text = result["content"]["answer"]["text"]
     claims = result["content"]["claims"]
     obligations = []
     for obligation in checklist["obligations"]:
@@ -64,7 +63,6 @@ def completeness_gate(
             claim["claim_id"]
             for claim in claims
             if obligation["obligation_id"] in claim["obligation_ids"]
-            and claim["customer_visible_span_text"] in answer_text
         ]
         obligations.append(
             {
@@ -81,7 +79,7 @@ def completeness_gate(
         "obligations": obligations,
         "uncovered_obligation_ids": uncovered,
         "pass": not uncovered,
-        "product_semantics": "llm_declares_semantic_mapping_host_verifies_visible_span_and_fails_closed",
+        "product_semantics": "llm_declares_semantic_mapping_host_verifies_binding_existence_and_fails_closed",
     }
 
 

@@ -98,6 +98,7 @@ PROMPTS = MappingProxyType({
 
 FAILURE_CODES = frozenset({
     "provider_request_too_large",
+    "provider_credential_missing",
     "provider_timeout",
     "provider_transport_error",
     "provider_redirect_rejected",
@@ -300,8 +301,8 @@ def build_manifest() -> dict[str, Any]:
         "credential_source": "current_process_DEEPSEEK_API_KEY_at_transport_send_only",
         "proxy_mode": "disabled",
         "redirect_mode": "rejected",
-        "tg07a_execution_mode": "offline_injected_only",
-        "real_transport_wiring_status": "not_connected_until_tg07b",
+        "tg07a_execution_mode": "offline_injected_and_authorized_real",
+        "real_transport_wiring_status": "wired_for_authorized_real_runs_only",
     }
     manifest["manifest_sha256"] = sha256_canonical(manifest)
     return manifest
@@ -580,7 +581,21 @@ def build_attempt_record(**fields: Any) -> dict[str, Any]:
     return record
 
 
-def finalize_transcript(*, object_id: str, run_id: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+TRANSCRIPT_MODE_KINDS = MappingProxyType(
+    {"offline_injected": "local_injected", "authorized_real": "official_https"}
+)
+
+
+def finalize_transcript(
+    *,
+    object_id: str,
+    run_id: str,
+    records: list[dict[str, Any]],
+    execution_mode: str = "offline_injected",
+    transport_kind: str = "local_injected",
+) -> dict[str, Any]:
+    if TRANSCRIPT_MODE_KINDS.get(execution_mode) != transport_kind:
+        raise Tg07aContractError("provider_transcript_invalid")
     manifest = build_manifest()
     estimated_cost_nanos = sum(
         record["cost"]["amount_cny_nanos"]
@@ -598,18 +613,91 @@ def finalize_transcript(*, object_id: str, run_id: str, records: list[dict[str, 
         "records": deepcopy(records),
         "record_count": len(records),
         "final_record_sha256": records[-1]["record_sha256"] if records else None,
-        "execution_mode": "offline_injected",
-        "transport_kind": "local_injected",
-        "network_attempt_count": 0,
-        "dns_attempt_count": 0,
-        "credential_read_count": 0,
-        "paid_call_count": 0,
-        "actual_paid_cost_cny_nanos": 0,
+        "execution_mode": execution_mode,
+        "transport_kind": transport_kind,
+        "network_attempt_count": sum(
+            1 for record in records if record.get("network_attempted") is True
+        ),
+        "dns_attempt_count": sum(
+            1 for record in records if record.get("dns_attempted") is True
+        ),
+        "credential_read_count": sum(
+            1 for record in records if record.get("credential_read_attempted") is True
+        ),
+        "paid_call_count": sum(
+            1 for record in records if record.get("paid_call_performed") is True
+        ),
+        "actual_paid_cost_cny_nanos": sum(
+            record["actual_paid_cost_cny_nanos"]
+            for record in records
+            if type(record.get("actual_paid_cost_cny_nanos")) is int
+        ),
         "estimated_cost_from_usage_cny_nanos": estimated_cost_nanos,
         "estimated_cost_semantics": "usage_pricing_estimate_not_invoice",
     }
     transcript["transcript_sha256"] = sha256_canonical(transcript)
     return transcript
+
+
+def _validate_attempt_mode_facts(record: dict[str, Any]) -> None:
+    """Bind network, credential, and billing facts to the execution mode.
+
+    ``offline_injected`` keeps the original all-zero contract. ``authorized_real``
+    accepts exactly the fact combinations the reviewed real transport can produce:
+    a credential read on every transport attempt, DNS coupled to the network
+    attempt, no response without a network attempt, and billing always unknown.
+    The transport never learns whether a real call was billed, so the contract
+    requires ``paid_call_performed is None`` and only allows
+    ``actual_paid_cost_cny_nanos`` to be ``None`` (unknown) or ``0`` (no
+    confirmed billed amount); it never asserts a real call was definitely
+    billed or definitely free.
+    """
+
+    if record["execution_mode"] == "offline_injected":
+        if (
+            record["transport_kind"] != "local_injected"
+            or record["network_attempted"] is not False
+            or record["dns_attempted"] is not False
+            or record["credential_read_attempted"] is not False
+            or record["paid_call_performed"] is not False
+            or type(record["actual_paid_cost_cny_nanos"]) is not int
+            or record["actual_paid_cost_cny_nanos"] != 0
+        ):
+            raise Tg07aContractError("provider_attempt_invalid")
+        return
+    if record["execution_mode"] != "authorized_real":
+        raise Tg07aContractError("provider_attempt_invalid")
+    if (
+        record["transport_kind"] != "official_https"
+        or any(
+            type(record[name]) is not bool
+            for name in (
+                "network_attempted",
+                "dns_attempted",
+                "credential_read_attempted",
+            )
+        )
+        or record["paid_call_performed"] is not None
+        or not (
+            record["actual_paid_cost_cny_nanos"] is None
+            or (
+                type(record["actual_paid_cost_cny_nanos"]) is int
+                and record["actual_paid_cost_cny_nanos"] == 0
+            )
+        )
+        or record["dns_attempted"] != record["network_attempted"]
+        or record["credential_read_attempted"] != record["transport_attempted"]
+        or (record["network_attempted"] and not record["transport_attempted"])
+        or (
+            (record["provider_response_received"] or record["http_status"] is not None)
+            and record["network_attempted"] is not True
+        )
+        or (
+            record["failure_code"] == "provider_timeout"
+            and record["network_attempted"] is not True
+        )
+    ):
+        raise Tg07aContractError("provider_attempt_invalid")
 
 
 def _validate_attempt(record: Any, *, sequence: int, previous: str | None, expected_request: PreparedRequest) -> dict[str, Any]:
@@ -655,16 +743,11 @@ def _validate_attempt(record: Any, *, sequence: int, previous: str | None, expec
         or record["latency_ms"] < 0
         or record["automatic_retry_count"] != 0
         or type(record["automatic_retry_count"]) is not int
-        or record["execution_mode"] != "offline_injected"
-        or record["transport_kind"] != "local_injected"
-        or record["network_attempted"] is not False
-        or record["dns_attempted"] is not False
-        or record["credential_read_attempted"] is not False
-        or record["paid_call_performed"] is not False
-        or type(record["actual_paid_cost_cny_nanos"]) is not int
-        or record["actual_paid_cost_cny_nanos"] != 0
+        or type(record["execution_mode"]) is not str
+        or type(record["transport_kind"]) is not str
     ):
         raise Tg07aContractError("provider_attempt_invalid")
+    _validate_attempt_mode_facts(record)
     if record["http_status"] is not None and (type(record["http_status"]) is not int or not 100 <= record["http_status"] <= 599):
         raise Tg07aContractError("provider_attempt_invalid")
     if record["status"] == "succeeded":
@@ -706,7 +789,7 @@ def _validate_attempt(record: Any, *, sequence: int, previous: str | None, expec
                 raise Tg07aContractError("provider_attempt_invalid")
         no_response_codes = {"provider_timeout", "provider_transport_error"}
         parsed_response_codes = {
-            "provider_response_too_large", "provider_response_json_invalid",
+            "provider_response_json_invalid",
             "provider_response_envelope_invalid", "provider_model_mismatch",
             "provider_reasoning_unexpected", "provider_usage_missing",
             "provider_usage_invalid", "provider_content_type_invalid",
@@ -718,6 +801,18 @@ def _validate_attempt(record: Any, *, sequence: int, previous: str | None, expec
                 and record["http_status"] is None
                 and record["response_safe_projection"] is None
                 and record["usage"] is None
+            )
+        elif record["failure_code"] == "provider_credential_missing":
+            # The real transport reports a missing credential before any
+            # network attempt; offline transports never read credentials.
+            valid_facts = (
+                record["execution_mode"] == "authorized_real"
+                and record["transport_attempted"] is True
+                and record["provider_response_received"] is False
+                and record["http_status"] is None
+                and record["response_safe_projection"] is None
+                and record["usage"] is None
+                and record["network_attempted"] is False
             )
         elif record["failure_code"] in no_response_codes:
             valid_facts = (
@@ -764,6 +859,28 @@ def _validate_attempt(record: Any, *, sequence: int, previous: str | None, expec
                         record["transport_attempted"] is True
                         and record["provider_response_received"] is True
                         and record["http_status"] == 200
+                    )
+                )
+            )
+        elif record["failure_code"] == "provider_response_too_large":
+            # Two faithful shapes: the adapter discarded an already received
+            # 200 response body (received + 200), or the real transport read
+            # past the byte cap and dropped the response object entirely
+            # (no received fact, no status, but a network attempt happened).
+            valid_facts = (
+                record["transport_attempted"] is True
+                and record["response_safe_projection"] is None
+                and record["usage"] is None
+                and (
+                    (
+                        record["provider_response_received"] is True
+                        and record["http_status"] == 200
+                    )
+                    or (
+                        record["execution_mode"] == "authorized_real"
+                        and record["provider_response_received"] is False
+                        and record["http_status"] is None
+                        and record["network_attempted"] is True
                     )
                 )
             )
@@ -828,20 +945,36 @@ def validate_transcript(
         or type(transcript["record_count"]) is not int
         or transcript["record_count"] != len(transcript["records"])
         or len(expected_calls) != len(transcript["records"])
-        or transcript["execution_mode"] != "offline_injected"
-        or transcript["transport_kind"] != "local_injected"
+        or type(transcript["execution_mode"]) is not str
+        or type(transcript["transport_kind"]) is not str
         or type(transcript["network_attempt_count"]) is not int
-        or transcript["network_attempt_count"] != 0
+        or transcript["network_attempt_count"] < 0
         or type(transcript["dns_attempt_count"]) is not int
-        or transcript["dns_attempt_count"] != 0
+        or transcript["dns_attempt_count"] < 0
         or type(transcript["credential_read_count"]) is not int
-        or transcript["credential_read_count"] != 0
+        or transcript["credential_read_count"] < 0
         or type(transcript["paid_call_count"]) is not int
-        or transcript["paid_call_count"] != 0
+        or transcript["paid_call_count"] < 0
         or type(transcript["actual_paid_cost_cny_nanos"]) is not int
-        or transcript["actual_paid_cost_cny_nanos"] != 0
+        or transcript["actual_paid_cost_cny_nanos"] < 0
         or transcript["estimated_cost_semantics"] != "usage_pricing_estimate_not_invoice"
     ):
+        raise Tg07aContractError("provider_transcript_invalid")
+    if (
+        TRANSCRIPT_MODE_KINDS.get(transcript["execution_mode"])
+        != transcript["transport_kind"]
+    ):
+        raise Tg07aContractError("provider_transcript_invalid")
+    if transcript["execution_mode"] == "offline_injected":
+        if (
+            transcript["network_attempt_count"] != 0
+            or transcript["dns_attempt_count"] != 0
+            or transcript["credential_read_count"] != 0
+            or transcript["paid_call_count"] != 0
+            or transcript["actual_paid_cost_cny_nanos"] != 0
+        ):
+            raise Tg07aContractError("provider_transcript_invalid")
+    elif transcript["credential_read_count"] < 1:
         raise Tg07aContractError("provider_transcript_invalid")
     previous: str | None = None
     expected_stage_order = [STAGE_PLAN, STAGE_CONTENT]
@@ -858,6 +991,11 @@ def validate_transcript(
             timeout_ms=expected_call["timeout_ms"],
         )
         checked = _validate_attempt(record, sequence=index, previous=previous, expected_request=prepared)
+        if (
+            checked["execution_mode"] != transcript["execution_mode"]
+            or checked["transport_kind"] != transcript["transport_kind"]
+        ):
+            raise Tg07aContractError("provider_transcript_invalid")
         previous = checked["record_sha256"]
         if checked["status"] == "failed" and index != len(transcript["records"]):
             raise Tg07aContractError("provider_transcript_invalid")
@@ -871,6 +1009,24 @@ def validate_transcript(
     if (
         type(transcript["estimated_cost_from_usage_cny_nanos"]) is not int
         or transcript["estimated_cost_from_usage_cny_nanos"] != expected_estimated_cost
+    ):
+        raise Tg07aContractError("provider_transcript_invalid")
+    counter_facts = (
+        ("network_attempt_count", "network_attempted"),
+        ("dns_attempt_count", "dns_attempted"),
+        ("credential_read_count", "credential_read_attempted"),
+        ("paid_call_count", "paid_call_performed"),
+    )
+    if any(
+        transcript[count_key]
+        != sum(1 for record in transcript["records"] if record[fact_key] is True)
+        for count_key, fact_key in counter_facts
+    ):
+        raise Tg07aContractError("provider_transcript_invalid")
+    if transcript["actual_paid_cost_cny_nanos"] != sum(
+        record["actual_paid_cost_cny_nanos"]
+        for record in transcript["records"]
+        if type(record["actual_paid_cost_cny_nanos"]) is int
     ):
         raise Tg07aContractError("provider_transcript_invalid")
     return deepcopy(transcript)

@@ -486,6 +486,8 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         "- name: Bind manifest to the selected green run",
         "- name: Check out the manifest commit",
         "- name: Verify manifest and main ancestry",
+        "- name: Build live API image on the production host",
+        "- name: Generate and verify the live (v2) release manifest",
         "- name: Build public deployment package",
         "- name: Verify trusted deployment controller integrity",
         "- name: Upload and activate with strict host verification",
@@ -756,9 +758,26 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         for line in (workflow or "").splitlines()
         if line.strip() and not line.strip().startswith("#")
     ) or any(
-        sum(candidate.strip() == expected for candidate in (workflow or "").splitlines()) != 1
+        # Each deploy secret is mapped exactly twice: the pinned live-image
+        # host-build step and the pinned upload step, nowhere else.
+        sum(candidate.strip() == expected for candidate in (workflow or "").splitlines()) != 2
         for expected in secret_contract
     )
+    live_build_blocks = [
+        block
+        for block in step_blocks
+        if block.splitlines()[0].strip()
+        == "- name: Build live API image on the production host"
+    ]
+    live_build_block = live_build_blocks[0] if len(live_build_blocks) == 1 else ""
+    live_build_env = _yaml_block(live_build_block, "env", 8)
+    live_build_env_entries = tuple(
+        line.strip()
+        for line in (live_build_env or "").splitlines()[1:]
+        if line.strip() and not line.strip().startswith("#")
+    )
+    live_build_env_invalid = live_build_env_entries != secret_contract
+    deploy_without_live_build = (deploy or "").replace(live_build_block, "")
     upload_env_entries = tuple(
         line.strip()
         for line in (upload_env or "").splitlines()[1:]
@@ -770,7 +789,10 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     transport_command = re.compile(r"(?<![A-Za-z0-9_])(?:ssh|scp)(?![A-Za-z0-9_])")
     direct_transport = False
     direct_secret_reference = False
-    for line in (deploy or "").splitlines():
+    # Direct ssh/scp and direct DEPLOY_* references are confined to the
+    # pinned live-image host-build step; everywhere else in the deploy job
+    # they stay forbidden (the upload step must use the trusted controller).
+    for line in deploy_without_live_build.splitlines():
         stripped = line.strip()
         if stripped and not stripped.startswith("#") and transport_command.search(stripped):
             direct_transport = True
@@ -815,6 +837,7 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         or invalid_secret_mapping
         or upload_commands != expected_upload_commands
         or upload_block_lines != expected_upload_block_lines
+        or live_build_env_invalid
         or any(
             not _has_exact_yaml_line(upload_block, indent, line)
             or _count_exact_yaml_lines(deploy, indent, line) != 1
@@ -1031,9 +1054,12 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             if phrase not in claims:
                 errors.append(f"required_public_claim_missing:{phrase}")
         machine_claims = (
-            "provider_enabled=false",
-            "provider_calls=0",
-            "provider_cost_cny=0",
+            # Live era: provider is enabled by explicit authorization; the
+            # status file must keep the confinement and budget facts visible.
+            "provider_enabled=true",
+            "provider.env",
+            "0600",
+            "重试 0",
         )
         if any(phrase not in status.lower() for phrase in machine_claims):
             errors.append("migration_provider_zero_claim_missing")
@@ -1100,7 +1126,19 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             "${API_IMAGE:?API_IMAGE must be an immutable digest}",
         ]:
             errors.append("production_compose_image_contract_invalid")
-        if 'TRACEABLE_PUBLIC_LIVE_ENABLED: "false"' not in compose:
+        live_flag_contract = (
+            "TRACEABLE_PUBLIC_LIVE_ENABLED: "
+            "${TRACEABLE_PUBLIC_LIVE_ENABLED:-false}"
+        )
+        provider_env_contract = (
+            "path: /opt/traceable-support/provider.env",
+            "required: false",
+        )
+        if live_flag_contract not in compose or any(
+            line not in compose for line in provider_env_contract
+        ):
+            # The provider flag must default to off and the credential must
+            # stay an optional, host-side 0600 env file (never built in).
             errors.append("production_provider_disable_missing")
     except (UnicodeDecodeError, ValueError) as exc:
         errors.append(str(exc))

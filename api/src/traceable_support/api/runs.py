@@ -274,6 +274,10 @@ class PublicRunService:
                     run_count INTEGER NOT NULL,
                     PRIMARY KEY(period_kind, period_key)
                 );
+                CREATE TABLE IF NOT EXISTS run_evidence (
+                    run_id TEXT PRIMARY KEY,
+                    evidence_json TEXT NOT NULL
+                );
                 CREATE TABLE IF NOT EXISTS metric_rollups (
                     day_key TEXT NOT NULL,
                     terminal_status TEXT NOT NULL,
@@ -636,6 +640,7 @@ class PublicRunService:
             package = execution.package
             call_count = execution.provider_call_count
             result = project_public_package(package, provider_call_count=call_count)
+            observations = package.get("provider_observations")
             terminal = "completed" if result["outcome"] == "candidate" else "handoff"
             self._finish(
                 run_id,
@@ -643,6 +648,9 @@ class PublicRunService:
                 result=result,
                 provider_calls=call_count,
                 error_code=package.get("handoff_reason"),
+                provider_observations=(
+                    observations if type(observations) is list else None
+                ),
             )
         except BaseException as exc:
             logging.error(
@@ -702,24 +710,38 @@ class PublicRunService:
         result: dict[str, Any],
         provider_calls: int | None,
         error_code: str | None,
+        provider_observations: list[dict[str, Any]] | None = None,
     ) -> None:
         if status not in TERMINAL_STATUSES or not (
             provider_calls is None
             or (type(provider_calls) is int and provider_calls >= 0)
+        ) or not (
+            provider_observations is None or type(provider_observations) is list
         ):
             raise ValueError("public_api_finish_invalid")
         with self._db_lock, closing(self._connect()) as connection:
-            connection.execute(
-                "UPDATE runs SET status=?, updated_at=?, result_json=?, error_code=?, provider_calls=? WHERE run_id=? AND status NOT IN ('completed','handoff')",
-                (
-                    status,
-                    _iso(self.now()),
-                    _canonical_json(result),
-                    error_code,
-                    provider_calls,
-                    run_id,
-                ),
-            )
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                updated = connection.execute(
+                    "UPDATE runs SET status=?, updated_at=?, result_json=?, error_code=?, provider_calls=? WHERE run_id=? AND status NOT IN ('completed','handoff')",
+                    (
+                        status,
+                        _iso(self.now()),
+                        _canonical_json(result),
+                        error_code,
+                        provider_calls,
+                        run_id,
+                    ),
+                ).rowcount
+                if updated and provider_observations is not None:
+                    connection.execute(
+                        "INSERT OR REPLACE INTO run_evidence (run_id, evidence_json) VALUES (?, ?)",
+                        (run_id, _canonical_json(provider_observations)),
+                    )
+                connection.commit()
+            except BaseException:
+                connection.rollback()
+                raise
 
     def get_run(self, run_id: str) -> dict[str, Any]:
         if not re.fullmatch(r"[A-Za-z0-9_-]{20,100}", run_id):
@@ -739,6 +761,22 @@ class PublicRunService:
                 "decided_at": row["decided_at"],
             }
         return value
+
+    def load_run_evidence(self, run_id: str) -> list[dict[str, Any]] | None:
+        """Read back persisted safe transport observations for internal review.
+
+        This internal evidence surface is never projected into the public
+        ``get_run`` response; observations stay secret-free by construction.
+        """
+
+        with self._db_lock, closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT evidence_json FROM run_evidence WHERE run_id=?", (run_id,)
+            ).fetchone()
+        if row is None:
+            return None
+        value = json.loads(row["evidence_json"])
+        return value if type(value) is list else None
 
     def decide(self, run_id: str, payload: dict[str, Any]) -> dict[str, str]:
         if type(payload) is not dict or not set(payload).issubset({"decision", "decision_text"}) or "decision" not in payload:
@@ -798,6 +836,9 @@ class PublicRunService:
                 removed = connection.execute(
                     "DELETE FROM runs WHERE created_at<?", (_iso(cutoff),)
                 ).rowcount
+                connection.execute(
+                    "DELETE FROM run_evidence WHERE run_id NOT IN (SELECT run_id FROM runs)"
+                )
                 if removed:
                     connection.execute(
                         "UPDATE maintenance_state SET pending_secure_erase=1 WHERE singleton=1"

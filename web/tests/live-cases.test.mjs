@@ -76,7 +76,7 @@ test("boundary challenge copy declares the live-off exception honestly", async (
 
   // 规格不得再保留两处旧概括原文（实时不可用时不能创建任何新运行）。
   const specSource = await readFile(
-    new URL("../../docs/work/active/portfolio-live-experience/spec.md", import.meta.url),
+    new URL("../../docs/work/completed/portfolio-live-experience/spec.md", import.meta.url),
     "utf8",
   );
   assert.doesNotMatch(specSource, /只明确说明不能创建新的运行/);

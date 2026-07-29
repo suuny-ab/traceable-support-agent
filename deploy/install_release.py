@@ -90,6 +90,7 @@ def _public_smoke(
     deadline: float,
     monotonic: Callable[[], float] = time.monotonic,
     runner: Callable[..., subprocess.CompletedProcess[bytes]] = subprocess.run,
+    expected_experience: str = "replay_only",
 ) -> None:
     def request(url: str, *, capture_body: bool = False) -> tuple[int, bytes]:
         remaining = deadline - monotonic()
@@ -153,7 +154,7 @@ def _public_smoke(
     if health != {
         "status": "ok",
         "service": "traceable-support-public-api",
-        "live_experience": "replay_only",
+        "live_experience": expected_experience,
     }:
         raise RuntimeError("public_health_contract_invalid")
 
@@ -217,16 +218,29 @@ def _rehearsal_anchor(release_root: Path, release_dir: Path) -> Path:
     return anchor
 
 
-def _prepare_release(staging: Path, release_root: Path, public_origin: str) -> Path:
+def _prepare_release(
+    staging: Path,
+    release_root: Path,
+    public_origin: str,
+    *,
+    live_enabled: bool | None = None,
+) -> tuple[Path, bool]:
     manifest_path = staging / "release-manifest.json"
     _run("python3", str(staging / "tools" / "release_manifest.py"), "--verify", str(manifest_path))
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_live = manifest["runtime"]["provider_enabled"] is True
+    if live_enabled is not None and manifest_live != live_enabled:
+        raise RuntimeError("provider_live_manifest_mismatch")
+    # An explicit flag must agree with the manifest; without a flag the
+    # manifest runtime is the deliberate, reviewed expression of the mode.
+    live = manifest_live
+    api_image = manifest["images"].get("api_live") or manifest["images"]["api_replay"]
     release_dir = release_root / "releases" / manifest["git_sha"]
     if release_dir.exists():
         existing = release_dir / "release-manifest.json"
         if not existing.is_file() or existing.read_bytes() != manifest_path.read_bytes():
             raise RuntimeError("existing_release_identity_conflict")
-        return release_dir
+        return release_dir, live
 
     release_dir.mkdir(parents=True, exist_ok=False)
     (release_dir / "deploy").mkdir()
@@ -241,38 +255,72 @@ def _prepare_release(staging: Path, release_root: Path, public_origin: str) -> P
         (release_dir / "deploy" / script).chmod(0o755)
     environment = (
         f"WEB_IMAGE={manifest['images']['web']}\n"
-        f"API_IMAGE={manifest['images']['api_replay']}\n"
+        f"API_IMAGE={api_image}\n"
         f"PUBLIC_ORIGIN={public_origin}\n"
-        "TRACEABLE_PUBLIC_LIVE_ENABLED=false\n"
+        f"TRACEABLE_PUBLIC_LIVE_ENABLED={'true' if live else 'false'}\n"
     )
     environment_path = release_dir / "release.env"
     environment_path.write_text(environment, encoding="utf-8")
     environment_path.chmod(0o600)
     _run("python3", str(release_dir / "tools" / "release_manifest.py"), "--verify", str(release_dir / "release-manifest.json"))
-    return release_dir
+    return release_dir, live
+
+
+def _release_live_from_env(release_dir: Path) -> bool:
+    env_path = release_dir / "release.env"
+    if not env_path.is_file():
+        return False
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("TRACEABLE_PUBLIC_LIVE_ENABLED="):
+            return line.split("=", 1)[1] == "true"
+    return False
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--staging", type=Path, required=True)
     parser.add_argument("--release-root", type=Path, default=Path("/opt/traceable-support"))
+    parser.add_argument(
+        "--enable-provider-live",
+        action="store_true",
+        default=None,
+        help=(
+            "Require the live Provider experience; must agree with the manifest"
+            " runtime. Without the flag the manifest runtime decides"
+            " (v1 replay manifests keep replay_only)."
+        ),
+    )
     args = parser.parse_args()
     staging = args.staging.resolve()
     release_root = args.release_root.resolve()
     if not staging.is_dir() or not release_root.is_absolute() or release_root == Path(release_root.anchor):
         raise SystemExit("deployment_path_invalid")
     public_origin = _validated_input(staging)
-    release_dir = _prepare_release(staging, release_root, public_origin)
+    release_dir, live_enabled = _prepare_release(
+        staging, release_root, public_origin, live_enabled=args.enable_provider_live
+    )
+    experience = "available" if live_enabled else "replay_only"
     rehearsal_anchor = _rehearsal_anchor(release_root, release_dir)
+    anchor_experience = (
+        "available" if _release_live_from_env(rehearsal_anchor) else "replay_only"
+    )
     host_caddy_sha256 = _required_sha(Path("/etc/caddy/Caddyfile"))
     activate = release_dir / "deploy" / "activate-release.sh"
     rollback = release_dir / "deploy" / "rollback-release.sh"
     steps: list[str] = []
 
+    def _smoke_for(expected: str) -> Callable[..., None]:
+        return lambda origin, *, deadline, monotonic: _public_smoke(
+            origin,
+            deadline=deadline,
+            monotonic=monotonic,
+            expected_experience=expected,
+        )
+
     def activate_and_smoke(label: str) -> None:
         _run("bash", str(activate), str(release_root), str(release_dir))
         try:
-            _wait_public_smoke(public_origin)
+            _wait_public_smoke(public_origin, smoke=_smoke_for(experience))
         except Exception:
             if (release_root / "previous").is_symlink():
                 _run("bash", str(rollback), str(release_root))
@@ -283,18 +331,18 @@ def main() -> int:
     if not (release_root / "previous").is_symlink():
         recovery = rehearsal_anchor / "deploy" / "activate-release.sh"
         _run("bash", str(recovery), str(release_root), str(rehearsal_anchor))
-        _wait_public_smoke(public_origin)
+        _wait_public_smoke(public_origin, smoke=_smoke_for(anchor_experience))
         raise RuntimeError("rollback_rehearsal_anchor_not_committed")
     _run("bash", str(rollback), str(release_root))
-    _wait_public_smoke(public_origin)
+    _wait_public_smoke(public_origin, smoke=_smoke_for(anchor_experience))
     steps.append("canonical_to_legacy")
     activate_and_smoke("legacy_to_canonical_again")
 
     receipt = {
         "schema_version": "traceable-deployment-receipt-v1",
         "git_sha": release_dir.name,
-        "provider_enabled": False,
-        "public_health": "replay_only",
+        "provider_enabled": live_enabled,
+        "public_health": experience,
         "steps": steps,
         "completed_at_unix": int(time.time()),
         "host_caddy_sha256": host_caddy_sha256,
@@ -302,7 +350,7 @@ def main() -> int:
 
     def restore_legacy_after_receipt_failure() -> None:
         _run("bash", str(rollback), str(release_root))
-        _wait_public_smoke(public_origin)
+        _wait_public_smoke(public_origin, smoke=_smoke_for(anchor_experience))
 
     _commit_receipt_or_restore(
         release_dir / "deployment-receipt.json",
@@ -310,7 +358,7 @@ def main() -> int:
         restore_legacy_after_receipt_failure,
     )
     print(f"release_installed={release_dir.name}")
-    print("provider_enabled=false")
+    print(f"provider_enabled={'true' if live_enabled else 'false'}")
     print("rollback_rehearsal=passed")
     return 0
 

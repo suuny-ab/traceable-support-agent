@@ -18,6 +18,7 @@ from .qa import (
     STEP1_MAX_OUTPUT_TOKENS,
     STEP2_MAX_OUTPUT_TOKENS,
     _context_contradiction,
+    _provider_observations,
     _record_handoff,
     _retrieve_evidence,
     _request_body,
@@ -176,6 +177,7 @@ def run_ticket(
         schema=CHECKLIST_SCHEMA_VERSION, run_id=run_id, case_label="enumerate",
     )
     package["worst_cost_cny_nanos"] += step1["worst_cost_cny_nanos"]
+    package["provider_observations"] = _provider_observations(transport)
     if not step1["ok"]:
         package["gates"]["step1_execution"] = "failed"
         _stage("enumeration", "failed")
@@ -218,6 +220,7 @@ def run_ticket(
         schema=TICKET_OUTPUT_SCHEMA_VERSION, run_id=run_id, case_label="generate",
     )
     package["worst_cost_cny_nanos"] += step2["worst_cost_cny_nanos"]
+    package["provider_observations"] = _provider_observations(transport)
     if not step2["ok"]:
         package["gates"]["step2_execution"] = "failed"
         _stage("generation", "failed")

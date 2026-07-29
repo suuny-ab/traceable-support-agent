@@ -240,6 +240,39 @@ class GenerationContractProbeTest(unittest.TestCase):
         )
         self.assertTrue(all(case["passed"] for case in report["cases"]))
 
+    def test_committed_offline_fixture_passes_full_probe(self) -> None:
+        fixture = (
+            REPO_ROOT
+            / "evals"
+            / "fixtures"
+            / "generation-contract-probe-offline-v1.json"
+        )
+        self.assertTrue(fixture.is_file())
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            report_path = root / "report.json"
+            code = generation_contract_probe.main(
+                [
+                    "--mode",
+                    "offline",
+                    "--offline-responses",
+                    str(fixture),
+                    "--out",
+                    str(root / "private"),
+                    "--report",
+                    str(report_path),
+                    "--git-sha",
+                    "0" * 40,
+                ]
+            )
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(code, 0)
+        self.assertTrue(report["totals"]["passed"])
+        self.assertEqual(report["totals"]["cases_executed"], 4)
+        self.assertEqual(report["totals"]["provider_calls"], 8)
+        self.assertIsNone(report["totals"]["stop_code"])
+
     def test_scoring_normalizes_nfkc_punctuation_without_semantic_model(self) -> None:
         self.assertEqual(
             generation_contract_probe._score_text("断电，检查。"),

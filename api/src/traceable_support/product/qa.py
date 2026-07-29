@@ -221,6 +221,21 @@ def _record_handoff(
     return package
 
 
+def _provider_observations(transport: Any) -> list[dict[str, Any]]:
+    """Snapshot the transport's validated safe observations, if it exposes any.
+
+    Observations are canary-checked at the transport boundary and carry no
+    prompts, responses, headers, or credentials. The public projection never
+    copies them; the control plane persists them as internal run evidence.
+    """
+
+    safe_observations = getattr(transport, "safe_observations", None)
+    if not callable(safe_observations):
+        return []
+    observations = safe_observations()
+    return observations if type(observations) is list else []
+
+
 def run_qa(
     *,
     question: str,
@@ -298,6 +313,7 @@ def run_qa(
         "handoff_reason": None,
         "failure_classification": None,
     }
+    package["provider_observations"] = _provider_observations(transport)
     if not step1["ok"]:
         package["worst_cost_cny_nanos"] += step1["worst_cost_cny_nanos"]
         package["gates"]["step1_execution"] = "failed"
@@ -342,6 +358,7 @@ def run_qa(
         stage_input_sha=sha256_canonical(stage_input_2),
         schema=OUTPUT_SCHEMA_VERSION, run_id=run_id, case_label="generate",
     )
+    package["provider_observations"] = _provider_observations(transport)
     if not step2["ok"]:
         package["worst_cost_cny_nanos"] += step2["worst_cost_cny_nanos"]
         package["gates"]["step2_execution"] = "failed"

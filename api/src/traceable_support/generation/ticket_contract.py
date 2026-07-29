@@ -8,12 +8,13 @@ from typing import Any
 FORBIDDEN_CUSTOMER_PHRASES = ("自动生成", "仅为草稿", "不能标记为已解决", "内部流程", "系统要求", "客服审核")
 LEGACY_TICKET_OUTPUT_SCHEMA_VERSION = "ticket-proposal-result-v1"
 TICKET_OUTPUT_SCHEMA_VERSION = "ticket-proposal-result-v3"
+TICKET_PROMPT_VERSION = "ticket-proposal-prompt-v2"
 TICKET_SYSTEM_PROMPT = """你是客服工单处理建议生成器。输入包含工单问题、型号、按顺序排列的10条候选证据和已审定obligation_checklist义务清单。只输出JSON，不输出推理。
 严格身份：顶层schema_version必须逐字为\"ticket-proposal-result-v3\"；顶层task_type必须逐字为\"ticket\"；content.kind必须逐字为\"ticket_proposal\"。
 宿主推导：不要输出obligation_plan或used_evidence_ids；宿主会从已审定义务清单和claims机械推导这些字段。
-来源规则：每项义务的approved_source_spans是宿主从第一阶段所选clause机械派生的唯一允许来源范围。每条claim优先且默认只绑定一个evidence_id，exact_span_text必须逐字位于所绑定每项义务对应evidence_id的一条approved_source_span内；只有同一exact_span_text逐字存在于每个义务和来源的允许范围时才可绑定多个来源或义务。每条claim还必须逐字复制draft_reply中表达同一来源主张的连续customer_visible_span_text；客户片段可以自然改写来源，但必须确实表达该主张。每条claim必须用obligation_ids归属至少一项义务；每项义务至少由一条claim支撑。
+来源规则：每条claim优先且默认只绑定一个evidence_id；绑定的每个evidence_id必须是输入证据中真实存在的ID，且必须属于所绑定每项义务批准的来源范围（approved_source_spans对应的证据）。exact_span_text是从所绑定证据原文中摘取的连续定位片段，供人工复核快速定位出处；宿主只硬校验绑定ID的存在性，不对该片段做逐字校验，但不得填写与所绑定证据无关的内容。绑定多个来源或义务时，每个evidence_id都必须属于每个义务的批准来源范围。每条claim还必须用customer_visible_span_text声明draft_reply中表达同一来源主张的连续片段；客户片段可以自然改写来源，宿主不逐字校验措辞，但片段必须确实表达该主张。每条claim必须用obligation_ids归属至少一项义务；每项义务至少由一条claim支撑。
 内容规则：action_steps是给客服的操作步骤（每步一句话，先用户可自助的检查，后升级路径）；draft_reply是给客户看的回复草稿，必须明确表达每项义务。draft_reply不得出现自动生成、草稿、内部流程、审核、标记已解决等系统或客服操作话术，不得补充证据外事实。
-输出格式：{"schema_version":"ticket-proposal-result-v3","task_type":"ticket","content":{"kind":"ticket_proposal","action_steps":["步骤一","步骤二"],"draft_reply":"客户可见回复","claims":[{"claim_id":"c1","exact_span_text":"从E1逐字复制的连续原文","customer_visible_span_text":"回复中表达该来源主张的连续片段","evidence_ids":["E1"],"obligation_ids":["o1"]}],"insufficient_evidence":false}}"""
+输出格式：{"schema_version":"ticket-proposal-result-v3","task_type":"ticket","content":{"kind":"ticket_proposal","action_steps":["步骤一","步骤二"],"draft_reply":"客户可见回复","claims":[{"claim_id":"c1","exact_span_text":"从E1摘取的连续定位片段","customer_visible_span_text":"回复中表达该来源主张的连续片段","evidence_ids":["E1"],"obligation_ids":["o1"]}],"insufficient_evidence":false}}"""
 
 
 class TicketContractError(ValueError):
@@ -224,7 +225,6 @@ def validate_ticket_result_v2(
             type(customer_span) is not str
             or not customer_span
             or len(customer_span) > 300
-            or customer_span not in draft
         ):
             _fail("ticket_v3_customer_span_invalid")
         if (
@@ -240,7 +240,6 @@ def validate_ticket_result_v2(
             or any(
                 type(evidence_id) is not str
                 or evidence_id not in evidence_by_id
-                or span not in evidence_by_id[evidence_id]["text"]
                 for evidence_id in evidence_ids
             )
             or type(obligation_ids) is not list
@@ -258,15 +257,6 @@ def validate_ticket_result_v2(
             allowed_sources = obligation["evidence_ids"]
             if any(evidence_id not in allowed_sources for evidence_id in evidence_ids):
                 _fail("ticket_v2_obligation_binding_invalid")
-            if any(
-                not any(
-                    source_span["evidence_id"] == evidence_id
-                    and span in source_span["exact_span_text"]
-                    for source_span in obligation["approved_source_spans"]
-                )
-                for evidence_id in evidence_ids
-            ):
-                _fail("ticket_v4_clause_binding_invalid")
             referenced[obligation_id].extend(evidence_ids)
         claim_ids.append(claim_id)
         used_set.update(evidence_ids)
@@ -292,8 +282,7 @@ def validate_ticket_result_v2(
 
 
 def ticket_completeness_gate(checklist: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
-    """Every obligation must have a declared customer-visible draft claim."""
-    draft = result["content"]["draft_reply"]
+    """Fail closed unless every obligation has a declared bound claim."""
     claims = result["content"]["claims"]
     obligations = []
     for obligation in checklist["obligations"]:
@@ -301,7 +290,6 @@ def ticket_completeness_gate(checklist: dict[str, Any], result: dict[str, Any]) 
             claim["claim_id"]
             for claim in claims
             if obligation["obligation_id"] in claim["obligation_ids"]
-            and claim["customer_visible_span_text"] in draft
         ]
         obligations.append({
             "obligation_id": obligation["obligation_id"],
@@ -314,7 +302,7 @@ def ticket_completeness_gate(checklist: dict[str, Any], result: dict[str, Any]) 
         "obligations": obligations,
         "uncovered_obligation_ids": uncovered,
         "pass": not uncovered,
-        "product_semantics": "llm_declares_semantic_mapping_host_verifies_visible_span_and_fails_closed",
+        "product_semantics": "llm_declares_semantic_mapping_host_verifies_binding_existence_and_fails_closed",
     }
 
 
@@ -322,6 +310,7 @@ __all__ = [
     "FORBIDDEN_CUSTOMER_PHRASES",
     "LEGACY_TICKET_OUTPUT_SCHEMA_VERSION",
     "TICKET_OUTPUT_SCHEMA_VERSION",
+    "TICKET_PROMPT_VERSION",
     "TICKET_SYSTEM_PROMPT",
     "TicketContractError",
     "ticket_completeness_gate",

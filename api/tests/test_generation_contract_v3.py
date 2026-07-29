@@ -21,6 +21,7 @@ from traceable_support.generation.qa_contract import (
 )
 from traceable_support.generation.ticket_contract import (
     TicketContractError,
+    ticket_completeness_gate,
     validate_ticket_result_v2,
 )
 
@@ -247,7 +248,7 @@ def test_qa_v4_derives_plan_used_evidence_and_claim_ids() -> None:
     assert normalized["content"]["answer"]["claim_ids"] == ["c1"]
 
 
-def test_qa_v4_accepts_declared_customer_paraphrase_and_rejects_forged_span() -> None:
+def test_qa_v4_tolerates_wording_drift_and_rejects_unknown_evidence_id() -> None:
     paraphrased = _qa_result()
     paraphrased["content"]["answer"]["text"] = "可以通过按键启动局部区域清洁。"
     paraphrased["content"]["claims"][0]["customer_visible_span_text"] = (
@@ -262,9 +263,20 @@ def test_qa_v4_accepts_declared_customer_paraphrase_and_rejects_forged_span() ->
         "按键启动局部区域清洁"
     )
 
+    # 措辞漂移但绑定有效：不再逐字校验 customer_visible_span_text 与正文
+    drifted = _qa_result()
+    drifted["content"]["claims"][0]["customer_visible_span_text"] = "正文中不存在"
+    normalized = validate_result(
+        {"case_id": "qa-1", "evidence": EVIDENCE},
+        _checklist(),
+        drifted,
+    )
+    assert normalized["content"]["claims"][0]["evidence_ids"] == ["E1"]
+
+    # 绑定存在性底线：引用不存在的证据 ID 仍然拒绝
     forged = _qa_result()
-    forged["content"]["claims"][0]["customer_visible_span_text"] = "正文中不存在"
-    with pytest.raises(CandidateV4Error, match="top10_v7_customer_span_invalid"):
+    forged["content"]["claims"][0]["evidence_ids"] = ["E9"]
+    with pytest.raises(CandidateV4Error, match="top10_v6_claim_invalid"):
         validate_result({"evidence": EVIDENCE}, _checklist(), forged)
 
 
@@ -281,7 +293,9 @@ def test_qa_v4_rejects_redundant_or_wrong_source_bindings() -> None:
         validate_result({"evidence": EVIDENCE}, _checklist(), wrong_source)
 
 
-def test_qa_v4_rejects_ignored_clause_from_an_approved_evidence() -> None:
+def test_qa_v4_accepts_binding_without_verbatim_clause_match() -> None:
+    # exact_span_text 引用了被忽略子句，但 evidence/obligation 绑定均真实有效：
+    # 新语义只做绑定存在性硬校验，不做逐字包含校验，因此通过
     ignored_clause = _qa_result()
     ignored_clause["content"]["answer"]["text"] = "完成后请检查尘盒。"
     ignored_clause["content"]["claims"][0]["exact_span_text"] = (
@@ -291,11 +305,41 @@ def test_qa_v4_rejects_ignored_clause_from_an_approved_evidence() -> None:
         "检查尘盒"
     )
 
-    with pytest.raises(CandidateV4Error, match="top10_v8_clause_binding_invalid"):
-        validate_result({"evidence": EVIDENCE}, _checklist(), ignored_clause)
+    normalized = validate_result(
+        {"evidence": EVIDENCE}, _checklist(), ignored_clause
+    )
+    assert normalized["content"]["claims"][0]["exact_span_text"] == (
+        "完成后检查尘盒。"
+    )
+
+    # 绑定越过义务批准来源范围仍然拒绝
+    cross_bound = _qa_result()
+    cross_bound["content"]["claims"][0]["evidence_ids"] = ["E2"]
+    with pytest.raises(CandidateV4Error, match="top10_v6_obligation_binding_invalid"):
+        validate_result({"evidence": EVIDENCE}, _checklist(), cross_bound)
 
 
-def test_ticket_v3_accepts_declared_customer_paraphrase_and_derives_plan() -> None:
+def test_completeness_gate_uses_binding_existence_not_verbatim_spans() -> None:
+    from traceable_support.generation.checklist import completeness_gate
+
+    checklist = _checklist()
+    result = validate_result(
+        {"case_id": "qa-1", "evidence": EVIDENCE}, checklist, _qa_result()
+    )
+    # 客户片段措辞漂移不影响过门：只要求义务有绑定的 claim
+    result["content"]["claims"][0]["customer_visible_span_text"] = "措辞漂移"
+    gate = completeness_gate(checklist, result)
+    assert gate["pass"] is True
+    assert gate["obligations"][0]["customer_visible_claim_ids"] == ["c1"]
+
+    # 义务没有任何 claim 绑定时 fail closed
+    result["content"]["claims"][0]["obligation_ids"] = []
+    gate = completeness_gate(checklist, result)
+    assert gate["pass"] is False
+    assert gate["uncovered_obligation_ids"] == ["o1"]
+
+
+def test_ticket_v3_tolerates_wording_drift_and_rejects_unknown_evidence_id() -> None:
     paraphrased = _ticket_result()
     paraphrased["content"]["draft_reply"] = "可以通过按键启动局部区域清洁。"
     paraphrased["content"]["claims"][0]["customer_visible_span_text"] = (
@@ -312,9 +356,20 @@ def test_ticket_v3_accepts_declared_customer_paraphrase_and_derives_plan() -> No
         "按键启动局部区域清洁"
     )
 
+    # 措辞漂移但绑定有效：不再逐字校验 customer_visible_span_text 与草稿
+    drifted = _ticket_result()
+    drifted["content"]["claims"][0]["customer_visible_span_text"] = "正文中不存在"
+    normalized = validate_ticket_result_v2(
+        {"evidence": EVIDENCE},
+        _checklist(),
+        drifted,
+    )
+    assert normalized["content"]["claims"][0]["evidence_ids"] == ["E1"]
+
+    # 绑定存在性底线：引用不存在的证据 ID 仍然拒绝
     forged = _ticket_result()
-    forged["content"]["claims"][0]["customer_visible_span_text"] = "正文中不存在"
-    with pytest.raises(TicketContractError, match="ticket_v3_customer_span_invalid"):
+    forged["content"]["claims"][0]["evidence_ids"] = ["E9"]
+    with pytest.raises(TicketContractError, match="ticket_v2_claim_invalid"):
         validate_ticket_result_v2(
             {"evidence": EVIDENCE},
             _checklist(),
@@ -335,7 +390,9 @@ def test_ticket_v3_rejects_wrong_source_binding() -> None:
         )
 
 
-def test_ticket_v3_rejects_ignored_clause_from_an_approved_evidence() -> None:
+def test_ticket_v3_accepts_binding_without_verbatim_clause_match() -> None:
+    # exact_span_text 引用了被忽略子句，但 evidence/obligation 绑定均真实有效：
+    # 新语义只做绑定存在性硬校验，不做逐字包含校验，因此通过
     ignored_clause = copy.deepcopy(_ticket_result())
     ignored_clause["content"]["draft_reply"] = "完成后请检查尘盒。"
     ignored_clause["content"]["claims"][0]["exact_span_text"] = (
@@ -345,12 +402,43 @@ def test_ticket_v3_rejects_ignored_clause_from_an_approved_evidence() -> None:
         "检查尘盒"
     )
 
-    with pytest.raises(TicketContractError, match="ticket_v4_clause_binding_invalid"):
-        validate_ticket_result_v2(
-            {"evidence": EVIDENCE},
-            _checklist(),
-            ignored_clause,
-        )
+    normalized = validate_ticket_result_v2(
+        {"evidence": EVIDENCE},
+        _checklist(),
+        ignored_clause,
+    )
+    assert normalized["content"]["claims"][0]["exact_span_text"] == (
+        "完成后检查尘盒。"
+    )
+
+
+def test_ticket_completeness_gate_uses_binding_existence_not_verbatim_spans() -> None:
+    checklist = {"obligations": [{"obligation_id": "o1", "description": "d",
+                                  "evidence_ids": ["E1"]}]}
+    # 客户片段措辞漂移（不逐字位于草稿）不影响过门：只要求义务有绑定的 claim
+    drifted = {"content": {
+        "draft_reply": "这种地毯需要避开。",
+        "action_steps": [],
+        "claims": [{
+            "claim_id": "c1",
+            "customer_visible_span_text": "草稿中不存在的措辞",
+            "obligation_ids": ["o1"],
+        }],
+    }}
+    assert ticket_completeness_gate(checklist, drifted)["pass"] is True
+    # 义务没有任何 claim 绑定时 fail closed
+    unbound = {"content": {
+        "draft_reply": "这种地毯需要避开。",
+        "action_steps": [],
+        "claims": [{
+            "claim_id": "c1",
+            "customer_visible_span_text": "需要避开",
+            "obligation_ids": [],
+        }],
+    }}
+    gate = ticket_completeness_gate(checklist, unbound)
+    assert gate["pass"] is False
+    assert gate["uncovered_obligation_ids"] == ["o1"]
 
 
 def test_failure_taxonomy_is_stable_and_content_free() -> None:

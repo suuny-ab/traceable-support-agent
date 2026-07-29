@@ -51,9 +51,10 @@ COPY --from=live-dependencies /install /usr/local
 COPY --from=live-model /model /opt/traceable-model
 COPY --chown=traceable:traceable api/src/traceable_support /app/api/src/traceable_support
 COPY --chown=traceable:traceable data /app/data
-ENV TRACEABLE_MODEL_ROOT=/opt/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5
+ENV TRACEABLE_MODEL_ROOT=/opt/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5 \
+    TRACEABLE_PUBLIC_LIVE_ENABLED=true
 USER 10001:10001
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-  CMD ["python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health',timeout=2)); assert data['status']=='ok' and data['live_experience']=='replay_only'"]
+  CMD ["python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health',timeout=2)); assert data['status']=='ok' and data['live_experience']=='available'"]
 CMD ["python", "-m", "traceable_support.api.http"]
