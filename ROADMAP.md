@@ -22,9 +22,10 @@
 ## 当前
 
 - [ ] `real-run-evidence` 真实运行证据持久化增量（`R0`，不启用实时模式）：transcript
-  合同接受 `authorized_real`、控制面内部持久化 transport 观察、提交探针离线夹具。候选
-  分支 `codex/real-run-evidence` 已本地提交，收口顺序为推送、Draft PR、CI 全绿、冻结
-  head 后正式独立复核；合并、部署与真实 Provider 调用均保持未授权。工作记录：
+  合同接受 `authorized_real`（账单未知三态与 transport 观察一致）、控制面内部持久化
+  transport 观察、提交探针离线夹具。Draft PR #37 冻结基线 `b30221a` 四项 Checks 绿，
+  正式复核两项阻断已完成修复；新 head Checks 全绿后按原 finding 与覆盖 diff 定向
+  复核；合并、部署与真实 Provider 调用均保持未授权。工作记录：
   `docs/work/active/real-run-evidence/`。
 
 ## 下一步

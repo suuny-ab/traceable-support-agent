@@ -32,9 +32,11 @@
 ## 最便宜证伪
 
 - 用 `DeepSeekContentAdapter` 与手工构造的 attempt 记录直接调用 `validate_transcript`：
-  连贯 `authorized_real` transcript 必须通过；offline 携带 network 事实、real 零
-  network 尝试、任一模式 `automatic_retry_count>0`、计数与记录不一致、混合模式必须
-  按固定 code 拒绝；offline 严格性逐条保持不变。
+  连贯 `authorized_real` transcript（含 transport 可产生的 credential_missing、
+  零 network transport_error、两种 response_too_large 形状）必须通过；offline 携带
+  network 事实、real 成功 attempt 零 network、real 账单标记非 `None`、任一模式
+  `automatic_retry_count>0`、计数与记录不一致、混合模式必须按固定 code 拒绝；
+  offline 严格性逐条保持不变。
 - 用既有离线脚本 transport 跑 `run_qa` / `run_ticket`，断言包内
   `provider_observations` 与 `safe_observations()` 一致，且 `get_run` 公开响应键集合
   不变、证据只从内部 `run_evidence` 表读回并随 30 天保留期清理。
@@ -43,7 +45,8 @@
 
 ## 范围
 
-- transcript 校验支持 `authorized_real`（内部连贯事实），offline 语义不变，哈希链
+- transcript 校验支持 `authorized_real`（事实语义与已评审 transport 观察一致：
+  账单未知三态、实际可产生失败组合全覆盖），offline 语义不变，哈希链
   语义不动；manifest 两个状态字段更新为新现实并重钉 `manifest_sha256`。
 - 运行包携带 `provider_observations`（鸭型 guard）；控制面新增内部 `run_evidence`
   表持久化观察记录，公开投影与响应不变；保留期清理覆盖该表。
