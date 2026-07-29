@@ -26,6 +26,9 @@ class CiImpactTest(unittest.TestCase):
     def test_clear_governance_paths_are_governance_only(self) -> None:
         paths = (
             "AGENTS.md",
+            "PROJECT.md",
+            "PUBLIC_CONTEXT.md",
+            "README.md",
             "ROADMAP.md",
             "docs/status.md",
             "docs/engineering/agent-workflow.md",
@@ -38,8 +41,6 @@ class CiImpactTest(unittest.TestCase):
 
     def test_runtime_and_unknown_paths_fail_closed(self) -> None:
         runtime_paths = (
-            "PROJECT.md",
-            "README.md",
             "docs/product/public-api.md",
             "docs/engineering/operations.md",
             ".github/workflows/ci-release.yml",
