@@ -11,13 +11,13 @@
 | 当前产品目标 | 求职交付已收口：公开 Beta 回放版已部署、验收并完成 Issue #28 生命周期关闭 |
 | 当前集成任务 | `real-run-evidence`：真实运行证据持久化候选（transcript 合同接受 `authorized_real`、运行包与控制面内部持久化 transport 观察、提交探针离线夹具）；不改变公开合同、公开响应、预算常量与生产 `replay_only` 姿态 |
 | 复杂度 | 标准 |
-| 风险 / 成熟度 | 增量 `R0`；产品保持 `S1 公开 Beta`、生产 `replay_only`；真实 Provider、费用、凭据和生产开关均未启用 |
+| 风险 / 成熟度 | 增量 `R0`；产品保持 `S1 公开 Beta`；生产已于 `2026-07-29` 切换为真实 Provider live（`provider_enabled=true`，分支 `kimi/binding-traceability-live` 部署 SHA `c8df17d`，服务器侧构建镜像按摘要固定，回滚演练通过） |
 | 产品候选 | `codex/real-run-evidence` Draft PR #37：第 1 轮两项阻断已修复（`9c7ed59`）；第 2 轮定向复核（复核时 head `b49e379`，run 30421455186 绿）确认代码语义通过、`BLOCKED` 仅剩事实同步；事实收口 `f5a0971`（run 30422565893 绿）与本轮 plan.md / 引用修正构成当前候选，产品代码自 `9c7ed59` 起未变，各推送 head 四项 Checks 均绿，最新状态以 PR #37 为准；当前已部署产品版本 `34079d7`（PR #31 / #34），仓库基线为 `origin/main` 当前 head |
 | 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | `docs/work/active/real-run-evidence/` |
 | 最近完成 | Issue #28 于 2026-07-28 以 `not planned` 关闭（视觉、回放体验与生产验收完成；公开真实 Provider 范围停止且从未启用）；PR #35 项目事实收口已合并部署（`4b3d46f`）；`docs/work/completed/ci-proof-contract/` |
 | 阻碍 | 无工程阻碍；npm 依赖漂移（11 high、test 锁 2 个）继续登记，修复与否待用户立项 |
-| Provider | 生产仍禁用：`provider_enabled=false`、`provider_calls=0`、`provider_cost_cny=0`；v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，重试 0；v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
+| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`，部署 SHA `c8df17d`（`kimi/binding-traceability-live`，基于 `codex/real-run-evidence` 候选 `9ac2f19` 叠加绑定式溯源门改造与部署链路解锁）；凭据仅存服务器 `/opt/traceable-support/provider.env`（0600），不进 git / 流水线 / 镜像；预算双保险生效（日 ¥20 / 月 ¥100 / 次 ¥1、重试 0）；上线当日公网真实 QA 1 次 `completed`（live candidate，证据挂载，`provider_calls=2`，预留 ¥1）；历史：v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
 | 下一检查点 | PR #37 事实收口（含 plan.md 旧约束修正与 PR 说明收窄）推送且四项 Checks 全绿后，由 Codex 定向独立复核确认同步无误以解除 `BLOCKED`；合并、部署与真实 Provider 授权仍为独立用户决定；Issue #29（本地未推送展示分支保留）与 Issue #14 继续后置；定期依赖审计变红告警按分层处理 |
 
 ## 当前队列
@@ -31,9 +31,13 @@ Task 可以并行，进入受保护 `main`、正式复核、部署和用户验�
 
 ## 当前产品事实
 
-- 方向 B 的公开回放体验位于 <https://47.84.34.86/>。
-- 当前求职交付是已经部署并通过最终体验验收的公开 Beta 回放版；健康状态保持
-  `replay_only`，真实 Provider、凭据和费用均未启用。
+- 方向 B 的公开体验位于 <https://47.84.34.86/>；`2026-07-29` 起为真实 Provider live
+  模式（健康状态 `available`），replay 回放预览保持可用。
+- 生成门语义：`2026-07-29` 起为绑定式溯源（ADR-0007）：每条结论必须绑定真实存在的
+  证据 / 义务 ID，证据原文随回答展示；不再要求措辞逐字复现原文。真实 Provider 本地
+  复测过门率 0/2 → 3/3，公网首跑 1/1 `completed`。
+- 此前求职交付为已部署并通过最终体验验收的公开 Beta 回放版（部署 `34079d7`）；真实
+  Provider、凭据和费用在该阶段均未启用。
 - `product/0.1.0` 尚未发布；Stage 12 已执行一次（19/24、9 通过），Issue #21 已修复当时的
   两条边界缺陷但未重跑未见集；Issue #22 已以部分结果和已知限制收口，不形成成功率主张。
 - Issue #28 已于 2026-07-28 以 `not planned` 关闭：视觉、公开回放体验与生产验收部分已
