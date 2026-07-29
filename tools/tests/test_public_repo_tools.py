@@ -326,6 +326,18 @@ jobs:
         uses: actions/checkout@0000000000000000000000000000000000000000
       - name: Verify manifest and main ancestry
         run: python --version
+      - name: Build live API image on the production host
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          git archive HEAD | ssh "$DEPLOY_USER@$DEPLOY_HOST" 'tar -x -C /tmp/ts-live-build'
+      - name: Generate and verify the live (v2) release manifest
+        run: python --version
       - name: Build public deployment package
         run: python --version
       - name: Verify trusted deployment controller integrity
@@ -408,6 +420,12 @@ jobs:
                 "production_deploy_controller_not_trusted"
             ),
             "- name: Check out the manifest commit": (
+                "production_deploy_controller_not_trusted"
+            ),
+            "- name: Build live API image on the production host": (
+                "production_deploy_controller_not_trusted"
+            ),
+            "- name: Generate and verify the live (v2) release manifest": (
                 "production_deploy_controller_not_trusted"
             ),
             (
@@ -493,6 +511,28 @@ jobs:
         self.assertIn(
             "production_deploy_controller_not_trusted",
             _deployment_workflow_errors(untrusted_controller),
+        )
+
+        live_env_block = """        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+"""
+        live_env_missing = workflow.replace(live_env_block, "", 1)
+        self.assertIn(
+            "production_deploy_transport_preflight_invalid",
+            _deployment_workflow_errors(live_env_missing),
+        )
+        live_env_extra = workflow.replace(
+            live_env_block,
+            live_env_block + "          BASH_ENV: /dev/null\n",
+            1,
+        )
+        self.assertIn(
+            "production_deploy_transport_preflight_invalid",
+            _deployment_workflow_errors(live_env_extra),
         )
         foreign_controller = workflow.replace(
             "        with:\n          ref: main",
