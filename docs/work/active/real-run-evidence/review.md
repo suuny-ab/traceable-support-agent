@@ -2,8 +2,9 @@
 
 > 本增量触及持久化（新增内部 `run_evidence` 表）与 Provider 证据合同语义
 > （transcript 接受 `authorized_real`、manifest 重钉）。按仓库规则，持久化与
-> 公共合同变化在收口时需要正式独立复核；第 1 轮正式复核已完成（两项阻断），
-> 阻断修复后待新 head Checks 全绿做第 2 轮定向复核。本文件不作最终收口结论。
+> 公共合同变化在收口时需要正式独立复核；第 1 轮正式复核两项阻断已修复，
+> 第 2 轮定向复核确认代码语义修复通过，唯一剩余阻断为 PR 说明与项目事实
+> 未同步（本轮文档与 PR 收口处理）。本文件不作最终收口结论。
 
 ## 自复核范围
 
@@ -63,6 +64,31 @@
 - 文档 diff：本目录与 `docs/status.md`、`ROADMAP.md`。
 - `qa.py` / `ticket.py` / `runs.py` / 夹具 / manifest / 公开合同未变，不重复
   复核。
+
+## 正式独立复核回执（第 2 轮，定向）
+
+- `candidate_sha`：`b49e379a45ca0b99d38c152eff60e543deb78274`（PR #37 当前
+  head；代码修复为 `9c7ed59`，其上仅文档同步）。
+- 复核范围：仅两项原 finding 与覆盖 diff（`contract.py`、
+  `test_real_run_transcript.py`、本目录与状态 / 路线文档）；未触及部分不重复
+  复核。
+- 已通过的 Checks：`governance` / `web` / `api` / `containers` 全部 SUCCESS
+  （run 30421455186，新 head；`publish` 按 Draft 规则跳过）。
+- 结论：`BLOCKED`。
+  1. finding 1（合同忠实性）：**修复确认通过**。real 模式
+     `paid_call_performed` 恒为 `None`（transport 永不确知是否计费），
+     `actual_paid_cost_cny_nanos` 仅允许 `None`（未知）/ `0`（无已确认
+     计费）；失败矩阵覆盖 transport 可产生组合（`provider_credential_missing`
+     入 `FAILURE_CODES`、`provider_response_too_large` 双形状、零 network
+     `provider_transport_error`）；语义由 `test_real_run_transcript.py`
+     18 例钉定，api 全量 126 项 + 20 subtests 通过。
+  2. finding 2（事实同步）：**仍成立，构成本轮唯一阻断**。复核时 PR #37
+     说明与本目录外的项目权威状态仍停在旧候选（旧语义"付费标记仅成功、
+     实际账单恒 0"、11 例 / 119 项），结论真实性要求先完成事实收口。
+- 收口动作与边界：本轮同步 `review.md` / `result.md` / `docs/status.md` /
+  `ROADMAP.md` 并更新 PR #37 说明为当前事实；产品代码自 `9c7ed59` 起未变。
+  阻断解除以复核者确认同步无误为准；合并、部署与真实 Provider 授权仍为用户
+  独立决定。
 
 ## 待复核者确认的问题（第 1 轮正式复核已处理）
 
