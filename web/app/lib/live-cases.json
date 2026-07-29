@@ -8,7 +8,7 @@
       "label": "QA · 局部清扫",
       "model": "CZ-R1",
       "input": "CZ-R1 怎么开始局部清扫？",
-      "summary": "带来源问答：答案必须逐字绑定批准 clause。",
+      "summary": "带来源问答：每条结论都绑定真实出处，证据原文随回答展示、随时可查。",
       "replayPresetId": "qa-local-clean"
     },
     {
