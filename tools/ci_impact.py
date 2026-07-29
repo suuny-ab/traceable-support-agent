@@ -11,6 +11,9 @@ GOVERNANCE_EXACT_PATHS = frozenset(
     {
         ".github/pull_request_template.md",
         "AGENTS.md",
+        "PROJECT.md",
+        "PUBLIC_CONTEXT.md",
+        "README.md",
         "ROADMAP.md",
         "docs/status.md",
         "docs/engineering/development-flow.md",

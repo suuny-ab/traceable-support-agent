@@ -206,7 +206,11 @@ jobs:
           ssh_opts=(-F /dev/null -i "$ssh_dir/key" -o BatchMode=yes -o ConnectionAttempts=1 -o ConnectTimeout=15 -o IdentitiesOnly=yes -o GlobalKnownHostsFile=/dev/null -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$ssh_dir/known_hosts" -p "$port")
           destination="$user@$host"
           git archive HEAD | ssh "${ssh_opts[@]}" "$destination" 'rm -rf /tmp/ts-live-build && mkdir -m 700 -p /tmp/ts-live-build && tar -x -C /tmp/ts-live-build'
-          image_id="$(ssh "${ssh_opts[@]}" "$destination" 'cd /tmp/ts-live-build && DOCKER_BUILDKIT=1 docker build --quiet --target live -t traceable-local/traceable-support-agent-api-live:staging -f api/Dockerfile . >/dev/null 2>&1 && docker image inspect --format "{{.Id}}" traceable-local/traceable-support-agent-api-live:staging; status=$?; rm -rf /tmp/ts-live-build; exit $status')"
+          # Tag each build with the commit sha as well as :staging so every
+          # release's image stays referenced: the host uses the containerd
+          # snapshotter and garbage-collects images whose last tag moves on.
+          build_sha="$(git rev-parse HEAD)"
+          image_id="$(ssh "${ssh_opts[@]}" "$destination" 'cd /tmp/ts-live-build && DOCKER_BUILDKIT=1 docker build --quiet --target live -t traceable-local/traceable-support-agent-api-live:staging -t traceable-local/traceable-support-agent-api-live:'"$build_sha"' -f api/Dockerfile . >/dev/null 2>&1 && docker image inspect --format "{{.Id}}" traceable-local/traceable-support-agent-api-live:staging; status=$?; rm -rf /tmp/ts-live-build; exit $status')"
           case "$image_id" in sha256:*) ;; *) echo "live_image_id_invalid" >&2; exit 1;; esac
           echo "image_ref=traceable-local/traceable-support-agent-api-live@${image_id}" >> "$GITHUB_OUTPUT"
       - name: Generate and verify the live (v2) release manifest
