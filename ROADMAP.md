@@ -18,18 +18,12 @@
 - [x] 用 Issue #22 建立两阶段失败分类、宿主机械投影和 clause 级来源绑定，关闭正式复核发现的来源越界；原真实模型候选质量完成门未满足，v15 兼容性保持未知并停止开放域调优。
 - [x] 用独立增量建立 CI 证明合同：每个 Check 绑定登记主张，绿灯区分已证明 / 故意跳过 / 未执行并失败关闭，红灯按产品 / 治理边界 / 外部依赖归因；依赖安全与产品功能分离（依赖变化时阻塞审计 + 周频定期审计）；经五轮独立复核、统一基线 `df81ccd` 自动部署；用户验收为 `user_confirmed_external` 外部回执（坐标与核验边界见归档记录，非 GitHub / 自动化证据）。
 - [x] 用 Issue #28 完成公开作品集视觉、回放体验与生产验收：live 优先工作台、统一公开运行合同、首页预览绑定批准来源 `KB-CZR1-014`；PR #31 / #34 合并，部署绑定 `34079d7`，独立最终生产体验验收 `PASS`。原始范围中的公开真实 Provider 目标按求职取舍明确停止（从未启用），不作为全部验收门通过；Issue 已于 2026-07-28 以 `not planned` 关闭，工作记录归档于 `docs/work/completed/portfolio-live-experience/`。
-- [x] 完成真实 Provider live 上线（`2026-07-29`，用户显式授权）：生成门由逐字锚定改为绑定式溯源（ADR-0007，QA + 工单同构，真实 Provider 本地复测过门率 0/2 → 3/3）；部署链路解除刻意锁死（live 镜像健康断言 `available`、release manifest v2、开关显式 opt-in、凭据走服务器 0600 文件）；分支 `kimi/binding-traceability-live` 部署 SHA `c8df17d`，服务器侧构建镜像按摘要固定，回滚演练通过；公网健康 `available`，首条真实 QA `completed`（live candidate，证据挂载，预算预留 ¥1）；replay 回放预览无退化。
+- [x] 交付 `real-run-evidence` 真实运行证据持久化增量：transcript 合同接受 `authorized_real`（账单未知三态与 transport 观察一致）、控制面内部持久化 transport 观察、提交探针离线夹具；Draft PR #37 经两轮定向复核全绿后关闭、未直接合并，内容随 PR #38 合入 main；工作记录归档于 `docs/work/completed/real-run-evidence/`。
+- [x] 完成真实 Provider live 上线（`2026-07-29`，用户显式授权）：生成门由逐字锚定改为绑定式溯源（ADR-0007，QA + 工单同构，真实 Provider 本地复测过门率 0/2 → 3/3）；部署链路解除刻意锁死（live 镜像健康断言 `available`、release manifest v2、开关显式 opt-in、凭据走服务器 0600 文件）；PR #38 / #40 合入 main 后由流水线自动部署 `766ba3f`（服务器侧构建镜像按摘要固定，回滚演练通过）；公网健康 `available`，首条真实 QA `completed`（live candidate，证据挂载，预算预留 ¥1）；replay 回放预览无退化。
 
 ## 当前
 
-- [ ] `real-run-evidence` 真实运行证据持久化增量（`R0`，不启用实时模式）：transcript
-  合同接受 `authorized_real`（账单未知三态与 transport 观察一致）、控制面内部持久化
-  transport 观察、提交探针离线夹具。Draft PR #37：第 2 轮定向复核（复核时 head
-  `b49e379`，run 30421455186 绿）确认代码语义修复通过；事实收口 `f5a0971`
-  （run 30422565893 绿）与本轮 plan.md / 引用修正构成当前候选，产品代码自
-  `9c7ed59` 起未变，各推送 head Checks 均绿，最新状态以 PR 页面为准；合并、
-  部署与真实 Provider 调用均保持未授权。工作记录：
-  `docs/work/active/real-run-evidence/`。
+- 无活动增量。上一增量 `real-run-evidence` 已交付（见上方完成列表末条）。
 
 ## 下一步
 
