@@ -192,9 +192,13 @@ jobs:
           # already holds /opt/traceable-support/provider.env (0600).
           ssh_dir="$RUNNER_TEMP/traceable-live-ssh"
           install -d -m 700 "$ssh_dir"
-          python3 -c 'import os,sys; v=os.environ["DEPLOY_SSH_KEY"].lstrip("\ufeff").replace("\\n","\n").replace("\r\n","\n").replace("\r","\n"); sys.stdout.write(v.rstrip("\n")+"\n")' > "$ssh_dir/key"
+          # GitHub secrets were pasted on Windows and carry a leading UTF-8 BOM
+          # and CR bytes (the trusted controller strips them the same way);
+          # normalize at byte level: strip one BOM, drop CR, unescape any
+          # literal \n sequences, and guarantee a trailing newline.
+          printf '%s\n' "$DEPLOY_SSH_KEY" | sed '1s/^\xef\xbb\xbf//' | tr -d '\r' | sed 's/\\n/\n/g' > "$ssh_dir/key"
           chmod 600 "$ssh_dir/key"
-          python3 -c 'import os,sys; v=os.environ["DEPLOY_KNOWN_HOSTS"].lstrip("\ufeff").replace("\\n","\n").replace("\r\n","\n").replace("\r","\n"); sys.stdout.write(v.rstrip("\n")+"\n")' > "$ssh_dir/known_hosts"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | sed '1s/^\xef\xbb\xbf//' | tr -d '\r' | sed 's/\\n/\n/g' > "$ssh_dir/known_hosts"
           chmod 600 "$ssh_dir/known_hosts"
           host="$(python3 -c 'import os; print(os.environ["DEPLOY_HOST"].strip("\ufeff \t\r\n"))')"
           user="$(python3 -c 'import os; print(os.environ["DEPLOY_USER"].strip("\ufeff \t\r\n"))')"
