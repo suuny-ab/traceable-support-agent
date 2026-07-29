@@ -66,12 +66,38 @@ release_health() {
   local web_base="$1"
   local api_base="$2"
   local public_origin="$3"
+  local live_enabled="${4:-false}"
   local route health_body
   health_body="/tmp/traceable-health-body.$$-${RANDOM}.json"
   trap 'rm -f "$health_body"' RETURN
   for route in / /design /app /privacy; do
     curl --fail --silent --show-error --max-time 10 "$web_base$route" >/dev/null
   done
+  if test "$live_enabled" = "true"; then
+    curl --fail --silent --show-error --max-time 10 \
+      "$api_base/api/v1/health" |
+      python3 -c 'import json,sys; value=json.load(sys.stdin); assert value == {"status":"ok","service":"traceable-support-public-api","live_experience":"available"}'
+    # Live mode fail-closed probe: consent=false must be rejected with 400
+    # before any run is created, so the probe never triggers a provider call.
+    local body status
+    body='{"task_type":"qa","input_mode":"free_text","text":"CZ-R1如何复位？","product_model":"CZ-R1","consent":false}'
+    status="$(curl --silent --show-error --max-time 10 --output "$health_body" \
+      --write-out '%{http_code}' -X POST "$api_base/api/v1/runs" \
+      -H "Origin: $public_origin" -H 'Content-Type: application/json' --data-binary "$body")"
+    test "$status" = "400" || release_fail "live_fail_closed_status_invalid"
+    python3 - "$health_body" <<'PY'
+import json, pathlib, sys
+value=json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert value["error"]["code"] == "consent_required"
+PY
+    status="$(curl --silent --show-error --max-time 10 --output /dev/null --write-out '%{http_code}' \
+      -X POST "$api_base/api/v1/runs" -H 'Origin: https://invalid.example' \
+      -H 'Content-Type: application/json' --data-binary "$body")"
+    test "$status" = "403" || release_fail "live_cors_status_invalid"
+    rm -f "$health_body"
+    trap - RETURN
+    return 0
+  fi
   curl --fail --silent --show-error --max-time 10 \
     "$api_base/api/v1/health" |
     python3 -c 'import json,sys; value=json.load(sys.stdin); assert value == {"status":"ok","service":"traceable-support-public-api","live_experience":"replay_only"}'
@@ -98,9 +124,10 @@ PY
 
 release_wait_local() {
   local public_origin="$1"
+  local live_enabled="${2:-false}"
   local attempt
   for attempt in $(seq 1 30); do
-    if release_health "http://127.0.0.1:3000" "http://127.0.0.1:8000" "$public_origin" 2>/dev/null; then
+    if release_health "http://127.0.0.1:3000" "http://127.0.0.1:8000" "$public_origin" "$live_enabled" 2>/dev/null; then
       return 0
     fi
     sleep 1
@@ -152,17 +179,37 @@ else:
 PY
 }
 
+release_live_enabled() {
+  python3 - "$1/release.env" <<'PY'
+import pathlib, sys
+value = "false"
+for line in pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").splitlines():
+    if line.startswith("TRACEABLE_PUBLIC_LIVE_ENABLED="):
+        value = line.split("=", 1)[1]
+if value not in {"true", "false"}:
+    raise SystemExit("release_live_flag_invalid")
+print(value)
+PY
+}
+
 release_preflight_images() {
   local release_dir="$1"
-  local public_origin web_image api_image web_name api_name web_port api_port user
+  local public_origin web_image api_image web_name api_name web_port api_port user live_enabled
   public_origin="$(release_public_origin "$release_dir")"
+  live_enabled="$(release_live_enabled "$release_dir")"
   read -r web_image api_image < <(python3 - "$release_dir/release-manifest.json" <<'PY'
 import json, pathlib, sys
 value=json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-print(value["images"]["web"], value["images"]["api_replay"])
+images = value["images"]
+print(images["web"], images.get("api_live") or images["api_replay"])
 PY
 )
-  release_compose "$release_dir" pull
+  # Registry images are pulled; server-side built images are already local.
+  for image in "$web_image" "$api_image"; do
+    if ! docker image inspect "$image" >/dev/null 2>&1; then
+      docker pull "$image" >/dev/null || release_fail "image_pull_failed"
+    fi
+  done
   for image in "$web_image" "$api_image"; do
     user="$(docker image inspect --format '{{.Config.User}}' "$image")"
     test -n "$user" && test "$user" != "0" && test "$user" != "root" \
@@ -177,12 +224,21 @@ PY
 
   web_name="traceable-preflight-web-${RANDOM}-$$"
   api_name="traceable-preflight-api-${RANDOM}-$$"
+  local -a api_run_env=()
+  if test "$live_enabled" = "true"; then
+    test -f /opt/traceable-support/provider.env \
+      || release_fail "provider_env_missing"
+    test "$(stat -c '%a' /opt/traceable-support/provider.env)" = "600" \
+      || release_fail "provider_env_mode_invalid"
+    api_run_env+=(--env-file /opt/traceable-support/provider.env)
+  fi
   docker run -d --name "$api_name" --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
     --tmpfs /var/lib/traceable:rw,noexec,nosuid,uid=10001,gid=10001,size=64m \
     --cap-drop ALL --security-opt no-new-privileges \
     -e "TRACEABLE_PUBLIC_ORIGIN=$public_origin" \
-    -e TRACEABLE_PUBLIC_LIVE_ENABLED=false \
+    -e "TRACEABLE_PUBLIC_LIVE_ENABLED=$live_enabled" \
+    "${api_run_env[@]}" \
     -p 127.0.0.1::8000 "$api_image" >/dev/null
   docker run -d --name "$web_name" --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
@@ -192,7 +248,7 @@ PY
   web_port="$(docker port "$web_name" 3000/tcp | sed -E 's/^.*:([0-9]+)$/\1/')"
   local ok=0 attempt
   for attempt in $(seq 1 30); do
-    if release_health "http://127.0.0.1:$web_port" "http://127.0.0.1:$api_port" "$public_origin" 2>/dev/null; then
+    if release_health "http://127.0.0.1:$web_port" "http://127.0.0.1:$api_port" "$public_origin" "$live_enabled" 2>/dev/null; then
       ok=1
       break
     fi

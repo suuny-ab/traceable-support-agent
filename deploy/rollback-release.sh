@@ -19,7 +19,7 @@ restore_current() {
   release_compose "$previous_release" down --remove-orphans >/dev/null 2>&1 || true
   release_wait_project_stopped
   release_compose "$current_release" up -d
-  release_wait_local "$(release_public_origin "$current_release")"
+  release_wait_local "$(release_public_origin "$current_release")" "$(release_live_enabled "$current_release")"
 }
 
 release_compose "$current_release" down --remove-orphans || {
@@ -34,7 +34,7 @@ if ! release_compose "$previous_release" up -d; then
   restore_current
   release_fail "previous_release_start_failed"
 fi
-if ! release_wait_local "$(release_public_origin "$previous_release")"; then
+if ! release_wait_local "$(release_public_origin "$previous_release")" "$(release_live_enabled "$previous_release")"; then
   restore_current
   release_fail "previous_release_health_failed"
 fi
