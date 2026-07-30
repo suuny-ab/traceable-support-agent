@@ -1,6 +1,6 @@
 # Traceable Support Agent
 
-一个面向 AI 应用工程师岗位的可追溯客服决策支持项目。系统使用合成知识与合成工单，展示混合检索、两阶段生成、证据绑定、机械质量门、失败关闭与人工最终决定怎样组合成可审查的 LLM Workflow。
+一个可追溯的客服决策支持系统。它使用合成知识与合成工单，将混合检索、两阶段生成、证据绑定、机械质量门、失败关闭与人工最终决定组织成可审查的 LLM Workflow。
 
 [![CI / Release](https://github.com/suuny-ab/traceable-support-agent/actions/workflows/ci-release.yml/badge.svg?branch=main)](https://github.com/suuny-ab/traceable-support-agent/actions/workflows/ci-release.yml)
 
@@ -22,7 +22,7 @@
 
 每次普通实时运行最多调用 Provider 2 次，自动重试为 0。固定“证据不足”边界挑战会在 Provider 调用前确定性转人工，调用数为 0；已验证回放位于独立区域，不创建新运行，也不调用模型。
 
-## 为什么它不只是一个 RAG Demo
+## 核心工程设计
 
 - **混合检索**：型号边界过滤后组合 BM25、BGE 与 RRF，并冻结有序检索 fixture。
 - **先规划再生成**：第一阶段枚举必须覆盖的业务义务，第二阶段才组织客户可见候选。
@@ -63,9 +63,9 @@ Evals → Product
 
 产品运行包不得反向依赖评测、脚本或历史实验代码。
 
-## 面试官快速核查
+## 关键主张、证据与边界
 
-| 想核查什么 | 直接证据 | 不能推出什么 |
+| 项目主张 | 证据入口 | 适用边界 |
 | --- | --- | --- |
 | 真实 Provider 已在公网启用 | [当前状态](docs/status.md)、[`/api/v1/health`](https://47.84.34.86/api/v1/health)、[运维合同](docs/engineering/operations.md) | 不代表生产级高可用或 SLA |
 | 生成门为什么从 0/2 提升到 3/3 | [ADR-0007：绑定式溯源](docs/decisions/ADR-0007-binding-traceability-over-verbatim-spans.md)、[QA 合同测试](api/tests/test_generation_contract_v3.py) | 绑定存在不等于开放域语义正确 |
