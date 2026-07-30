@@ -73,7 +73,7 @@ export default function DesignPage() {
             <div><span>Formal B1</span><strong>27 / 36</strong><p>安全护栏未达冻结门，候选正式失败。</p></div>
             <div><span>Top-10 v3</span><strong>6 / 6 ≠ PASS</strong><p>结构门全过，但正文只覆盖 11 / 15 项关键义务。</p></div>
             <div><span>Two-step</span><strong>Plan → Text</strong><p>把遗漏上移到义务规划，再以机械映射阻止静默漏项。</p></div>
-            <div><span>Public beta</span><strong>Replay only</strong><p>公网保持 Provider 关闭，真实与回放路径明确区分。</p></div>
+            <div><span>Public beta</span><strong>绑定式溯源</strong><p>真实 Provider 已启用；每条结论绑定存在的证据与义务，回放独立标记。</p></div>
           </div>
         </section>
       </main>

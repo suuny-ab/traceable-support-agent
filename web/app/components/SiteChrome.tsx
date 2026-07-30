@@ -62,7 +62,7 @@ export function SiteHeader() {
 
         <div className="deploy-status" aria-label="公开体验状态">
           <i aria-hidden="true" />
-          <span><strong>公开回放在线</strong><small>Provider disabled</small></span>
+          <span><strong>实时优先公开体验</strong><small>Replay fallback</small></span>
         </div>
       </div>
     </header>
