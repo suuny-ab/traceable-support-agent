@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 const boundaries = [
   ["数据", "只使用合成数据", "不要输入姓名、电话、订单、公司机密、内部日志或任何真实客户问题。自由输入上限为 500 字。"],
-  ["Provider", "当前公网实时能力关闭", "预设案例在浏览器中回放。只有页面明确显示实时可用时才会提交模型请求；未知状态失败关闭。"],
-  ["留存", "实时原始内容最多保留 30 天", "若未来启用实时接口，原始内容只为故障诊断和证据回读保留；到期从 SQLite 与 WAL 清理，不建立原文备份。"],
+  ["Provider", "当前公网已启用实时能力", "只有页面明确显示实时可用时才会提交模型请求；不可用或未知状态失败关闭，预设回放保持独立且明确标记。"],
+  ["留存", "实时原始内容最多保留 30 天", "原始内容只为故障诊断和证据回读保留；到期从 SQLite 与 WAL 清理，不建立原文备份。"],
   ["调用", "最多两次，零自动重试", "模型不能调用工具、决定重试或绕过预算。连接未知时不会自动重新提交，避免重复调用与费用。"],
   ["决定", "人工批准不等于已经发送", "批准、编辑和拒绝只记录审核意图；系统不会发送回复、关闭工单、退款、换新或改变账号。"],
 ];
@@ -27,8 +27,8 @@ export default function PrivacyPage() {
         </header>
 
         <section className="boundary-summary" aria-label="当前公开状态">
-          <div><span>公开模式</span><strong>Verified replay</strong></div>
-          <div><span>Provider</span><strong>Disabled</strong></div>
+          <div><span>公开模式</span><strong>实时 + 已验证回放</strong></div>
+          <div><span>Provider</span><strong>仅服务端启用</strong></div>
           <div><span>自动业务动作</span><strong>0</strong></div>
           <div><span>真实客户数据</span><strong>不允许</strong></div>
         </section>

@@ -5,7 +5,9 @@
 - 公开地址：<https://47.84.34.86/>。
 - 主机：一台阿里云新加坡 Ubuntu 实例。
 - Caddy 占用 80/443 端口；Web/API 仅绑定 `127.0.0.1:3000/8000`。
-- 当前公开模式为 `replay_only`；未配置 DeepSeek 凭据。
+- 当前生产真实 Provider live 已显式启用（`2026-07-29`）；凭据仅存服务器
+  `/opt/traceable-support/provider.env`（0600），不进入 Git、流水线或镜像。
+- 公开 Web 以健康状态为准开放新运行；实时不可用时失败关闭，并保留独立标记的已验证回放。
 - 在唯一权威仓库的镜像摘要部署及其后一次生产部署都成功之前，现有版本继续作为回滚锚点。
 
 ## 目标交付链路
@@ -30,9 +32,9 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
 
 1. CI 与公开安全扫描全部通过。
 2. 基于同一个 Git SHA 构建并发布两个镜像。
-3. 生成 `release-manifest.json`，绑定镜像摘要、API 合同哈希、知识/prompt/回放哈希和 `provider_enabled=false`。
+3. 生成 `release-manifest.json`，绑定镜像摘要、API 合同哈希、知识/prompt/回放哈希和运行模式；CI 构建默认保持 `provider_enabled=false`，生产部署只有在显式 live 配置与凭据预检通过后才生成 `provider_enabled=true` 的 manifest v2。
 4. 拉取两个不可变镜像并验证摘要，再通过一次性属主初始化器创建非 root 的唯一权威数据卷。
-5. 在临时回环端口启动候选，检查四个路由、健康状态、精确 CORS 和 Provider 关闭行为。
+5. 在临时回环端口启动候选，检查四个路由、健康状态、精确 CORS，以及健康合同与 manifest 声明的 live / replay 模式一致。
 6. 原子更新 `current`，重启回环生产容器对，再通过 Caddy 重复公开冒烟检查。
 7. 任一环节失败时，恢复原符号链接和 root 环境文件，重新激活 `previous`，并报告失败检查门。
 

@@ -93,14 +93,15 @@ export default function Home() {
           <div className="proof-copy">
             <p className="section-kicker">当前公开能力</p>
             <h2>把边界讲清楚，<br />比把 Demo 说大更重要。</h2>
-            <p>当前公网体验以已验证回放为主，Provider 关闭。唯一的例外是固定边界挑战：它在模型
-              调用前由确定性规则转人工，Provider 调用为 0。真实模型主链已在本地固定场景验证，
-              但不据此宣称生产级高可用、SLA 或 product/0.1.0 已发布。</p>
+            <p>当前公网已启用真实 Provider，页面只有在健康状态为 available 时才创建实时运行；
+              不可用时不会拿预设答案替换输入，只保留独立标记的已验证回放。固定边界挑战会在模型
+              调用前由确定性规则转人工，Provider 调用为 0。公开 Beta 不据此宣称生产级高可用、
+              SLA 或 product/0.1.0 已发布。</p>
             <Link className="text-link" href="/privacy">查看完整运行边界 →</Link>
           </div>
           <div className="proof-grid">
             <article><span>产品路径</span><strong>QA + 工单</strong><p>两条主链共用证据合同、失败关闭和人工决定。</p></article>
-            <article><span>当前公网</span><strong>Replay only</strong><p>回放与实时路径明确区分，不伪造模型生成。</p></article>
+            <article><span>当前公网</span><strong>实时 + 回放兜底</strong><p>实时运行与已验证回放明确区分，不伪造模型生成。</p></article>
             <article><span>自动动作</span><strong>0</strong><p>批准只记录决定，不发送回复或改变业务系统。</p></article>
             <article><span>公开 API</span><strong>4</strong><p>运行、轮询、人工决定和健康接口保持稳定。</p></article>
           </div>

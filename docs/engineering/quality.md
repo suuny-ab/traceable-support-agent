@@ -111,7 +111,8 @@ release-manifest 门约束。合同不声称覆盖这四类失败。
 - 除仓库根目录外不存在嵌套 Git 仓库；
 - 不存在 Windows 用户目录路径、密钥、凭据、Provider 原始内容、归档、数据库或私有 HOLDOUT；
 - 已跟踪文件均不超过 5 MiB，初始例外清单为空；
-- 公开主张与 `provider_enabled=false`、`replay_only`、`product/0.1.0 not released` 一致；
+- 公开主张区分本地默认 `replay_only` 与生产显式 `provider_enabled=true`；健康状态、部署
+  manifest 和 `product/0.1.0 not released` 必须与各自环境的当前证据一致；
 - 生产包不得导入 `evals`、`tools` 或已完成工作项。
 
 ### API
@@ -132,7 +133,8 @@ release-manifest 门约束。合同不声称覆盖这四类失败。
 ### 容器与部署
 
 - 镜像以内置非 root 用户运行，并通过 Compose 只暴露绑定回环地址的应用端口；
-- 本增量健康检查报告 `replay_only`；
+- CI 构建候选默认健康检查报告 `replay_only`；生产部署按 manifest v2 的显式模式检查
+  `available` 或 `replay_only`，不得把两者混写；
 - 发布清单绑定 Git SHA、镜像摘要以及合同/内容哈希；
 - 健康切换失败时恢复上一版本。
 

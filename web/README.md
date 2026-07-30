@@ -30,4 +30,6 @@ npm test
 
 Docker 运行阶段只包含 `.next/standalone`、静态文件和 `public/`，使用非 root `node` 用户。生产 Compose 进一步启用只读根文件系统、`tmpfs /tmp`、移除 capabilities 和 `no-new-privileges`。
 
-当前公开产品仍是合成数据、`replay_only` Beta；Stage 12、实时 Provider 和 `product/0.1.0` 均不在本次前端迁移中。
+当前公开产品仍只使用合成数据并保持 Beta 成熟度；生产真实 Provider 已于 `2026-07-29`
+显式启用，Web 先检查实时健康状态，再决定是否开放新运行。Stage 12 未重跑，
+`product/0.1.0` 仍未发布；本地默认启动继续保持 `replay_only`。

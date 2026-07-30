@@ -7,18 +7,18 @@
 | 字段 | 内容 |
 | --- | --- |
 | `state` | `ready` |
-| 更新时间 | `2026-07-29` |
-| 当前产品目标 | 求职交付已收口：公开 Beta 回放版已部署、验收并完成 Issue #28 生命周期关闭 |
-| 当前集成任务 | 无活动产品集成任务；无产品代码修复阻断 |
-| 复杂度 | 无活动增量 |
+| 更新时间 | `2026-07-30` |
+| 当前产品目标 | Issue #29 展示候选已形成：以面试官视角统一 GitHub、网站与当前事实文档，缩短求职作品集的理解和核查路径 |
+| 当前集成任务 | 无活动实现；Draft PR #43 required checks 已全绿，等待用户面试官视角验收 |
+| 复杂度 | 无活动增量；候选为 R1 公开文案、文档与演示资产变更，不修改检索、生成、Provider 或公共 API 算法 |
 | 风险 / 成熟度 | 产品保持 `S1 公开 Beta`；生产已于 `2026-07-29` 切换为真实 Provider live（`provider_enabled=true`，main 流水线自动部署 `766ba3f`，服务器侧构建镜像按摘要固定，回滚演练通过） |
-| 产品候选 | 无活动候选；当前已部署产品版本 `766ba3f`（PR #38 / #40，真实 Provider live），仓库基线为 `origin/main` 当前 head |
+| 产品候选 | Draft PR #43（`codex/readme-live-mode`）已推送；当前已部署产品版本仍为 `766ba3f`（PR #38 / #40，真实 Provider live） |
 | 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | 无 |
 | 最近完成 | PR #37（`real-run-evidence`，真实运行证据持久化地基）内容随 PR #38 合入 main（PR #37 关闭未直接合并，工作记录归档 `docs/work/completed/real-run-evidence/`）；真实 Provider live 上线（`766ba3f`，绑定式溯源门 ADR-0007 + 部署链路，回滚演练通过，公网首跑真实 QA `completed`）；Issue #28 于 2026-07-28 以 `not planned` 关闭；`docs/work/completed/ci-proof-contract/` |
 | 阻碍 | 无工程阻碍；npm 依赖漂移（11 high、test 锁 2 个）继续登记，修复与否待用户立项 |
-| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`，部署 SHA `766ba3f`（main 流水线自动部署；PR #38 合入门改造与部署链路、PR #40 修复部署密钥归一化）；凭据仅存服务器 `/opt/traceable-support/provider.env`（0600），不进 git / 流水线 / 镜像；预算双保险生效（日 ¥20 / 月 ¥100 / 次 ¥1、重试 0）；上线当日公网真实 QA 1 次 `completed`（live candidate，证据挂载，`provider_calls=2`，预留 ¥1）；历史：v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
-| 下一检查点 | 用户启动 Issue #29（GitHub 仓库展示改造）；Issue #14 继续后置；公网初期观察 handoff 分类分布与真实成本（ADR-0007 遗留风险评估）；定期依赖审计变红告警按分层处理 |
+| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`，部署 SHA `766ba3f`（main 流水线自动部署；PR #38 合入门改造与部署链路、PR #40 修复部署密钥归一化）；凭据仅存服务器 `/opt/traceable-support/provider.env`（0600），不进 git / 流水线 / 镜像；预算双保险生效（日 ¥20 / 月 ¥100 / 次 ¥1、重试 0）；上线当日公网真实 QA 1 次 `completed`（live candidate，证据挂载，`provider_calls=2`，预留 ¥1）；`2026-07-30` 经用户授权为 Issue #29 GIF 再执行默认合成 QA 1 次，同一 run 四阶段 PASS、`provider_calls=2`、重试 0，未提交人工决定或外部动作；历史：v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
+| 下一检查点 | 用户从面试官视角验收 Draft PR #43；保持 Draft、不自动合并或部署，Issue #14 与 `product/0.1.0` Release 继续后置 |
 
 ## 当前队列
 
@@ -40,10 +40,10 @@ Task 可以并行，进入受保护 `main`、正式复核、部署和用户验�
   Provider、凭据和费用在该阶段均未启用。
 - `product/0.1.0` 尚未发布；Stage 12 已执行一次（19/24、9 通过），Issue #21 已修复当时的
   两条边界缺陷但未重跑未见集；Issue #22 已以部分结果和已知限制收口，不形成成功率主张。
-- Issue #28 已于 2026-07-28 以 `not planned` 关闭：视觉、公开回放体验与生产验收部分已
-  完成；公开真实 Provider 与实时 candidate 验收门没有完成且已停止（从未启用），不表述
-  为全部验收门通过。
-- Issue #29 保留为下一项 GitHub 求职展示工作；Issue #14 发布或保持 Beta 判断继续后置。
+- Issue #28 已于 2026-07-28 以 `not planned` 关闭：在该关闭时点，视觉、公开回放体验与
+  生产验收部分已完成，公开真实 Provider 尚未启用；该历史结论已由 2026-07-29 的独立
+  授权 live 上线增量更新，不能再作为当前公网状态。
+- Issue #29 已启动为当前 GitHub 求职展示工作；Issue #14 发布或保持 Beta 判断继续后置。
 - 当前工作树和公开 GitHub 仓库是产品唯一权威开发来源。
 - 唯一权威开发位置为主 worktree `traceable-support-agent`；
   `traceable-support-agent-live-workbench`、`traceable-support-agent-live-integration` 与
