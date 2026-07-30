@@ -4,7 +4,9 @@
 
 [![CI / Release](https://github.com/suuny-ab/traceable-support-agent/actions/workflows/ci-release.yml/badge.svg?branch=main)](https://github.com/suuny-ab/traceable-support-agent/actions/workflows/ci-release.yml)
 
-![Traceable Support Agent：让每个 LLM 结论都有证据](web/public/og.png)
+![生产真实 Provider 运行：从新建合成 QA 到证据绑定候选](web/public/live-provider-run.gif)
+
+> 以上 GIF 录制于 `2026-07-30` 的生产体验：一次默认合成 QA、同一 run、Provider 调用 2 次、自动重试 0，最终四道检查全部 PASS。为缩短阅读时间，GIF 省略了阶段间等待；它不是预设回放，也没有提交批准、发送回复或触发其他业务动作。
 
 [在线体验](https://47.84.34.86/) · [设计说明](https://47.84.34.86/design) · [QA / 工单体验](https://47.84.34.86/app) · [公开主张证据](docs/product/evidence-map.md)
 

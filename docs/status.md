@@ -17,7 +17,7 @@
 | 活动工作 | Issue #29 展示一致性与面试官阅读路径 |
 | 最近完成 | PR #37（`real-run-evidence`，真实运行证据持久化地基）内容随 PR #38 合入 main（PR #37 关闭未直接合并，工作记录归档 `docs/work/completed/real-run-evidence/`）；真实 Provider live 上线（`766ba3f`，绑定式溯源门 ADR-0007 + 部署链路，回滚演练通过，公网首跑真实 QA `completed`）；Issue #28 于 2026-07-28 以 `not planned` 关闭；`docs/work/completed/ci-proof-contract/` |
 | 阻碍 | 无工程阻碍；npm 依赖漂移（11 high、test 锁 2 个）继续登记，修复与否待用户立项 |
-| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`，部署 SHA `766ba3f`（main 流水线自动部署；PR #38 合入门改造与部署链路、PR #40 修复部署密钥归一化）；凭据仅存服务器 `/opt/traceable-support/provider.env`（0600），不进 git / 流水线 / 镜像；预算双保险生效（日 ¥20 / 月 ¥100 / 次 ¥1、重试 0）；上线当日公网真实 QA 1 次 `completed`（live candidate，证据挂载，`provider_calls=2`，预留 ¥1）；历史：v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
+| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`，部署 SHA `766ba3f`（main 流水线自动部署；PR #38 合入门改造与部署链路、PR #40 修复部署密钥归一化）；凭据仅存服务器 `/opt/traceable-support/provider.env`（0600），不进 git / 流水线 / 镜像；预算双保险生效（日 ¥20 / 月 ¥100 / 次 ¥1、重试 0）；上线当日公网真实 QA 1 次 `completed`（live candidate，证据挂载，`provider_calls=2`，预留 ¥1）；`2026-07-30` 经用户授权为 Issue #29 GIF 再执行默认合成 QA 1 次，同一 run 四阶段 PASS、`provider_calls=2`、重试 0，未提交人工决定或外部动作；历史：v14 两次调用估算 `¥0.080325`、预留 `¥0.287007`，v11 / v13 各有一次未计价，历史实际账单仍待账号侧确认 |
 | 下一检查点 | Issue #29 本地候选通过文本、Web 构建和链接检查后，由用户从面试官视角验收；真实运行 GIF、GitHub Topics、推送 / PR / Release 等外部动作单独过门；Issue #14 继续后置 |
 
 ## 当前队列
