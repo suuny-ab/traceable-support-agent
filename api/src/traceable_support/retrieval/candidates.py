@@ -13,6 +13,7 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 
 from .corpus import tokenize
+from .vector_store import VectorStore, pgvector_store_from_env
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -208,6 +209,74 @@ class DenseBgeRetriever:
             ],
             request,
         )
+
+
+class PgVectorDenseRetriever(DenseBgeRetriever):
+    """BGE dense candidate that delegates similarity search to a vector store.
+
+    Passage embeddings are computed by the same local FastEmbed model custody
+    as the in-memory path; only storage and top-k cosine search move to the
+    configured backend (see ``retrieval.vector_store``).
+    """
+
+    def __init__(
+        self,
+        *,
+        store: VectorStore,
+        manifest_path: Path = DEFAULT_MODEL_MANIFEST,
+    ) -> None:
+        super().__init__(manifest_path=manifest_path)
+        self._store = store
+        self._synced_fingerprint: str | None = None
+
+    def _ensure_index(self, index: dict[str, Any]) -> None:
+        super()._ensure_index(index)
+        fingerprint = index["manifest"]["build_fingerprint"]
+        if self._synced_fingerprint == fingerprint:
+            return
+        if self._passage_vectors is None:
+            raise ValueError("embedding_model_not_initialized")
+        self._store.sync(
+            fingerprint,
+            [
+                (chunk_id, vector.tolist())
+                for chunk_id, vector in zip(self._chunk_ids, self._passage_vectors)
+            ],
+        )
+        self._synced_fingerprint = fingerprint
+
+    def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]:
+        self._ensure_index(index)
+        if self._model is None:
+            raise ValueError("embedding_model_not_initialized")
+        query_vector = _normalize(next(iter(self._model.query_embed(request.query))))
+        if query_vector.shape != (self.manifest["dimension"],):
+            raise ValueError("embedding_query_dimension_invalid")
+        rows = self._store.query(
+            index["manifest"]["build_fingerprint"],
+            query_vector.tolist(),
+            request.top_k,
+        )
+        return _validate_hits(
+            [
+                RetrievalHit(chunk_id=chunk_id, rank=rank, score=round(score, 8))
+                for rank, (chunk_id, score) in enumerate(rows, start=1)
+            ],
+            request,
+        )
+
+
+def build_dense_retriever() -> DenseBgeRetriever:
+    """Dense candidate for the product pipeline.
+
+    The pgvector backend is used only when ``TRACEABLE_RETRIEVAL_VECTOR_DSN``
+    is configured; otherwise the in-memory numpy path is returned unchanged.
+    """
+
+    store = pgvector_store_from_env()
+    if store is None:
+        return DenseBgeRetriever()
+    return PgVectorDenseRetriever(store=store)
 
 
 class ReciprocalRankFusionRetriever:

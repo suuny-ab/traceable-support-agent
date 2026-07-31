@@ -115,6 +115,11 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
         "使用固定本地模型，不构成真实 Provider 质量主张",
         QUALITY_DOC,
     ),
+    "api.pgvector-store": (
+        "pgvector 向量存储在真实 Postgres 上完成建表、嵌入写入、top-k 余弦排序与幂等重复同步",
+        "只证明存储适配器的机械行为；未设置 TRACEABLE_RETRIEVAL_VECTOR_DSN 时默认检索路径不经过 Postgres",
+        QUALITY_DOC,
+    ),
     "api.eval-runner-tests": (
         "Stage 12 评测 runner 与冻结检查工具按自身测试工作",
         "只证明评测工具，不重跑未见集，不产生新的质量主张",

@@ -11,7 +11,12 @@ from typing import Any, Literal
 
 from .corpus import parse_document, tokenize
 from .source_scope import resolve_applicable_models
-from .candidates import BM25Retriever, DenseBgeRetriever, RetrievalRequest
+from .candidates import (
+    BM25Retriever,
+    DenseBgeRetriever,
+    RetrievalRequest,
+    build_dense_retriever,
+)
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -324,7 +329,7 @@ class ModelAwareRrfPipeline:
             return BusinessRetrievalResult(candidate_hits=(), delivery_hits=())
         if scope not in self._indexes:
             self._indexes[scope] = _index_for(scoped_units, f"{self.unit_strategy}:{scope}")
-            self._retrievers[scope] = (BM25Retriever(), DenseBgeRetriever())
+            self._retrievers[scope] = (BM25Retriever(), build_dense_retriever())
         index = self._indexes[scope]
         lexical, dense = self._retrievers[scope]
         component_depth = min(max(request.candidate_pool_limit, 20), len(scoped_units))

@@ -259,6 +259,20 @@ jobs:
   api:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    services:
+      pgvector:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: traceable
+          POSTGRES_DB: traceable_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U traceable -d traceable_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -288,6 +302,7 @@ jobs:
             --claim api.audit-tool-install \
             --claim api.dependency-advisory \
             --claim api.product-tests \
+            --claim api.pgvector-store \
             --claim api.eval-runner-tests \
             --claim api.replay-assembly-boundary \
             --reason governance_only \
@@ -375,6 +390,17 @@ jobs:
             --category product \
             --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pytest api/tests
+      - name: Run pgvector store integration tests
+        if: steps.impact.outputs.classification == 'runtime'
+        env:
+          PYTHONPATH: api/src
+          PGVECTOR_TEST_DSN: postgresql://traceable@127.0.0.1:5432/traceable_test
+        run: |
+          python3 tools/ci_proof.py run \
+            --claim api.pgvector-store \
+            --category product \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
+            python -m pytest api/tests/test_pgvector_store.py
       - name: Run Stage 12 evaluation runner and freeze checker tests
         if: steps.impact.outputs.classification == 'runtime'
         env:
@@ -408,6 +434,7 @@ jobs:
             --expect api.audit-tool-install \
             --expect api.dependency-advisory \
             --expect api.product-tests \
+            --expect api.pgvector-store \
             --expect api.eval-runner-tests \
             --expect api.replay-assembly-boundary
 

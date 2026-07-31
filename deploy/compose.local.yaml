@@ -1,3 +1,12 @@
+# Local convenience stack for manual verification; nothing here is a production contract.
+#
+# Optional pgvector backend for the retrieval vector store (throwaway, local-only,
+# trust auth, bound to 127.0.0.1):
+#   docker compose -f deploy/compose.local.yaml up -d pgvector
+#   export TRACEABLE_RETRIEVAL_VECTOR_DSN=postgresql://traceable@127.0.0.1:5432/traceable
+#   export PGVECTOR_TEST_DSN=postgresql://traceable@127.0.0.1:5432/traceable
+# With PGVECTOR_TEST_DSN set, `python -m pytest api/tests/test_pgvector_store.py`
+# runs the store integration tests against this database instead of skipping.
 name: traceable-support-local
 
 services:
@@ -70,6 +79,26 @@ services:
       api-data-init:
         condition: service_completed_successfully
 
+  pgvector:
+    image: pgvector/pgvector:pg17
+    init: true
+    environment:
+      POSTGRES_USER: traceable
+      POSTGRES_DB: traceable
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 127.0.0.1:${TRACEABLE_LOCAL_PGVECTOR_PORT:-5432}:5432
+    volumes:
+      - traceable-pgvector:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U traceable -d traceable"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    pids_limit: 180
+
 volumes:
   traceable-data:
     name: traceable-support-local-data
+  traceable-pgvector:
+    name: traceable-support-local-pgvector
