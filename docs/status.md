@@ -6,24 +6,25 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| `state` | `candidate` |
+| `state` | `ready` |
 | 更新时间 | `2026-07-31` |
-| 当前产品目标 | 为求职作品集补齐“线上实际运行哪次提交”的可验证证据：健康接口返回镜像构建 SHA，部署与回滚门核对精确版本；不扩展 RAG、Provider 或监控能力 |
-| 当前集成任务 | `codex/release-sha-health` 本地候选；规格与本地证据见 `docs/work/active/release-sha-health/spec.md`，尚未推送、合并或部署 |
-| 复杂度 | 完整、当前实现为 `R0`：修改公共健康合同与生产发布门，但不进行网络、Provider 调用或外部写入；推送与自动部署是后续独立动作 |
-| 风险 / 成熟度 | 产品保持 `S1 公开 Beta`；主要风险是服务器 live 构建漏注入 SHA、运行身份错配和首次旧回滚锚点缺少字段，均由构建参数、精确健康检查和一次兼容边界处理 |
-| 产品候选 | 已验证：用固定 40 位 SHA 构建的回放镜像将该值写入只读身份文件，健康接口原样返回，容器进入 `healthy`；API、公开冒烟和发布脚本会在身份错配时失败 |
+| 当前产品目标 | 发布版本身份已形成公开可复验闭环；本阶段结束，不继续扩展监控、RAG 或 Provider 功能 |
+| 当前集成任务 | 无 |
+| 复杂度 | 无活动增量；产品保持 `S1 公开 Beta`、单机、无 SLA |
+| 风险 / 成熟度 | 公网健康可核对部署提交，但只证明发布身份与本次单机回滚演练，不证明代码正确、高可用或长期稳定性 |
+| 产品候选 | 无；`release_sha` 增量已通过 PR #50、main CI、自动部署和公网精确 SHA 验收 |
 | 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
-| 活动工作 | `docs/work/active/release-sha-health/` |
-| 最近完成 | PR #49 已 squash 合并为 `139a9c8` 并自动部署；16 题可重复检索体检已形成公开冻结结果并停止 |
-| 阻碍 | 当前无工程阻碍；工作树已有用户未跟踪缓存目录 `clean/`，本切片不读取、修改或提交它。工作树级公共扫描会命中该目录，候选验证需使用 Git index / clean CI 范围。启用 pgvector DSN 前的 live readiness P1 finding 与 npm 依赖漂移继续登记，本轮不处理 |
-| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；本切片开工时部署 SHA 为 `139a9c8ba0c450cc7a7b8fbdb518601763ac7719`，但旧健康接口尚不返回该身份。本切片不改变 Provider 授权、凭据、预算或默认生产检索后端，也不调用 Provider。凭据仅存服务器 `/opt/traceable-support/provider.env`（0600），不进 git / 流水线 / 镜像；预算双保险生效（日 ¥20 / 月 ¥100 / 次 ¥1、重试 0） |
-| 下一检查点 | 形成一个边界清楚的本地提交后停止，等待用户另行决定是否推送；不在本切片内合并或部署 |
+| 活动工作 | 无 |
+| 最近完成 | PR #50 squash 合并为 `66af626`；main CI `30629303699`、生产部署 `30629464871` 和公网完整 SHA 验收通过，工作记录归档于 `docs/work/completed/release-sha-health/` |
+| 阻碍 | 当前无工程阻碍；启用 pgvector DSN 前的 live readiness P1 finding、npm 依赖漂移和 Issue #14 继续后置，不构成当前活动工作 |
+| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=66af626ba4debf4c8a1cf91da023754168c5b908` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
+| 下一检查点 | 暂停项目功能开发，把已交付的 RAG、失败关闭与部署身份闭环用于简历和有效投递；Issue #14 继续后置 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
+| `release-sha-health` | `delivered` | PR #50 合并部署；公网健康返回与 `66af626ba4debf4c8a1cf91da023754168c5b908` 精确一致的完整 `release_sha` |
 | `ISSUE-29-PORTFOLIO-PRESENTATION` | `delivered` | PR #43 合并为 `8da0546` 并自动部署；GitHub、真实运行 GIF、公网站点与当前事实统一，用户验收 `PASS` |
 | `TASK-TRACEABLE-LIVE-WORKBENCH` | `delivered` | PR #31 合并部署，最终生产体验验收 `PASS`；首页一致性由 PR #34 修正；Issue #28 已关闭归档 |
 | `TASK-REAL-RUN-EVIDENCE` | `delivered` | 内容随 PR #38 合入 main（#38 叠加绑定式溯源门改造 ADR-0007 与部署链路解锁；PR #37 经两轮定向复核全绿后关闭、未直接合并）；真实 Provider live 已上线（`766ba3f`）；工作记录归档 `docs/work/completed/real-run-evidence/` |
@@ -34,8 +35,8 @@ Task 可以并行；required Checks、所需当次授权、触发时的评审兜
 ## 当前产品事实
 
 - 方向 B 的公开体验位于 <https://47.84.34.86/>；`2026-07-29` 起为真实 Provider live
-  模式。本切片开工时 `main` 与生产部署均绑定 `139a9c8ba0c450cc7a7b8fbdb518601763ac7719`，
-  健康状态为 `available`，但当前生产健康响应尚无 `release_sha`；本地候选尚未交付。
+  模式。当前生产运行的产品发布为 `66af626ba4debf4c8a1cf91da023754168c5b908`，
+  公网健康同时返回该完整 `release_sha` 与 `live_experience=available`；后续仅文档收口不触发部署。
 - 生成门语义：`2026-07-29` 起为绑定式溯源（ADR-0007）：每条结论必须绑定真实存在的
   证据 / 义务 ID，证据原文随回答展示；不再要求措辞逐字复现原文。真实 Provider 本地
   复测过门率 0/2 → 3/3，公网首跑 1/1 `completed`。
@@ -62,6 +63,6 @@ Task 可以并行；required Checks、所需当次授权、触发时的评审兜
 
 - 产品事实：`PROJECT.md`
 - 结果路线：`ROADMAP.md`
-- 最近完成记录：`docs/work/completed/portfolio-live-experience/`、`docs/work/completed/ci-proof-contract/`、`docs/work/completed/real-run-evidence/`
+- 最近完成记录：`docs/work/completed/release-sha-health/`、`docs/work/completed/portfolio-live-experience/`、`docs/work/completed/ci-proof-contract/`、`docs/work/completed/real-run-evidence/`
 - 工程规则：`docs/engineering/`
 - Agent 协作规则：`docs/engineering/agent-workflow.md`
