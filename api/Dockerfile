@@ -14,11 +14,18 @@ RUN groupadd --gid 10001 traceable \
     && mkdir -p /var/lib/traceable \
     && chown -R traceable:traceable /var/lib/traceable
 
+FROM ${PYTHON_IMAGE} AS replay-dependencies
+WORKDIR /build
+COPY api/requirements-base.lock ./requirements-base.lock
+RUN python -m pip install --disable-pip-version-check --no-cache-dir --no-deps --require-hashes \
+    --prefix=/install -r requirements-base.lock
+
 FROM runtime-base AS replay
 ARG VCS_REF=unknown
 LABEL org.opencontainers.image.source="https://github.com/suuny-ab/traceable-support-agent" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.title="traceable-support-agent-api-replay"
+COPY --from=replay-dependencies /install /usr/local
 COPY --chown=traceable:traceable api/src/traceable_support/__init__.py /app/api/src/traceable_support/__init__.py
 COPY --chown=traceable:traceable api/src/traceable_support/api /app/api/src/traceable_support/api
 COPY --chown=traceable:traceable api/src/traceable_support/product/__init__.py /app/api/src/traceable_support/product/__init__.py
@@ -32,8 +39,11 @@ CMD ["python", "-m", "traceable_support.api.http"]
 
 FROM ${PYTHON_IMAGE} AS live-dependencies
 WORKDIR /build
+COPY api/requirements-base.lock ./requirements-base.lock
 COPY api/requirements-live.lock ./requirements-live.lock
 RUN python -m pip install --disable-pip-version-check --no-cache-dir --no-deps --require-hashes \
+    --prefix=/install -r requirements-base.lock \
+    && python -m pip install --disable-pip-version-check --no-cache-dir --no-deps --require-hashes \
     --prefix=/install -r requirements-live.lock
 
 FROM ${PYTHON_IMAGE} AS live-model

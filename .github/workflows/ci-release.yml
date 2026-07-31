@@ -300,6 +300,7 @@ jobs:
           cache: pip
           cache-dependency-path: |
             api/requirements-test.lock
+            api/requirements-base.lock
             api/requirements-live.lock
       - name: Install locked test and offline-live dependencies
         if: steps.impact.outputs.classification == 'runtime'
@@ -309,6 +310,11 @@ jobs:
             --category external \
             --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m pip install --disable-pip-version-check --no-deps --requirement api/requirements-test.lock
+          python3 tools/ci_proof.py run \
+            --claim api.dependencies \
+            --category external \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
+            python -m pip install --disable-pip-version-check --no-deps --require-hashes --requirement api/requirements-base.lock
           python3 tools/ci_proof.py run \
             --claim api.dependencies \
             --category external \
@@ -325,6 +331,11 @@ jobs:
       - name: Audit API dependency locks (blocking only on dependency changes)
         if: steps.impact.outputs.classification == 'runtime' && steps.impact.outputs.api_dependency_files_changed == 'true'
         run: |
+          python3 tools/ci_proof.py run \
+            --claim api.dependency-advisory \
+            --category boundary \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
+            pip-audit --disable-pip --no-deps --requirement api/requirements-base.lock
           python3 tools/ci_proof.py run \
             --claim api.dependency-advisory \
             --category boundary \

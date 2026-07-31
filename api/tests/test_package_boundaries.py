@@ -48,12 +48,16 @@ def test_replay_control_plane_imports_without_site_packages() -> None:
         "PYTHONPATH": str(REPOSITORY / "api" / "src"),
         "PYTHONIOENCODING": "utf-8",
     }
+    # The HTTP shell (api.http) intentionally requires the pinned FastAPI +
+    # uvicorn base dependencies, which live in site-packages. The replay
+    # boundary that must stay importable with -S is the control plane itself
+    # (api.runs), matching the CI api.replay-assembly-boundary probe.
     result = subprocess.run(
         [
             sys.executable,
             "-S",
             "-c",
-            "from traceable_support.api.http import create_server; print('replay-import-ok')",
+            "from traceable_support.api.runs import PublicRunService; print('replay-import-ok')",
         ],
         cwd=REPOSITORY,
         env=environment,

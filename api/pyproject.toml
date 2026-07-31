@@ -7,7 +7,10 @@ name = "traceable-support"
 version = "0.1.0b0"
 description = "Fail-closed, evidence-bound support candidate service"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "fastapi==0.141.1",
+  "uvicorn==0.52.0",
+]
 
 [project.optional-dependencies]
 live = [

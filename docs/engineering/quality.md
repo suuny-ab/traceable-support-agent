@@ -46,7 +46,7 @@ npm test
 依赖安全与产品功能检查分离：`ci-release` 只在依赖文件变化的候选上执行阻塞性审计——
 `web/package.json` 或 `web/package-lock.json` 变化时执行 `npm audit --audit-level=high`；
 `api/requirements-*.txt/.lock` 变化时执行钉定 `pip-audit==2.10.1 --disable-pip --no-deps`
-对两份锁定清单的审计。未改代码时出现的 advisory 漂移由定期审计发现。
+对三份锁定清单（base、live、test）的审计。未改代码时出现的 advisory 漂移由定期审计发现。
 定期审计由 `.github/workflows/dependency-audit.yml` 每周执行一次（schedule 触发只在
 默认分支 `main` 上运行；分支与 PR 上只能 `workflow_dispatch` 手动触发），同时保留
 本地入口：
@@ -56,7 +56,7 @@ python tools/dependency_audit.py
 ```
 
 该入口对 `web/` 执行 npm audit，并在本机装有 `pip-audit` 时以 `--disable-pip --no-deps`
-对两份 API 锁定清单直接审计固定版本（不让 pip 重新解析，哈希锁文件与平台标记依赖下
+对三份 API 锁定清单（base、live、test）直接审计固定版本（不让 pip 重新解析，哈希锁文件与平台标记依赖下
 重解析会失败）；工具缺失的扫描标记为 skipped，不影响退出码。退出码语义按工具如实
 区分：npm audit 非零表示 high 及以上 advisory；pip-audit 无严重度阈值，退出 1 表示
 任意已知漏洞；任何非零也可能是扫描环境错误（registry、网络、工具），`fail(exit N)`
@@ -91,7 +91,7 @@ release-manifest 门约束。合同不声称覆盖这四类失败。
 只有在表中对应主张为“通过”时才表示已证明。
 
 依赖文件变化时的候选级阻塞审计分两侧：`web/` 依赖变化触发 npm audit；API 锁定清单
-变化触发钉定 `pip-audit==2.10.1 --disable-pip --no-deps` 对两份锁文件的审计（pip
+变化触发钉定 `pip-audit==2.10.1 --disable-pip --no-deps` 对三份锁文件的审计（pip
 审计发现任意已知漏洞即红，不限 high）。测试通过 `contextlib.redirect_stderr` 隔离
 `::error` workflow command，绿色 Check 不携带测试夹具产生的虚假失败注解。
 
