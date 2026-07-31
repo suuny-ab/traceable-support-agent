@@ -95,3 +95,17 @@ test("homepage preview answer matches the verified replay and approved clause", 
   assert.match(preset.result.evidence[0].text, /长按三秒/);
   assert.doesNotMatch(html, /短按局部清扫键/);
 });
+
+test("design page renders the frozen retrieval checkup and its limits", async () => {
+  const response = await fetch(`${baseUrl}/design`);
+  const html = await response.text();
+  assert.match(html, /RAG 体检/);
+  assert.match(html, /BM25 \+ BGE \+ RRF/);
+  assert.match(html, /Top 5 全部命中/);
+  assert.match(html, /Top 10 全部命中/);
+  assert.match(html, /错误型号来源/);
+  assert.match(html, /成功样例/);
+  assert.match(html, /失败样例/);
+  assert.match(html, /不代表线上成功率/);
+  assert.match(html, /没有调用 Provider/);
+});
