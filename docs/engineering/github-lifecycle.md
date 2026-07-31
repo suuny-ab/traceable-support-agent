@@ -39,7 +39,7 @@ GitHub 管：
 Issue、评论和标签不授予 Provider、费用、凭据、生产、外部写入或破坏性操作。公开 GitHub
 不得包含 secret、私有 HOLDOUT、Provider 原始内容、本机路径或敏感清单。
 
-Issue 不保存个人 Work 的用户长期计划、跨项目现实顺序、用户精力或 CLI Conversation
+Issue 不保存裁决入口侧的用户长期计划、跨项目现实顺序、用户精力或 CLI Conversation
 状态，也不能覆盖 `ROADMAP.md` 之外的用户现实安排。
 
 ## 最小标签
