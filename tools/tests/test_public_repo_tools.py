@@ -177,8 +177,8 @@ jobs:
             docker logs traceable-api-replay-ci >&2 || true
             status=1
           else
-            python -c 'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"' \\
-              || { echo "health_not_replay_only" >&2; status=1; }
+            python -c 'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only" and value["release_sha"] == os.environ["GITHUB_SHA"]' \\
+              || { echo "health_release_identity_invalid" >&2; status=1; }
           fi
           web_ready=false
           for attempt in $(seq 1 15); do
@@ -335,6 +335,8 @@ jobs:
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -Eeuo pipefail
+          build_sha="$(git rev-parse HEAD)"
+          docker build --quiet --target live --build-arg VCS_REF='"$build_sha"' .
           git archive HEAD | ssh "$DEPLOY_USER@$DEPLOY_HOST" 'tar -x -C /tmp/ts-live-build'
       - name: Generate and verify the live (v2) release manifest
         run: python --version
@@ -407,6 +409,9 @@ jobs:
             ),
             'verify_args+=(--github-run-attempt "$PUBLISH_RUN_ATTEMPT")': (
                 "production_deploy_manifest_attempt_binding_missing"
+            ),
+            "docker build --quiet --target live --build-arg VCS_REF='\"$build_sha\"'": (
+                "production_live_image_sha_injection_missing"
             ),
             "- name: Check out the trusted deployment controller": (
                 "production_deploy_controller_not_trusted"

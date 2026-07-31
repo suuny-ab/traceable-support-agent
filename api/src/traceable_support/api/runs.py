@@ -50,6 +50,9 @@ ACTIVE_STATUSES = frozenset(
     {"queued", "retrieving", "planning", "generating", "validating"}
 )
 ALL_STATUSES = TERMINAL_STATUSES | ACTIVE_STATUSES
+_RELEASE_SHA_PATTERN = re.compile(r"(?:[0-9a-f]{40}|development|local)")
+_RELEASE_SHA_PATH = Path("/app/release-sha")
+
 
 class PublicApiError(RuntimeError):
     """A detached, client-safe public API error."""
@@ -151,6 +154,7 @@ class PublicRunService:
         database: Path,
         *,
         allowed_origin: str,
+        release_sha: str | None = None,
         live_enabled: bool | None = None,
         product_runner: ProductRunner | None = None,
         now: Callable[[], datetime] = _utc_now,
@@ -182,6 +186,20 @@ class PublicRunService:
         self.database = Path(database).resolve()
         self.database.parent.mkdir(parents=True, exist_ok=True)
         self.allowed_origin = allowed_origin.rstrip("/")
+        if release_sha is None:
+            resolved_release_sha = (
+                _RELEASE_SHA_PATH.read_text(encoding="utf-8").strip()
+                if _RELEASE_SHA_PATH.is_file()
+                else "development"
+            )
+        else:
+            resolved_release_sha = release_sha
+        if (
+            type(resolved_release_sha) is not str
+            or _RELEASE_SHA_PATTERN.fullmatch(resolved_release_sha) is None
+        ):
+            raise ValueError("public_api_release_sha_invalid")
+        self.release_sha = resolved_release_sha
         self.live_enabled = (
             _parse_bool(os.environ.get("TRACEABLE_PUBLIC_LIVE_ENABLED"))
             if live_enabled is None
@@ -390,6 +408,7 @@ class PublicRunService:
             "status": "ok",
             "service": "traceable-support-public-api",
             "live_experience": "available" if self.live_available else "replay_only",
+            "release_sha": self.release_sha,
         }
 
     def submit(self, payload: dict[str, Any], *, browser_token: str | None) -> Submission:

@@ -50,6 +50,7 @@ PY
   test -f "$release_dir/release.env" || release_fail "release_environment_missing"
   test "$(stat -c '%a' "$release_dir/release.env")" = "600" \
     || release_fail "release_environment_mode_invalid"
+  release_expected_sha "$release_dir" >/dev/null
 }
 
 release_compose() {
@@ -67,6 +68,7 @@ release_health() {
   local api_base="$2"
   local public_origin="$3"
   local live_enabled="${4:-false}"
+  local expected_release_sha="${5:-}"
   local route health_body
   health_body="/tmp/traceable-health-body.$$-${RANDOM}.json"
   trap 'rm -f "$health_body"' RETURN
@@ -76,7 +78,7 @@ release_health() {
   if test "$live_enabled" = "true"; then
     curl --fail --silent --show-error --max-time 10 \
       "$api_base/api/v1/health" |
-      python3 -c 'import json,sys; value=json.load(sys.stdin); assert value == {"status":"ok","service":"traceable-support-public-api","live_experience":"available"}'
+      python3 -c 'import json,sys; value=json.load(sys.stdin); expected={"status":"ok","service":"traceable-support-public-api","live_experience":"available"}; expected.update({"release_sha":sys.argv[1]} if sys.argv[1] else {}); assert value == expected' "$expected_release_sha"
     # Live mode fail-closed probe: consent=false must be rejected with 400
     # before any run is created, so the probe never triggers a provider call.
     local body status
@@ -100,7 +102,7 @@ PY
   fi
   curl --fail --silent --show-error --max-time 10 \
     "$api_base/api/v1/health" |
-    python3 -c 'import json,sys; value=json.load(sys.stdin); assert value == {"status":"ok","service":"traceable-support-public-api","live_experience":"replay_only"}'
+    python3 -c 'import json,sys; value=json.load(sys.stdin); expected={"status":"ok","service":"traceable-support-public-api","live_experience":"replay_only"}; expected.update({"release_sha":sys.argv[1]} if sys.argv[1] else {}); assert value == expected' "$expected_release_sha"
 
   local body status
   body='{"task_type":"qa","input_mode":"free_text","text":"CZ-R1如何复位？","product_model":"CZ-R1","consent":true}'
@@ -125,9 +127,10 @@ PY
 release_wait_local() {
   local public_origin="$1"
   local live_enabled="${2:-false}"
+  local expected_release_sha="${3:-}"
   local attempt
   for attempt in $(seq 1 30); do
-    if release_health "http://127.0.0.1:3000" "http://127.0.0.1:8000" "$public_origin" "$live_enabled" 2>/dev/null; then
+    if release_health "http://127.0.0.1:3000" "http://127.0.0.1:8000" "$public_origin" "$live_enabled" "$expected_release_sha" 2>/dev/null; then
       return 0
     fi
     sleep 1
@@ -179,6 +182,29 @@ else:
 PY
 }
 
+release_expected_sha() {
+  python3 - "$1/release.env" "$1/release-manifest.json" <<'PY'
+import json, pathlib, re, sys
+environment = pathlib.Path(sys.argv[1])
+expected = None
+for line in environment.read_text(encoding="utf-8").splitlines():
+    if line.startswith("EXPECTED_RELEASE_SHA="):
+        expected = line.split("=", 1)[1]
+if expected is None:
+    print("")
+    raise SystemExit(0)
+if re.fullmatch(r"[0-9a-f]{40}", expected) is None:
+    raise SystemExit("release_expected_sha_invalid")
+manifest = pathlib.Path(sys.argv[2])
+if not manifest.is_file():
+    raise SystemExit("release_expected_sha_manifest_missing")
+value = json.loads(manifest.read_text(encoding="utf-8"))
+if value.get("git_sha") != expected:
+    raise SystemExit("release_expected_sha_mismatch")
+print(expected)
+PY
+}
+
 release_live_enabled() {
   python3 - "$1/release.env" <<'PY'
 import pathlib, sys
@@ -194,9 +220,11 @@ PY
 
 release_preflight_images() {
   local release_dir="$1"
-  local public_origin web_image api_image web_name api_name web_port api_port user live_enabled
+  local public_origin web_image api_image web_name api_name web_port api_port user live_enabled expected_release_sha
   public_origin="$(release_public_origin "$release_dir")"
   live_enabled="$(release_live_enabled "$release_dir")"
+  expected_release_sha="$(release_expected_sha "$release_dir")"
+  test -n "$expected_release_sha" || release_fail "release_sha_expectation_missing"
   read -r web_image api_image < <(python3 - "$release_dir/release-manifest.json" <<'PY'
 import json, pathlib, sys
 value=json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
@@ -248,7 +276,7 @@ PY
   web_port="$(docker port "$web_name" 3000/tcp | sed -E 's/^.*:([0-9]+)$/\1/')"
   local ok=0 attempt
   for attempt in $(seq 1 30); do
-    if release_health "http://127.0.0.1:$web_port" "http://127.0.0.1:$api_port" "$public_origin" "$live_enabled" 2>/dev/null; then
+    if release_health "http://127.0.0.1:$web_port" "http://127.0.0.1:$api_port" "$public_origin" "$live_enabled" "$expected_release_sha" 2>/dev/null; then
       ok=1
       break
     fi

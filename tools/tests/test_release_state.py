@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import shlex
 import subprocess
@@ -13,6 +14,7 @@ from deploy.install_release import (
     _commit_receipt_or_restore,
     _public_smoke,
     _rehearsal_anchor,
+    _release_sha_from_env,
     _required_sha,
     _run as _install_run,
     _stable_error_code,
@@ -65,6 +67,31 @@ class ReleaseShellTest(unittest.TestCase):
         self.assertEqual(completed.returncode, 23)
         self.assertNotIn("false_success", completed.stdout)
         self.assertIn("release_stop_state_query_failed", completed.stderr)
+
+    def test_expected_release_sha_must_match_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            release = Path(temporary)
+            release_sha = "a" * 40
+            (release / "release.env").write_text(
+                f"EXPECTED_RELEASE_SHA={release_sha}\n", encoding="utf-8"
+            )
+            (release / "release-manifest.json").write_text(
+                json.dumps({"git_sha": release_sha}), encoding="utf-8"
+            )
+            completed = self._run_release_lib(
+                f"release_expected_sha {shlex.quote(str(release))}\n"
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(completed.stdout.strip(), release_sha)
+
+            (release / "release.env").write_text(
+                f"EXPECTED_RELEASE_SHA={'b' * 40}\n", encoding="utf-8"
+            )
+            completed = self._run_release_lib(
+                f"release_expected_sha {shlex.quote(str(release))}\n"
+            )
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("release_expected_sha_mismatch", completed.stderr)
 
 
 class ReleaseStateTransactionTest(unittest.TestCase):
@@ -155,6 +182,53 @@ class ReleaseStateTransactionTest(unittest.TestCase):
 
 
 class DeploymentInputTest(unittest.TestCase):
+    def test_release_sha_from_env_supports_one_legacy_anchor(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            release = Path(temporary)
+            (release / "release.env").write_text("LEGACY=1\n", encoding="utf-8")
+            self.assertIsNone(_release_sha_from_env(release))
+            (release / "release.env").write_text(
+                f"EXPECTED_RELEASE_SHA={'a' * 40}\n", encoding="utf-8"
+            )
+            self.assertEqual(_release_sha_from_env(release), "a" * 40)
+
+    def test_public_smoke_requires_exact_release_sha(self) -> None:
+        release_sha = "a" * 40
+
+        def runner(
+            command: list[str],
+            **_kwargs: object,
+        ) -> subprocess.CompletedProcess[bytes]:
+            if command[-1].endswith("/api/v1/health"):
+                health = {
+                    "status": "ok",
+                    "service": "traceable-support-public-api",
+                    "live_experience": "available",
+                    "release_sha": release_sha,
+                }
+                stdout = json.dumps(health).encode("utf-8") + b"\n200"
+            else:
+                stdout = b"200"
+            return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr=b"")
+
+        _public_smoke(
+            "https://example.invalid",
+            deadline=15.0,
+            monotonic=lambda: 0.0,
+            runner=runner,
+            expected_experience="available",
+            expected_release_sha=release_sha,
+        )
+        with self.assertRaisesRegex(RuntimeError, "^public_health_contract_invalid$"):
+            _public_smoke(
+                "https://example.invalid",
+                deadline=15.0,
+                monotonic=lambda: 0.0,
+                runner=runner,
+                expected_experience="available",
+                expected_release_sha="b" * 40,
+            )
+
     def test_public_smoke_wait_retries_transient_proxy_failure(self) -> None:
         clock = [0.0]
         calls: list[float] = []

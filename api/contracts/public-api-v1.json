@@ -17,7 +17,9 @@
     },
     "GET /api/v1/health": {
       "success_status": 200,
-      "live_experience_values": ["available", "replay_only"]
+      "response_keys": ["status", "service", "live_experience", "release_sha"],
+      "live_experience_values": ["available", "replay_only"],
+      "release_sha": "40-character lowercase Git SHA for release images; development or local outside releases"
     }
   },
   "limits": {

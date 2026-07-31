@@ -535,6 +535,7 @@ class PublicApiHttpTests(unittest.TestCase):
         self.service = PublicRunService(
             Path(self.temporary.name) / "http.sqlite3",
             allowed_origin=ORIGIN,
+            release_sha="a" * 40,
             live_enabled=True,
             product_runner=_product_runner(lambda row, stage: (_candidate_package(), 2)),
             start_cleanup_thread=False,
@@ -576,6 +577,7 @@ class PublicApiHttpTests(unittest.TestCase):
                 "status": "ok",
                 "service": "traceable-support-public-api",
                 "live_experience": "available",
+                "release_sha": "a" * 40,
             },
         )
         self.assertEqual(headers["cache-control"], "no-store")
@@ -629,6 +631,17 @@ class PublicApiHttpTests(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         self.assertEqual(recorded, {"status": "recorded", "decision": "reject"})
+
+    def test_release_sha_rejects_unknown_or_malformed_identity(self) -> None:
+        for release_sha in ("unknown", "ABCDEF", "a" * 39, "a" * 41):
+            with self.subTest(release_sha=release_sha):
+                with self.assertRaisesRegex(ValueError, "public_api_release_sha_invalid"):
+                    PublicRunService(
+                        Path(self.temporary.name) / f"invalid-{len(release_sha)}.sqlite3",
+                        allowed_origin=ORIGIN,
+                        release_sha=release_sha,
+                        start_cleanup_thread=False,
+                    )
 
     def test_strict_json_and_method_boundary(self) -> None:
         duplicate = b'{"decision":"approve","decision":"reject"}'

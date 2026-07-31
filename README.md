@@ -30,7 +30,7 @@
 - **生成前边界**：公开合成安全事件和明确的型号独占能力冲突在 transport 构造前转人工。
 - **失败是正式结果**：机械门检查来源、义务、结构、安全和虚假完成态；证据不足时转人工。
 - **受控运行**：Provider 位于服务端边界，调用前检查预算、隐私和授权，自动重试为 0。
-- **可复现交付**：标准 Next.js `standalone`、Python API、锁定依赖、非 root 容器、不可变镜像发布和生产回滚演练。
+- **可复现交付**：标准 Next.js `standalone`、Python API、锁定依赖、非 root 容器、不可变镜像发布和生产回滚演练；健康接口公开构建 Git SHA，部署门核对清单与实际运行版本。
 
 ## 产品边界
 
@@ -71,7 +71,7 @@ Evals → Product
 | 生成门为什么从 0/2 提升到 3/3 | [ADR-0007：绑定式溯源](docs/decisions/ADR-0007-binding-traceability-over-verbatim-spans.md)、[QA 合同测试](api/tests/test_generation_contract_v3.py) | 绑定存在不等于开放域语义正确 |
 | 失败是否真的会关闭 | [产品边界测试](api/tests/test_product_boundaries.py)、[公开 API 测试](api/tests/test_public_api.py) | 不证明所有未见输入都能正确分类 |
 | 评测有没有保留失败结果 | [Stage 12 聚合结果](evals/stage12-aggregate-v1.json)、[已知限制](docs/product/limitations.md) | 19/24、9 通过不是成功率或上线门 |
-| 部署能否回滚和复现 | [部署实现](deploy/)、[运维说明](docs/engineering/operations.md)、[质量策略](docs/engineering/quality.md) | 单机演练不等于多区高可用 |
+| 部署能否回滚和复现 | [部署实现](deploy/)、[`/api/v1/health`](https://47.84.34.86/api/v1/health)、[运维说明](docs/engineering/operations.md)、[质量策略](docs/engineering/quality.md) | `release_sha` 只证明当前进程声明的构建提交且由发布门核对；单机演练不等于多区高可用 |
 
 Stage 12 只执行过一次：19/24 案例完成、9 通过，并暴露候选生成合同高失败率和两条边界缺陷。Issue #21 已用公开合成回归修复当时的两条边界缺陷，但未重跑未见集，因此这里保留原观测，不把后续修复倒写成新的评测结果。
 

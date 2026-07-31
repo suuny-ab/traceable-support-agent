@@ -22,6 +22,7 @@ RUN python -m pip install --disable-pip-version-check --no-cache-dir --no-deps -
 
 FROM runtime-base AS replay
 ARG VCS_REF=unknown
+RUN python -c "import os,pathlib,re,sys; value=os.environ['VCS_REF']; re.fullmatch(r'(?:[0-9a-f]{40}|local)',value) or sys.exit('vcs_ref_invalid'); pathlib.Path('/app/release-sha').write_text(value+'\n',encoding='utf-8')"
 LABEL org.opencontainers.image.source="https://github.com/suuny-ab/traceable-support-agent" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.title="traceable-support-agent-api-replay"
@@ -34,7 +35,7 @@ COPY --chown=traceable:traceable api/src/traceable_support/product/types.py /app
 USER 10001:10001
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-  CMD ["python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health',timeout=2)); assert data['status']=='ok' and data['live_experience']=='replay_only'"]
+  CMD ["python", "-c", "import json,pathlib,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health',timeout=2)); assert data['status']=='ok' and data['live_experience']=='replay_only' and data['release_sha']==pathlib.Path('/app/release-sha').read_text().strip()"]
 CMD ["python", "-m", "traceable_support.api.http"]
 
 FROM ${PYTHON_IMAGE} AS live-dependencies
@@ -54,6 +55,7 @@ RUN python download_embedding_model.py --manifest model-manifest.json --root /mo
 
 FROM runtime-base AS live
 ARG VCS_REF=unknown
+RUN python -c "import os,pathlib,re,sys; value=os.environ['VCS_REF']; re.fullmatch(r'(?:[0-9a-f]{40}|local)',value) or sys.exit('vcs_ref_invalid'); pathlib.Path('/app/release-sha').write_text(value+'\n',encoding='utf-8')"
 LABEL org.opencontainers.image.source="https://github.com/suuny-ab/traceable-support-agent" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.title="traceable-support-agent-api-live-offline-candidate"
@@ -66,5 +68,5 @@ ENV TRACEABLE_MODEL_ROOT=/opt/traceable-model/artifacts/models/fastembed/fast-bg
 USER 10001:10001
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-  CMD ["python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health',timeout=2)); assert data['status']=='ok' and data['live_experience']=='available'"]
+  CMD ["python", "-c", "import json,pathlib,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health',timeout=2)); assert data['status']=='ok' and data['live_experience']=='available' and data['release_sha']==pathlib.Path('/app/release-sha').read_text().strip()"]
 CMD ["python", "-m", "traceable_support.api.http"]
