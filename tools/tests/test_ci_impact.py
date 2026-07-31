@@ -86,6 +86,8 @@ class CiImpactTest(unittest.TestCase):
         for path in (
             "web/package.json",
             "web/package-lock.json",
+            "api/requirements-base.txt",
+            "api/requirements-base.lock",
             "api/requirements-live.txt",
             "api/requirements-live.lock",
             "api/requirements-test.txt",

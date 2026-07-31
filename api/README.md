@@ -13,7 +13,8 @@ python -m pytest api/tests
 
 容器目标：
 
-- `replay` 只复制标准库控制面和产品类型，不安装检索或 Provider 依赖；
+- `replay` 复制控制面源码和产品类型，只安装 `requirements-base.lock` 锁定清单
+  （FastAPI + uvicorn 闭包），不安装检索或 Provider 依赖；
 - `live` 安装固定依赖并校验下载本地 BGE 模型，但仍以
   `TRACEABLE_PUBLIC_LIVE_ENABLED=false` 启动。本轮不发布该目标。
 

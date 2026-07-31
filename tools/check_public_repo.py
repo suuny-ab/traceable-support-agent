@@ -1188,6 +1188,7 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             return result
 
         for direct_path, lock_path in (
+            ("api/requirements-base.txt", "api/requirements-base.lock"),
             ("api/requirements-live.txt", "api/requirements-live.lock"),
             ("api/requirements-test.txt", "api/requirements-test.lock"),
         ):
@@ -1201,8 +1202,14 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             requirements("api/requirements-live.lock")
         ):
             errors.append("live_requirement_hash_coverage_invalid")
+        base_lock = _read(mapped, "api/requirements-base.lock")
+        if len(re.findall(r"(?m)^\s+--hash=sha256:[0-9a-f]{64}", base_lock)) < len(
+            requirements("api/requirements-base.lock")
+        ):
+            errors.append("base_requirement_hash_coverage_invalid")
         if (
             "requirements-live.lock" not in dockerfile
+            or "requirements-base.lock" not in dockerfile
             or "--no-deps" not in dockerfile
             or "--require-hashes" not in dockerfile
         ):

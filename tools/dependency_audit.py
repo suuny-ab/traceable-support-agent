@@ -38,6 +38,7 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 
 NPM_REGISTRY = "https://registry.npmjs.org"
 API_LOCKS = (
+    "api/requirements-base.lock",
     "api/requirements-live.lock",
     "api/requirements-test.lock",
 )
