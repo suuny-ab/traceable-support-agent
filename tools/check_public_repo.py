@@ -437,8 +437,8 @@ def _container_smoke_workflow_errors(workflow: str) -> list[str]:
         "docker logs traceable-api-replay-ci >&2 || true",
         "status=1",
         "else",
-        'python -c \'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only"\' \\',
-        '|| { echo "health_not_replay_only" >&2; status=1; }',
+        'python -c \'import json,os,pathlib; value=json.loads(pathlib.Path(os.environ["RUNNER_TEMP"],"health.json").read_text()); assert value["live_experience"] == "replay_only" and value["release_sha"] == os.environ["GITHUB_SHA"]\' \\',
+        '|| { echo "health_release_identity_invalid" >&2; status=1; }',
         "fi",
         "web_ready=false",
         "for attempt in $(seq 1 15); do",
@@ -591,7 +591,6 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
     ):
         if not _has_exact_yaml_line(deploy, 12, line):
             errors.append(error)
-
     step_names = {
         "trusted": "- name: Check out the trusted deployment controller",
         "stage": "- name: Stage trusted deployment controller",
@@ -770,6 +769,12 @@ def _deployment_workflow_errors(workflow: str) -> list[str]:
         == "- name: Build live API image on the production host"
     ]
     live_build_block = live_build_blocks[0] if len(live_build_blocks) == 1 else ""
+    live_image_identity_contract = (
+        'build_sha="$(git rev-parse HEAD)"',
+        "docker build --quiet --target live --build-arg VCS_REF='\"$build_sha\"'",
+    )
+    if any(token not in live_build_block for token in live_image_identity_contract):
+        errors.append("production_live_image_sha_injection_missing")
     live_build_env = _yaml_block(live_build_block, "env", 8)
     live_build_env_entries = tuple(
         line.strip()

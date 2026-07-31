@@ -13,13 +13,15 @@ current_release="$(release_assert_under_root "$release_root" "$release_root/curr
 previous_release="$(release_assert_under_root "$release_root" "$release_root/previous")"
 release_validate "$current_release"
 release_validate "$previous_release"
+current_sha="$(release_expected_sha "$current_release")"
+previous_sha="$(release_expected_sha "$previous_release")"
 test "$current_release" != "$previous_release" || release_fail "rollback_target_same_as_current"
 
 restore_current() {
   release_compose "$previous_release" down --remove-orphans >/dev/null 2>&1 || true
   release_wait_project_stopped
   release_compose "$current_release" up -d
-  release_wait_local "$(release_public_origin "$current_release")" "$(release_live_enabled "$current_release")"
+  release_wait_local "$(release_public_origin "$current_release")" "$(release_live_enabled "$current_release")" "$current_sha"
 }
 
 release_compose "$current_release" down --remove-orphans || {
@@ -34,7 +36,7 @@ if ! release_compose "$previous_release" up -d; then
   restore_current
   release_fail "previous_release_start_failed"
 fi
-if ! release_wait_local "$(release_public_origin "$previous_release")" "$(release_live_enabled "$previous_release")"; then
+if ! release_wait_local "$(release_public_origin "$previous_release")" "$(release_live_enabled "$previous_release")" "$previous_sha"; then
   restore_current
   release_fail "previous_release_health_failed"
 fi

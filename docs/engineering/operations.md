@@ -34,11 +34,11 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
 2. 基于同一个 Git SHA 构建并发布两个镜像。
 3. 生成 `release-manifest.json`，绑定镜像摘要、API 合同哈希、知识/prompt/回放哈希和运行模式；CI 构建默认保持 `provider_enabled=false`，生产部署只有在显式 live 配置与凭据预检通过后才生成 `provider_enabled=true` 的 manifest v2。
 4. 拉取两个不可变镜像并验证摘要，再通过一次性属主初始化器创建非 root 的唯一权威数据卷。
-5. 在临时回环端口启动候选，检查四个路由、健康状态、精确 CORS，以及健康合同与 manifest 声明的 live / replay 模式一致。
-6. 原子更新 `current`，重启回环生产容器对，再通过 Caddy 重复公开冒烟检查。
+5. 在临时回环端口启动候选，检查四个路由、健康状态、精确 CORS，并要求健康响应的 live / replay 模式及 `release_sha` 分别与 manifest 运行模式和 Git SHA 一致。
+6. 原子更新 `current`，重启回环生产容器对，再通过 Caddy 重复公开冒烟检查并核对同一个 `release_sha`。
 7. 任一环节失败时，恢复原符号链接和 root 环境文件，重新激活 `previous`，并报告失败检查门。
 
-公开源站与首次迁移演练标志经过复核后固定在 `deploy/production-target.json`，不接受自由输入的调度参数。首次生产迁移执行受控的 `old → new → old → new` 演练。如果不存在经过验证的旧版回滚锚点，就会在激活唯一权威版本前失败，而不是假装已经测试回滚。版本切换在 `docker compose down` 后显式等待该项目的容器和网络清理完成，再启动目标版本；这是一道有界状态屏障，不是部署重试。每次本地健康通过后，Caddy 公网路径使用统一 15 秒 deadline 验证四个路由和健康合同；受控 `/usr/bin/curl --max-time`、Python 子进程 timeout 和成功返回后的绝对 deadline 复核共同限制总等待，只对 502 / 503 / 504、连接错误和超时等待就绪，4xx、证书错误和内容合同错误立即失败关闭。三个发布元数据路径使用补偿事务；普通写入失败会先恢复原状态，再重新激活旧容器。激活前读取 Caddy 回执证据；最终回执持久化本身也是检查门，失败时回滚至经过验证的旧版本。旧版本会一直保留到下一次成功的生产部署之后。
+公开源站与首次迁移演练标志经过复核后固定在 `deploy/production-target.json`，不接受自由输入的调度参数。首次生产迁移执行受控的 `old → new → old → new` 演练。如果不存在经过验证的旧版回滚锚点，就会在激活唯一权威版本前失败，而不是假装已经测试回滚。构建 SHA 身份合同第一次上线时，既有旧锚点因没有 `release_sha` 只执行原健康合同；新候选必须精确匹配，且新发布环境会记录经 manifest 核对的期望 SHA，因此此后的候选和回滚目标都执行精确身份校验。版本切换在 `docker compose down` 后显式等待该项目的容器和网络清理完成，再启动目标版本；这是一道有界状态屏障，不是部署重试。每次本地健康通过后，Caddy 公网路径使用统一 15 秒 deadline 验证四个路由、健康合同和适用的发布身份；受控 `/usr/bin/curl --max-time`、Python 子进程 timeout 和成功返回后的绝对 deadline 复核共同限制总等待，只对 502 / 503 / 504、连接错误和超时等待就绪，4xx、证书错误、内容合同错误和版本错配立即失败关闭。三个发布元数据路径使用补偿事务；普通写入失败会先恢复原状态，再重新激活旧容器。激活前读取 Caddy 回执证据；最终回执持久化本身也是检查门，失败时回滚至经过验证的旧版本。旧版本会一直保留到下一次成功的生产部署之后。
 
 部署使用受限服务器用户与 GitHub production environment。服务器主机、用户和私钥作为 Actions secrets 保存；服务器匿名拉取公开 GHCR 镜像。
 

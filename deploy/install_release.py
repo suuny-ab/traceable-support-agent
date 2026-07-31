@@ -91,6 +91,7 @@ def _public_smoke(
     monotonic: Callable[[], float] = time.monotonic,
     runner: Callable[..., subprocess.CompletedProcess[bytes]] = subprocess.run,
     expected_experience: str = "replay_only",
+    expected_release_sha: str | None = None,
 ) -> None:
     def request(url: str, *, capture_body: bool = False) -> tuple[int, bytes]:
         remaining = deadline - monotonic()
@@ -151,11 +152,14 @@ def _public_smoke(
         health = json.loads(body)
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise RuntimeError("public_health_contract_invalid") from None
-    if health != {
+    expected_health = {
         "status": "ok",
         "service": "traceable-support-public-api",
         "live_experience": expected_experience,
-    }:
+    }
+    if expected_release_sha is not None:
+        expected_health["release_sha"] = expected_release_sha
+    if health != expected_health:
         raise RuntimeError("public_health_contract_invalid")
 
 
@@ -258,6 +262,7 @@ def _prepare_release(
         f"API_IMAGE={api_image}\n"
         f"PUBLIC_ORIGIN={public_origin}\n"
         f"TRACEABLE_PUBLIC_LIVE_ENABLED={'true' if live else 'false'}\n"
+        f"EXPECTED_RELEASE_SHA={manifest['git_sha']}\n"
     )
     environment_path = release_dir / "release.env"
     environment_path.write_text(environment, encoding="utf-8")
@@ -274,6 +279,19 @@ def _release_live_from_env(release_dir: Path) -> bool:
         if line.startswith("TRACEABLE_PUBLIC_LIVE_ENABLED="):
             return line.split("=", 1)[1] == "true"
     return False
+
+
+def _release_sha_from_env(release_dir: Path) -> str | None:
+    env_path = release_dir / "release.env"
+    if not env_path.is_file():
+        return None
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("EXPECTED_RELEASE_SHA="):
+            value = line.split("=", 1)[1]
+            if re.fullmatch(r"[0-9a-f]{40}", value) is None:
+                raise RuntimeError("release_expected_sha_invalid")
+            return value
+    return None
 
 
 def main() -> int:
@@ -304,23 +322,29 @@ def main() -> int:
     anchor_experience = (
         "available" if _release_live_from_env(rehearsal_anchor) else "replay_only"
     )
+    anchor_release_sha = _release_sha_from_env(rehearsal_anchor)
     host_caddy_sha256 = _required_sha(Path("/etc/caddy/Caddyfile"))
     activate = release_dir / "deploy" / "activate-release.sh"
     rollback = release_dir / "deploy" / "rollback-release.sh"
     steps: list[str] = []
 
-    def _smoke_for(expected: str) -> Callable[..., None]:
+    def _smoke_for(
+        expected: str, expected_release_sha: str | None
+    ) -> Callable[..., None]:
         return lambda origin, *, deadline, monotonic: _public_smoke(
             origin,
             deadline=deadline,
             monotonic=monotonic,
             expected_experience=expected,
+            expected_release_sha=expected_release_sha,
         )
 
     def activate_and_smoke(label: str) -> None:
         _run("bash", str(activate), str(release_root), str(release_dir))
         try:
-            _wait_public_smoke(public_origin, smoke=_smoke_for(experience))
+            _wait_public_smoke(
+                public_origin, smoke=_smoke_for(experience, release_dir.name)
+            )
         except Exception:
             if (release_root / "previous").is_symlink():
                 _run("bash", str(rollback), str(release_root))
@@ -331,10 +355,16 @@ def main() -> int:
     if not (release_root / "previous").is_symlink():
         recovery = rehearsal_anchor / "deploy" / "activate-release.sh"
         _run("bash", str(recovery), str(release_root), str(rehearsal_anchor))
-        _wait_public_smoke(public_origin, smoke=_smoke_for(anchor_experience))
+        _wait_public_smoke(
+            public_origin,
+            smoke=_smoke_for(anchor_experience, anchor_release_sha),
+        )
         raise RuntimeError("rollback_rehearsal_anchor_not_committed")
     _run("bash", str(rollback), str(release_root))
-    _wait_public_smoke(public_origin, smoke=_smoke_for(anchor_experience))
+    _wait_public_smoke(
+        public_origin,
+        smoke=_smoke_for(anchor_experience, anchor_release_sha),
+    )
     steps.append("canonical_to_legacy")
     activate_and_smoke("legacy_to_canonical_again")
 
@@ -350,7 +380,10 @@ def main() -> int:
 
     def restore_legacy_after_receipt_failure() -> None:
         _run("bash", str(rollback), str(release_root))
-        _wait_public_smoke(public_origin, smoke=_smoke_for(anchor_experience))
+        _wait_public_smoke(
+            public_origin,
+            smoke=_smoke_for(anchor_experience, anchor_release_sha),
+        )
 
     _commit_receipt_or_restore(
         release_dir / "deployment-receipt.json",
