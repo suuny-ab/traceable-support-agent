@@ -1,0 +1,121 @@
+{
+  "schema_version": "retrieval-checkup-v1",
+  "purpose": "A frozen public development set for comparing the repository's existing model-aware BM25, local BGE and RRF retrieval rankings.",
+  "status": "public_synthetic_development_set_not_product_release_claim",
+  "frozen_on": "2026-07-31",
+  "freeze_rule": "Run the first frozen set as written. Do not tune retrieval, replace questions or weaken labels in this slice; a factual label correction requires a full rerun and an explicit dataset version change.",
+  "cases": [
+    {
+      "case_id": "RET-DEV-R1-001",
+      "product_model": "CZ-R1",
+      "query": "R1 今天走得七扭八歪，刚才家里人把它拎到另一个房间了。先查什么？实在要恢复，R1 具体按哪两个键、按多久？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["COMMON-FAQ/map-recovery", "CZ-R1-MANUAL/reset"]
+    },
+    {
+      "case_id": "RET-DEV-R1-002",
+      "product_model": "CZ-R1",
+      "query": "R1 新买回来，充电座周围到底要留多少空位？清扫前地上的电线要不要收，传感器表面应保持什么状态？",
+      "traits": ["multi_source", "cross_document"],
+      "required_source_sections": ["CZ-R1-MANUAL/setup", "COMMON-FAQ/before-cleaning"]
+    },
+    {
+      "case_id": "RET-DEV-R1-003",
+      "product_model": "CZ-R1",
+      "query": "R1 报 E101，缠轮子的线清掉后轮子还是不回弹，我已经重启两遍了。还要继续试吗？客服最少登记哪些内容，能不能要我的电话和地址？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["FAULT-CODES/e101-wheel-blocked", "CUSTOMER-SERVICE-SOP/intake-fields"]
+    },
+    {
+      "case_id": "RET-DEV-R1-004",
+      "product_model": "CZ-R1",
+      "query": "R1 报 E210，充电座已通电、前方清空、触点也擦了，试了三次还是回不去，下一步怎么办？",
+      "traits": ["single_source"],
+      "required_source_sections": ["FAULT-CODES/r1-e210-dock"]
+    },
+    {
+      "case_id": "RET-DEV-R1-005",
+      "product_model": "CZ-R1",
+      "query": "出差三个月前想把 R1 收起来：关机前充到多少、放在哪里、多久补一次电？收起来前主刷、边刷和传感器通常多久维护一次？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["COMMON-FAQ/charging", "CZ-R1-MANUAL/maintenance"]
+    },
+    {
+      "case_id": "RET-DEV-R1-006",
+      "product_model": "CZ-R1",
+      "query": "R1 低电自己回座以后，充够了会不会自动接着扫？我趁充电把尘盒滤网洗了，摸着还有点潮，能装回去吗？",
+      "traits": ["multi_source", "robust_expression"],
+      "required_source_sections": ["CZ-R1-MANUAL/cleaning-modes", "CZ-R1-MANUAL/dust-bin"]
+    },
+    {
+      "case_id": "RET-DEV-R1-007",
+      "product_model": "CZ-R1",
+      "query": "R1 签收第 5 天，固定诊断确认是非人为硬件故障。客服能直接答应换新并说退款完成了吗？",
+      "traits": ["multi_source", "cross_document"],
+      "required_source_sections": ["AFTER-SALES-POLICY/replacement", "CUSTOMER-SERVICE-SOP/manual-escalation"]
+    },
+    {
+      "case_id": "RET-DEV-R1-008",
+      "product_model": "CZ-R1",
+      "query": "R1 用了 9 个月才出故障，已经超过七天了。准备维修建议前要记录什么、核对资料的哪些信息，能不能回复‘已经寄修’？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["AFTER-SALES-POLICY/warranty", "AFTER-SALES-POLICY/repair", "CUSTOMER-SERVICE-SOP/evidence-check"]
+    },
+    {
+      "case_id": "RET-DEV-R2-001",
+      "product_model": "CZ-R2",
+      "query": "我家 R2 老是反复离开基站。基站周围要留多少空间、先擦哪里？另外任务结束那阵突然很大声，是不是故障？",
+      "traits": ["multi_source", "robust_expression"],
+      "required_source_sections": ["CZ-R2-MANUAL/station-setup", "CZ-R2-MANUAL/auto-empty"]
+    },
+    {
+      "case_id": "RET-DEV-R2-002",
+      "product_model": "CZ-R2",
+      "query": "R2 基站报 E310，断电后具体检查哪三处？恢复供电后能连续试集尘吗，橙灯还亮怎么办？",
+      "traits": ["single_source"],
+      "required_source_sections": ["FAULT-CODES/r2-e310-dust-bag"]
+    },
+    {
+      "case_id": "RET-DEV-R2-003",
+      "product_model": "CZ-R2",
+      "query": "厨房有一小滩水，R2 不是能拖地吗，我直接让它进去把水吸干行不行？家里的长毛地毯又该怎么处理？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["COMMON-FAQ/wet-environment", "CZ-R2-MANUAL/vacuum-and-mop"]
+    },
+    {
+      "case_id": "RET-DEV-R2-004",
+      "product_model": "CZ-R2",
+      "query": "R2 卡住后想复位。复位孔按多久、看到什么灯时松手？复位完集尘袋会自动清空吗？",
+      "traits": ["single_source"],
+      "required_source_sections": ["CZ-R2-MANUAL/reset"]
+    },
+    {
+      "case_id": "RET-DEV-R2-005",
+      "product_model": "CZ-R2",
+      "query": "R2 老在深色地垫旁报 E102，应该挪到什么样的地面，用什么擦哪个部位？",
+      "traits": ["robust_expression"],
+      "required_source_sections": ["FAULT-CODES/e102-cliff-sensor"]
+    },
+    {
+      "case_id": "RET-DEV-R2-006",
+      "product_model": "CZ-R2",
+      "query": "R2 要放柜子里三个月：关机前充到多少、多久补电？拖布、主刷和传感器在收起来前怎么维护？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["COMMON-FAQ/charging", "CZ-R2-MANUAL/maintenance"]
+    },
+    {
+      "case_id": "RET-DEV-R2-007",
+      "product_model": "CZ-R2",
+      "query": "我买 R2 主要想扫拖和自动集尘，R1 能不能装水箱凑合用？两款机器的复位方法是不是一样？",
+      "traits": ["single_source"],
+      "required_source_sections": ["COMMON-FAQ/model-difference"]
+    },
+    {
+      "case_id": "RET-DEV-R2-008",
+      "product_model": "CZ-R2",
+      "query": "R2 吸进水后坏了，我想申请保修。手册和售后规则说法不一致时哪个优先？客服能不能先答应，还是必须转人工？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["COMMON-FAQ/wet-environment", "AFTER-SALES-POLICY/exclusions", "AFTER-SALES-POLICY/priority", "CUSTOMER-SERVICE-SOP/manual-escalation"]
+    }
+  ]
+}

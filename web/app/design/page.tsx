@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
+import retrievalCheckup from "../lib/retrieval-checkup-v1.json";
 
 export const metadata: Metadata = {
   title: "设计与工程证据",
@@ -20,6 +21,14 @@ const flow = [
   ["证据生成", "形成客户可见候选", "第二轮只在批准来源与义务范围内组织正文。"],
   ["机械门", "通过或明确停止", "来源、结构和完整性失败就 handoff；通过也只等待人工决定。"],
 ];
+
+const retrievalCases = new Map(
+  retrievalCheckup.cases.map((item) => [item.case_id, item]),
+);
+
+const retrievalLabels = new Map(
+  retrievalCheckup.retrievers.map((item) => [item.retriever_id, item.label]),
+);
 
 export default function DesignPage() {
   return (
@@ -62,6 +71,73 @@ export default function DesignPage() {
             <li><strong>实时能力不是默认值</strong><span>开关、runner、依赖、凭据和健康门必须同时就绪。</span></li>
             <li><strong>人工批准不触发动作</strong><span>决定被记录，但不发送、不退款、不换新、不结单。</span></li>
           </ul>
+        </section>
+
+        <section className="retrieval-checkup" aria-labelledby="retrieval-checkup-title">
+          <div className="section-heading">
+            <p>RAG 体检</p>
+            <div>
+              <h2 id="retrieval-checkup-title">同一组问题，三种现有检索各自找回了什么。</h2>
+              <p>第一次冻结运行，结果不用于换题、调参或包装线上成功率。</p>
+            </div>
+          </div>
+
+          <div className="checkup-scope" aria-label="评测范围">
+            <article><strong>{retrievalCheckup.dataset.case_count}</strong><span>个冻结合成问题</span></article>
+            <article><strong>{retrievalCheckup.dataset.model_split["CZ-R1"]} + {retrievalCheckup.dataset.model_split["CZ-R2"]}</strong><span>R1 / R2 各半</span></article>
+            <article><strong>{retrievalCheckup.dataset.section_count} / {retrievalCheckup.dataset.section_count}</strong><span>当前有效章节被标签覆盖</span></article>
+            <article><strong>{retrievalCheckup.dataset.multi_source_case_count}</strong><span>个多来源问题</span></article>
+          </div>
+
+          <div className="checkup-table-wrap">
+            <table className="checkup-table">
+              <caption>每个数字表示“全部必需来源都进入该范围”的题数，不是单个来源命中率。</caption>
+              <thead>
+                <tr><th scope="col">检索方式</th><th scope="col">Top 5 全部命中</th><th scope="col">Top 10 全部命中</th><th scope="col">错误型号来源</th></tr>
+              </thead>
+              <tbody>
+                {retrievalCheckup.retrievers.map((item) => (
+                  <tr key={item.retriever_id}>
+                    <th scope="row">{item.label}</th>
+                    <td><strong>{item.full_coverage_at_5.passed_cases} / {item.full_coverage_at_5.total_cases}</strong></td>
+                    <td>{item.full_coverage_at_10.passed_cases} / {item.full_coverage_at_10.total_cases}</td>
+                    <td>{item.wrong_model_hits_at_10}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="checkup-examples" aria-label="一条成功和两条失败">
+            {retrievalCheckup.public_examples.map((example) => {
+              const item = retrievalCases.get(example.case_id);
+              if (!item) return null;
+              const retrieval = item.retrievals[example.retriever_id as keyof typeof item.retrievals];
+              return (
+                <article key={`${example.role}-${example.case_id}`} className={example.role === "success" ? "example-success" : "example-failure"}>
+                  <span>{example.role === "success" ? "成功样例" : "失败样例"} · {retrievalLabels.get(example.retriever_id)}</span>
+                  <h3>{example.case_id}</h3>
+                  <p>{item.query}</p>
+                  <dl>
+                    <div><dt>必需来源</dt><dd>{item.required_source_sections.join("；")}</dd></div>
+                    <div>
+                      <dt>Top 5 结果</dt>
+                      <dd>{example.role === "success"
+                        ? "全部进入 Top 5。"
+                        : example.missing_at_5.map((source) => `${source} 只排到第 ${retrieval.required_source_ranks[source as keyof typeof retrieval.required_source_ranks]} 名`).join("；")}
+                      </dd>
+                    </div>
+                  </dl>
+                </article>
+              );
+            })}
+          </div>
+
+          <aside className="checkup-boundary">
+            <strong>这组数字能证明什么？</strong>
+            <p>它只说明：在 16 个公开合成问题上，混合 RRF 把 BM25 和 BGE 各自漏出 Top 5 的来源补了回来。它不代表线上成功率，不评回答是否正确，也不是未见 HOLDOUT；全程没有调用 Provider。</p>
+            <code>PYTHONPATH=api/src python tools/retrieval_checkup.py --check</code>
+          </aside>
         </section>
 
         <section className="failure-ledger">
