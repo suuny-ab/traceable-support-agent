@@ -2,7 +2,7 @@
 
 > 本文件保存项目结果队列和固定候选；Conversation / Turn 运行状态在 Git 外控制系统。
 > 项目 Agent 仅在确有隔离、候选或恢复治理需要时建立 Task / Run，并把恢复事实留在项目
-> checkpoint；个人 Work 和新 Conversation 入口不默认登记。
+> checkpoint；裁决入口和新现场会话不默认登记。
 
 | 字段 | 内容 |
 | --- | --- |
