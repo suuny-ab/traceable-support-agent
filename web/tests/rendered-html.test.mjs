@@ -45,10 +45,10 @@ after(() => {
 });
 
 const routes = [
-  ["/", /让客服 AI 的结论/],
-  ["/design", /把模型放进一条/],
-  ["/app", /从输入到决定/],
-  ["/privacy", /这里不是客服入口/],
+  ["/", /客服 AI 不只回答/],
+  ["/design", /三个工程问题/],
+  ["/app", /运行一个案例/],
+  ["/privacy", /不要带入真实数据/],
 ];
 
 for (const [pathname, expected] of routes) {
@@ -65,7 +65,7 @@ for (const [pathname, expected] of routes) {
   });
 }
 
-test("renders explicit live-health and replay choices", async () => {
+test("renders one guided path while preserving explicit advanced choices", async () => {
   const response = await fetch(`${baseUrl}/app`);
   const html = await response.text();
   assert.match(html, /正在检测实时服务/);
@@ -75,7 +75,26 @@ test("renders explicit live-health and replay choices", async () => {
   assert.match(html, /GEN-DEV-IE-001/);
   assert.match(html, /唯一的例外是固定边界挑战/);
   assert.match(html, /Provider 调用为 0/);
+  assert.match(html, /推荐案例 · 约 30 秒/);
+  assert.match(html, /点击左侧按钮开始/);
+  assert.match(html, /<details class="experience-options">/);
+  assert.match(html, /更多体验/);
+  assert.match(html, /其他实时案例、自由提问与已验证回放/);
+  assert.match(html, /回放不调用模型/);
+  assert.match(html, /不执行客服动作/);
   assert.doesNotMatch(html, /不可用时不能创建新运行/);
+});
+
+test("homepage leads with the job-search proof and one primary demo action", async () => {
+  const response = await fetch(`${baseUrl}/`);
+  const html = await response.text();
+  assert.match(html, /AI 应用工程作品/);
+  assert.match(html, /RAG · Guardrails · Full-stack/);
+  assert.match(html, /运行推荐案例/);
+  assert.match(html, /真实模型运行/);
+  assert.match(html, /来源可以回读/);
+  assert.match(html, /失败时转人工/);
+  assert.doesNotMatch(html, /button-secondary/);
 });
 
 test("homepage preview answer matches the verified replay and approved clause", async () => {
@@ -108,4 +127,29 @@ test("design page renders the frozen retrieval checkup and its limits", async ()
   assert.match(html, /失败样例/);
   assert.match(html, /不代表线上成功率/);
   assert.match(html, /没有调用 Provider/);
+});
+
+test("design page leads with three proof summaries and keeps deep evidence expandable", async () => {
+  const response = await fetch(`${baseUrl}/design`);
+  const html = await response.text();
+  assert.match(html, /模型如何被约束/);
+  assert.match(html, /检索真的更好吗/);
+  assert.match(html, /系统何时会停手/);
+  assert.match(html, /四项原则与五步工作流/);
+  assert.match(html, /范围、完整表格与成功\/失败案例/);
+  assert.match(html, /四次关键发现与产品变化/);
+  assert.equal((html.match(/<details class="evidence-details">/g) ?? []).length, 3);
+});
+
+test("privacy page shows the safe path before expandable operating details", async () => {
+  const response = await fetch(`${baseUrl}/privacy`);
+  const html = await response.text();
+  assert.match(html, /可以体验/);
+  assert.match(html, /不要输入/);
+  assert.match(html, /用虚构问题查看完整链路/);
+  assert.match(html, /任何真实客户或内部信息/);
+  assert.match(html, /展开完整边界/);
+  assert.match(html, /数据、Provider、留存、调用与人工决定/);
+  assert.match(html, /状态未知时，页面不会替系统猜答案/);
+  assert.match(html, /<details class="evidence-details privacy-details">/);
 });

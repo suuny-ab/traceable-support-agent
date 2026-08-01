@@ -11,6 +11,7 @@ test("light SaaS palette and responsive accessibility contracts are local", asyn
   assert.match(css, /--amber:\s*#a65306/);
   assert.match(css, /\.mobile-menu-button[\s\S]*width:\s*44px[\s\S]*height:\s*44px/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /summary:focus-visible/);
   assert.match(css, /overflow-x:\s*clip/);
   assert.doesNotMatch(css, /url\((?:https?:)?\/\//);
 });
@@ -26,6 +27,23 @@ test("mobile navigation exposes keyboard state and the real repository", async (
   assert.match(source, /https:\/\/github\.com\/suuny-ab\/traceable-support-agent/);
   assert.match(source, /target="_blank"/);
   assert.match(source, /rel="noreferrer"/);
+});
+
+test("guided workbench collapses to one column on narrow screens", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.guided-grid\s*\{[^}]*grid-template-columns:\s*\.76fr 1\.24fr/);
+  assert.match(css, /@media \(max-width: 1100px\)[\s\S]*?\.guided-grid\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.guided-proof-list\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /\.experience-options\s*\{[^}]*border-top/);
+});
+
+test("engineering evidence uses progressive disclosure on narrow screens", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.evidence-index\s*\{[^}]*grid-template-columns:\s*repeat\(3, 1fr\)/);
+  assert.match(css, /\.evidence-details\s*\{[^}]*border:/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*?\.evidence-index\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*?\.story-heading\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*?\.privacy-guidance\s*\{\s*grid-template-columns:\s*1fr/);
 });
 
 test("core text palette meets WCAG AA contrast", () => {

@@ -62,7 +62,7 @@ export function SiteHeader() {
 
         <div className="deploy-status" aria-label="公开体验状态">
           <i aria-hidden="true" />
-          <span><strong>实时优先公开体验</strong><small>Replay fallback</small></span>
+          <span><strong>公开 Beta</strong><small>实时运行 + 回放</small></span>
         </div>
       </div>
     </header>
@@ -75,7 +75,7 @@ export function SiteFooter() {
       <div className="shell footer-inner">
         <div>
           <strong>Traceable Support Agent</strong>
-          <span>可追溯客服决策支持 · AI Application Engineering Portfolio</span>
+          <span>RAG · 受控生成 · 失败关闭 · AI 应用工程作品</span>
         </div>
         <nav aria-label="页脚导航">
           <Link href="/design">设计与证据</Link>

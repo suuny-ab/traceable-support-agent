@@ -16,6 +16,7 @@ import {
   submitHumanDecision,
 } from "../lib/live-api.mjs";
 import { selectRunRoute } from "../lib/replay-routing.mjs";
+import { revealResultPanel } from "../lib/result-visibility.mjs";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 const stageNames = ["检索证据", "规划义务", "生成候选", "执行质量门"];
@@ -80,6 +81,7 @@ function providerCallCopy(result: DemoResult): string {
 
 export function DemoWorkbench() {
   const operationRef = useRef(0);
+  const outputRef = useRef<HTMLElement>(null);
   const [trace, setTrace] = useState<TraceState[]>(emptyTrace);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DemoResult | null>(null);
@@ -97,6 +99,9 @@ export function DemoWorkbench() {
   const inputLocked = running || decisionState === "submitting";
   const liveReady = availability === "available";
   const visibleSuggestions = suggestedQuestions.filter((item) => item.taskType === freeTaskType);
+  const recommendedLiveCase = liveCases[0];
+  const additionalLiveCases = liveCases.slice(1);
+  const recommendedReplay = replayPresets[0];
 
   useEffect(() => {
     let active = true;
@@ -116,6 +121,10 @@ export function DemoWorkbench() {
     setDecisionState("idle");
     setDecisionText("");
     setTrace(emptyTrace());
+  }
+
+  function revealOutput() {
+    window.requestAnimationFrame(() => revealResultPanel(outputRef.current));
   }
 
   async function refreshAvailability() {
@@ -169,6 +178,7 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     clearRun();
+    revealOutput();
     const outcome = await requestLiveRun({
       taskType,
       inputMode,
@@ -218,6 +228,7 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     clearRun();
+    revealOutput();
     const stopIndex = preset.stopStageIndex ?? stageNames.length - 1;
     for (let index = 0; index <= stopIndex; index += 1) {
       if (operation !== operationRef.current) return;
@@ -237,6 +248,7 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     setCanContinue(false);
+    revealOutput();
     const outcome = await pollLiveRun({
       runId,
       baseUrl: API_BASE,
@@ -294,13 +306,22 @@ export function DemoWorkbench() {
     clearRun();
   }
 
+  function startRecommended() {
+    if (inputLocked || availability === "checking") return;
+    if (liveReady && recommendedLiveCase) {
+      void runCase(recommendedLiveCase);
+      return;
+    }
+    if (recommendedReplay) void showReplay(recommendedReplay.id);
+  }
+
   const availabilityCopy = availability === "checking"
     ? "正在检测实时服务"
     : availability === "available"
-      ? "实时体验可用 · 每次点击都创建新的运行"
+      ? "实时体验可用 · 点击后创建新的运行"
       : availability === "unavailable"
-        ? "实时服务不可用 · 普通运行不可用；边界挑战仍创建 0 次模型调用的确定性转人工，另可查看已验证回放"
-        : "实时状态未知 · 普通运行不可用；边界挑战仍创建 0 次模型调用的确定性转人工，另可查看已验证回放";
+        ? "实时服务不可用 · 推荐案例将打开已验证回放"
+        : "实时状态未知 · 推荐案例将打开已验证回放";
   const freeTooShort = freeTaskType === "ticket" && freeInput.trim().length > 0 && Array.from(freeInput.trim()).length < 8;
   const canSubmitFree = !inputLocked && liveReady && Boolean(freeInput.trim()) && freeCount <= 500 && !freeTooShort;
 
@@ -313,11 +334,50 @@ export function DemoWorkbench() {
         <button type="button" onClick={refreshAvailability} disabled={availability === "checking" || inputLocked}>重新检测</button>
       </div>
 
-      <div className="workbench-grid">
-        <section className="input-panel" aria-label="运行输入">
-          <div className="panel-heading"><span>LIVE CASES</span><strong>默认案例 · 每次创建新运行</strong></div>
+      <div className="guided-grid">
+        <section className="guided-case" aria-labelledby="guided-case-title">
+          <div className="guided-case-kicker"><span>01</span> 推荐案例 · 约 30 秒</div>
+          <h2 id="guided-case-title">CZ-R1 局部清扫</h2>
+          <p className="guided-question">{recommendedLiveCase?.input}</p>
+          <button className="guided-run-button" type="button" disabled={inputLocked || availability === "checking"} onClick={startRecommended}>
+            {availability === "checking" ? "正在确认实时状态…" : liveReady ? "运行推荐案例" : "查看已验证回放"}<span>→</span>
+          </button>
+          <small className="guided-boundary">{liveReady ? "将创建一次新的真实运行；自动重试为 0。" : "实时不可用，不会用回放冒充新运行。"}</small>
+          <p className="guided-summary">不用先理解所有设置。运行后按顺序查看四件事：</p>
+          <ol className="guided-proof-list">
+            <li><span>1</span>客户可见回答</li>
+            <li><span>2</span>绑定的批准来源</li>
+            <li><span>3</span>质量门检查结果</li>
+            <li><span>4</span>等待人工决定</li>
+          </ol>
+        </section>
+
+        <section ref={outputRef} className="output-panel guided-output" aria-live="polite" aria-label="运行结果" tabIndex={-1}>
+          <div className="panel-heading"><span>RUN RESULT</span><strong>{result ? result.title : "等待推荐案例"}</strong></div>
+          {runId && <div className="run-id"><span>RUN ID</span><code>{runId}</code>{canContinue && <button type="button" disabled={running} onClick={continuePolling}>继续查询同一运行</button>}</div>}
+          <ol className="progress-list">
+            {stageNames.map((name, index) => <li className={`trace-${trace[index]}`} key={name}><b>{String(index + 1).padStart(2, "0")}</b><span>{name}</span><em>{trace[index].toUpperCase()}</em></li>)}
+          </ol>
+          {!result && <div className="result-placeholder"><strong>点击左侧按钮开始</strong><p>结果会在这里依次展示回答、来源、质量门和人工决定，而不是只给出一个无法检查的答案。</p></div>}
+          {result && <ResultView
+            result={result}
+            runId={runId}
+            decision={decision}
+            decisionState={decisionState}
+            decisionText={decisionText}
+            onDecision={chooseDecision}
+            onDecisionText={setDecisionText}
+            onSubmitEdit={submitEdit}
+          />}
+        </section>
+      </div>
+
+      <details className="experience-options">
+        <summary><span>更多体验</span><strong>其他实时案例、自由提问与已验证回放</strong><em>展开</em></summary>
+        <div className="input-panel experience-options-content" aria-label="更多运行输入">
+          <div className="panel-heading"><span>MORE LIVE CASES</span><strong>其他案例 · 每次创建新运行</strong></div>
           <div className="case-list">
-            {liveCases.map((liveCase) => {
+            {additionalLiveCases.map((liveCase) => {
               const runnable = selectRunRoute({ availability, preflightOnly: liveCase.kind === "boundary" }) === "live";
               return (
                 <article className={`case-card${liveCase.kind === "boundary" ? " case-boundary" : ""}`} key={liveCase.id}>
@@ -368,7 +428,7 @@ export function DemoWorkbench() {
 
           <div className="replay-section">
             <div className="panel-heading"><span>VERIFIED REPLAY</span><strong>已验证回放 · 不创建新运行</strong></div>
-            <p className="replay-hint">回放是历史已验证结果，不调用模型，也绝不冒充本次运行。</p>
+            <p className="replay-hint">已验证回放不调用模型，也绝不冒充本次运行。</p>
             <ul className="replay-list">
               {replayPresets.map((preset) => (
                 <li key={preset.id}>
@@ -377,28 +437,10 @@ export function DemoWorkbench() {
                 </li>
               ))}
             </ul>
+            <p className="input-boundary">运行边界：普通运行不可用时不会创建。唯一的例外是固定边界挑战 GEN-DEV-IE-001；实时不可用时，它仍会创建一次 Provider 调用为 0 的确定性转人工运行。</p>
           </div>
-        </section>
-
-        <section className="output-panel" aria-live="polite" aria-label="运行结果">
-          <div className="panel-heading"><span>RUN TRACE</span><strong>{result ? result.title : "等待运行"}</strong></div>
-          {runId && <div className="run-id"><span>RUN ID</span><code>{runId}</code>{canContinue && <button type="button" disabled={running} onClick={continuePolling}>继续查询同一运行</button>}</div>}
-          <ol className="progress-list">
-            {stageNames.map((name, index) => <li className={`trace-${trace[index]}`} key={name}><b>{String(index + 1).padStart(2, "0")}</b><span>{name}</span><em>{trace[index].toUpperCase()}</em></li>)}
-          </ol>
-          {!result && <div className="result-placeholder"><strong>选择一个默认案例或提交自由探索</strong><p>阶段轨迹只来自服务端持久化状态；结果展示客户可见正文、义务、来源 clause 绑定和机械门，而不是只有一个答案框。</p></div>}
-          {result && <ResultView
-            result={result}
-            runId={runId}
-            decision={decision}
-            decisionState={decisionState}
-            decisionText={decisionText}
-            onDecision={chooseDecision}
-            onDecisionText={setDecisionText}
-            onSubmitEdit={submitEdit}
-          />}
-        </section>
-      </div>
+        </div>
+      </details>
     </div>
   );
 }
