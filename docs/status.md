@@ -6,24 +6,25 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| `state` | `ready` |
-| 更新时间 | `2026-07-31` |
-| 当前产品目标 | 发布版本身份已形成公开可复验闭环；本阶段结束，不继续扩展监控、RAG 或 Provider 功能 |
-| 当前集成任务 | 无 |
-| 复杂度 | 无活动增量；产品保持 `S1 公开 Beta`、单机、无 SLA |
-| 风险 / 成熟度 | 公网健康可核对部署提交，但只证明发布身份与本次单机回滚演练，不证明代码正确、高可用或长期稳定性 |
-| 产品候选 | 无；`release_sha` 增量已通过 PR #50、main CI、自动部署和公网精确 SHA 验收 |
-| 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
-| 活动工作 | 无 |
+| `state` | `local_acceptance` |
+| 更新时间 | `2026-08-01` |
+| 当前产品目标 | 打磨求职展示，不增加产品功能；先把首页和工作台收束成招聘方 10 秒理解、2 分钟体验的主路径 |
+| 当前集成任务 | `portfolio-guided-path` |
+| 复杂度 | 标准 / `R0`；改变首页与工作台的用户可见信息层级，不改变运行、Provider、数据或安全合同 |
+| 风险 / 成熟度 | 最大风险是折叠后隐藏关键边界；当前候选保留实时 / 回放区分、边界挑战、自由输入和完整结果，并由渲染与响应式测试失败关闭 |
+| 产品候选 | 本地分支 `codex/workbench-polish`，固定实现提交 `14e4c6b`；未推送、未部署，等待用户本地体验验收 |
+| 项目基线 | `origin/main` 的 `e52bae3`；唯一权威位置为主 worktree `traceable-support-agent` |
+| 活动工作 | `portfolio-guided-path`：首页单一求职主张；工作台推荐案例 + 结果优先；其他能力折叠为“更多体验” |
 | 最近完成 | PR #50 squash 合并为 `66af626`；main CI `30629303699`、生产部署 `30629464871` 和公网完整 SHA 验收通过，工作记录归档于 `docs/work/completed/release-sha-health/` |
-| 阻碍 | 当前无工程阻碍；启用 pgvector DSN 前的 live readiness P1 finding、npm 依赖漂移和 Issue #14 继续后置，不构成当前活动工作 |
+| 阻碍 | 无工程阻碍；本地候选待用户体验验收。移动端响应式合同已通过机器检查，但本轮验收浏览器禁止强制移动视口，未形成移动端截图 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=66af626ba4debf4c8a1cf91da023754168c5b908` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 暂停项目功能开发，把已交付的 RAG、失败关闭与部署身份闭环用于简历和有效投递；Issue #14 继续后置 |
+| 下一检查点 | 用户在 `http://localhost:3411/` 验收首页与推荐案例主路径；通过后再单独决定是否推送和部署 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
+| `portfolio-guided-path` | `local_acceptance` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已在本地浏览器验收；未推送、未部署 |
 | `release-sha-health` | `delivered` | PR #50 合并部署；公网健康返回与 `66af626ba4debf4c8a1cf91da023754168c5b908` 精确一致的完整 `release_sha` |
 | `ISSUE-29-PORTFOLIO-PRESENTATION` | `delivered` | PR #43 合并为 `8da0546` 并自动部署；GitHub、真实运行 GIF、公网站点与当前事实统一，用户验收 `PASS` |
 | `TASK-TRACEABLE-LIVE-WORKBENCH` | `delivered` | PR #31 合并部署，最终生产体验验收 `PASS`；首页一致性由 PR #34 修正；Issue #28 已关闭归档 |
