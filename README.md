@@ -4,6 +4,14 @@
 
 [![CI / Release](https://github.com/suuny-ab/traceable-support-agent/actions/workflows/ci-release.yml/badge.svg?branch=main)](https://github.com/suuny-ab/traceable-support-agent/actions/workflows/ci-release.yml)
 
+## 工程证据速览
+
+| RAG 检索 | 型号隔离 | 自动化验证 | 线上版本 |
+| --- | --- | --- | --- |
+| [RRF Top-5 必需来源覆盖 16/16](evals/retrieval-checkup-v1.json) | [错误型号来源 0](docs/product/evidence-map.md) | [main CI 5/5 jobs 成功；API 137 passed / 2 skipped；Stage 12 runner 13 passed](https://github.com/suuny-ab/traceable-support-agent/actions/runs/30690110223) | [`release_sha=915ca4e…` 公网可验](https://47.84.34.86/api/v1/health) |
+
+> 检索数字来自 16 个冻结公开合成开发题，只表示必需来源覆盖，不代表回答语义正确、线上成功率或未见集表现；测试与 CI 数字绑定上述运行，`release_sha` 只证明发布身份。
+
 ![生产真实 Provider 运行：从新建合成 QA 到证据绑定候选](web/public/live-provider-run.gif)
 
 > 以上 GIF 录制于 `2026-07-30` 的生产体验：一次默认合成 QA、同一 run、Provider 调用 2 次、自动重试 0，最终四道检查全部 PASS。为缩短阅读时间，GIF 省略了阶段间等待；它不是预设回放，也没有提交批准、发送回复或触发其他业务动作。
@@ -73,7 +81,11 @@ Evals → Product
 | 评测有没有保留失败结果 | [Stage 12 聚合结果](evals/stage12-aggregate-v1.json)、[已知限制](docs/product/limitations.md) | 19/24、9 通过不是成功率或上线门 |
 | 部署能否回滚和复现 | [部署实现](deploy/)、[`/api/v1/health`](https://47.84.34.86/api/v1/health)、[运维说明](docs/engineering/operations.md)、[质量策略](docs/engineering/quality.md) | `release_sha` 只证明当前进程声明的构建提交且由发布门核对；单机演练不等于多区高可用 |
 
-Stage 12 只执行过一次：19/24 案例完成、9 通过，并暴露候选生成合同高失败率和两条边界缺陷。Issue #21 已用公开合成回归修复当时的两条边界缺陷，但未重跑未见集，因此这里保留原观测，不把后续修复倒写成新的评测结果。
+### Stage 12：原始观测、已修复边界与下一步
+
+1. **原始观测**：[Stage 12 聚合结果](evals/stage12-aggregate-v1.json)中保留了第一次正式评测事实：19/24 案例完成、9 通过，并暴露候选生成合同高失败率，以及 SAF-003 / MBD-003 两条未正确转人工的边界缺陷。
+2. **Issue #21 已修复**：[#21](https://github.com/suuny-ab/traceable-support-agent/issues/21) 已用公开合成回归建立生成前确定性安全 / 型号边界，并完成部署；这修复了已知机制缺陷，但没有重跑或改写原未见集结果。
+3. **下一步计划**：若继续判断 `product/0.1.0`，需要先按新的验证说明卡另行授权并重跑未见集，再由 [Issue #14](https://github.com/suuny-ab/traceable-support-agent/issues/14) 作发布取舍；在此之前不声称 Stage 12 分数或开放域质量已经提高。
 
 ## 本地运行
 
