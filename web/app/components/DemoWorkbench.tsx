@@ -16,6 +16,7 @@ import {
   submitHumanDecision,
 } from "../lib/live-api.mjs";
 import { selectRunRoute } from "../lib/replay-routing.mjs";
+import { revealResultPanel } from "../lib/result-visibility.mjs";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 const stageNames = ["检索证据", "规划义务", "生成候选", "执行质量门"];
@@ -80,6 +81,7 @@ function providerCallCopy(result: DemoResult): string {
 
 export function DemoWorkbench() {
   const operationRef = useRef(0);
+  const outputRef = useRef<HTMLElement>(null);
   const [trace, setTrace] = useState<TraceState[]>(emptyTrace);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DemoResult | null>(null);
@@ -97,6 +99,8 @@ export function DemoWorkbench() {
   const inputLocked = running || decisionState === "submitting";
   const liveReady = availability === "available";
   const visibleSuggestions = suggestedQuestions.filter((item) => item.taskType === freeTaskType);
+  const recommendedLiveCase = liveCases[0];
+  const recommendedReplay = replayPresets[0];
 
   useEffect(() => {
     let active = true;
@@ -116,6 +120,10 @@ export function DemoWorkbench() {
     setDecisionState("idle");
     setDecisionText("");
     setTrace(emptyTrace());
+  }
+
+  function revealOutput() {
+    window.requestAnimationFrame(() => revealResultPanel(outputRef.current));
   }
 
   async function refreshAvailability() {
@@ -169,6 +177,7 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     clearRun();
+    revealOutput();
     const outcome = await requestLiveRun({
       taskType,
       inputMode,
@@ -218,6 +227,7 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     clearRun();
+    revealOutput();
     const stopIndex = preset.stopStageIndex ?? stageNames.length - 1;
     for (let index = 0; index <= stopIndex; index += 1) {
       if (operation !== operationRef.current) return;
@@ -237,6 +247,7 @@ export function DemoWorkbench() {
     const operation = ++operationRef.current;
     setRunning(true);
     setCanContinue(false);
+    revealOutput();
     const outcome = await pollLiveRun({
       runId,
       baseUrl: API_BASE,
@@ -294,6 +305,15 @@ export function DemoWorkbench() {
     clearRun();
   }
 
+  function startRecommended() {
+    if (inputLocked || availability === "checking") return;
+    if (liveReady && recommendedLiveCase) {
+      void runCase(recommendedLiveCase);
+      return;
+    }
+    if (recommendedReplay) void showReplay(recommendedReplay.id);
+  }
+
   const availabilityCopy = availability === "checking"
     ? "正在检测实时服务"
     : availability === "available"
@@ -311,6 +331,17 @@ export function DemoWorkbench() {
         <strong>{availabilityCopy}</strong>
         {availabilityReason && <code>{availabilityReason}</code>}
         <button type="button" onClick={refreshAvailability} disabled={availability === "checking" || inputLocked}>重新检测</button>
+      </div>
+
+      <div className="recommended-path">
+        <div>
+          <span>推荐先试</span>
+          <strong>CZ-R1 局部清扫</strong>
+          <small>{liveReady ? "创建一次实时运行，查看来源绑定" : "实时不可用时，明确查看已验证回放"}</small>
+        </div>
+        <button type="button" disabled={inputLocked || availability === "checking"} onClick={startRecommended}>
+          {availability === "checking" ? "正在确认实时状态…" : liveReady ? "创建新运行" : "查看已验证回放"}<span>→</span>
+        </button>
       </div>
 
       <div className="workbench-grid">
@@ -380,7 +411,7 @@ export function DemoWorkbench() {
           </div>
         </section>
 
-        <section className="output-panel" aria-live="polite" aria-label="运行结果">
+        <section ref={outputRef} className="output-panel" aria-live="polite" aria-label="运行结果" tabIndex={-1}>
           <div className="panel-heading"><span>RUN TRACE</span><strong>{result ? result.title : "等待运行"}</strong></div>
           {runId && <div className="run-id"><span>RUN ID</span><code>{runId}</code>{canContinue && <button type="button" disabled={running} onClick={continuePolling}>继续查询同一运行</button>}</div>}
           <ol className="progress-list">
