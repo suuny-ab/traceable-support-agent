@@ -21,9 +21,8 @@ export default function PrivacyPage() {
       <main className="shell inner-page narrow-page">
         <header className="page-intro privacy-intro">
           <p className="eyebrow"><span>信任边界</span> Privacy & operations</p>
-          <h1>你可以体验工作流，<br /><em>但这里不是客服入口。</em></h1>
-          <p>这是一套面向作品集的合成数据公开 Beta。下面集中说明什么会发生、什么不会发生，
-            以及系统在无法证明状态时如何停止。</p>
+          <h1>可以体验整个工作流，<br /><em>但不要带入真实数据。</em></h1>
+          <p>这是使用合成数据的作品集公开 Beta。先看四条底线；留存、调用和失败状态等完整说明可以按需展开。</p>
         </header>
 
         <section className="boundary-summary" aria-label="当前公开状态">
@@ -33,15 +32,31 @@ export default function PrivacyPage() {
           <div><span>真实客户数据</span><strong>不允许</strong></div>
         </section>
 
-        <section className="policy-list">
-          {boundaries.map(([label, title, copy], index) => (
-            <article key={label}>
-              <span>{String(index + 1).padStart(2, "0")} · {label}</span>
-              <h2>{title}</h2>
-              <p>{copy}</p>
-            </article>
-          ))}
+        <section className="privacy-guidance" aria-label="体验须知">
+          <article>
+            <span>可以体验</span>
+            <h2>用虚构问题查看完整链路。</h2>
+            <ul><li>运行 QA 或工单案例</li><li>查看来源、质量门和人工决定</li><li>明确区分实时运行与回放</li></ul>
+          </article>
+          <article>
+            <span>不要输入</span>
+            <h2>任何真实客户或内部信息。</h2>
+            <ul><li>姓名、电话和订单</li><li>公司机密或内部日志</li><li>真实客户问题和生产数据</li></ul>
+          </article>
         </section>
+
+        <details className="evidence-details privacy-details">
+          <summary><span>展开完整边界</span><strong>数据、Provider、留存、调用与人工决定</strong><em>展开</em></summary>
+          <section className="policy-list evidence-details-body">
+            {boundaries.map(([label, title, copy], index) => (
+              <article key={label}>
+                <span>{String(index + 1).padStart(2, "0")} · {label}</span>
+                <h2>{title}</h2>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </section>
+        </details>
 
         <aside className="privacy-callout">
           <div><span>失败关闭</span><h2>状态未知时，页面不会替系统猜答案。</h2></div>

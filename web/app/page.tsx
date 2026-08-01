@@ -15,6 +15,12 @@ const stages = [
   ["05", "决定", "主管批准、编辑或拒绝，不自动执行。"],
 ];
 
+const portfolioProofs = [
+  ["AI 应用", "RAG + 受控生成", "检索、义务规划和生成分工清楚，每条客户可见结论绑定批准来源。"],
+  ["工程交付", "API + SQLite + 容器", "异步运行、人工决定、持久化、预算门和发布身份形成完整闭环。"],
+  ["质量边界", "评测 + 失败关闭", "公开评测可重复，证据不足、越界或状态未知都不会被包装成成功。"],
+];
+
 export default function Home() {
   return (
     <div className="site-frame">
@@ -89,21 +95,24 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="proof-section shell">
-          <div className="proof-copy">
-            <p className="section-kicker">当前公开能力</p>
-            <h2>把边界讲清楚，<br />比把 Demo 说大更重要。</h2>
-            <p>当前公网已启用真实 Provider，页面只有在健康状态为 available 时才创建实时运行；
-              不可用时不会拿预设答案替换输入，只保留独立标记的已验证回放。固定边界挑战会在模型
-              调用前由确定性规则转人工，Provider 调用为 0。公开 Beta 不据此宣称生产级高可用、
-              SLA 或 product/0.1.0 已发布。</p>
-            <Link className="text-link" href="/privacy">查看完整运行边界 →</Link>
+        <section className="portfolio-section shell">
+          <div className="portfolio-heading">
+            <p className="section-kicker">求职展示重点</p>
+            <h2>这份作品证明的，<br />不只是会调用模型。</h2>
+            <p>它覆盖了 AI 应用从检索、生成、控制面到部署验证的完整链路，同时诚实保留公开 Beta 的能力边界。</p>
+            <div className="portfolio-links">
+              <Link className="text-link" href="/design">查看架构与评测 →</Link>
+              <Link className="text-link" href="/privacy">查看运行边界 →</Link>
+            </div>
           </div>
-          <div className="proof-grid">
-            <article><span>产品路径</span><strong>QA + 工单</strong><p>两条主链共用证据合同、失败关闭和人工决定。</p></article>
-            <article><span>当前公网</span><strong>实时 + 回放兜底</strong><p>实时运行与已验证回放明确区分，不伪造模型生成。</p></article>
-            <article><span>自动动作</span><strong>0</strong><p>批准只记录决定，不发送回复或改变业务系统。</p></article>
-            <article><span>公开 API</span><strong>4</strong><p>运行、轮询、人工决定和健康接口保持稳定。</p></article>
+          <div className="portfolio-proof-list">
+            {portfolioProofs.map(([label, title, copy], index) => (
+              <article key={label}>
+                <span>{String(index + 1).padStart(2, "0")} · {label}</span>
+                <strong>{title}</strong>
+                <p>{copy}</p>
+              </article>
+            ))}
           </div>
         </section>
 
