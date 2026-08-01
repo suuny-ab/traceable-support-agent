@@ -6,25 +6,25 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| `state` | `local_acceptance` |
+| `state` | `accepted_local` |
 | 更新时间 | `2026-08-01` |
 | 当前产品目标 | 打磨求职展示，不增加产品功能；先把首页和工作台收束成招聘方 10 秒理解、2 分钟体验的主路径 |
 | 当前集成任务 | `portfolio-guided-path` |
 | 复杂度 | 标准 / `R0`；改变首页与工作台的用户可见信息层级，不改变运行、Provider、数据或安全合同 |
 | 风险 / 成熟度 | 最大风险是折叠后隐藏关键边界；当前候选保留实时 / 回放区分、边界挑战、自由输入和完整结果，并由渲染与响应式测试失败关闭 |
-| 产品候选 | 本地分支 `codex/workbench-polish`，固定实现提交 `14e4c6b`；未推送、未部署，等待用户本地体验验收 |
+| 产品候选 | 本地分支 `codex/workbench-polish`，固定实现提交 `14e4c6b`；用户于 `2026-08-01` 确认相比此前有提升并同意本轮收口，尚未推送、未部署 |
 | 项目基线 | `origin/main` 的 `e52bae3`；唯一权威位置为主 worktree `traceable-support-agent` |
-| 活动工作 | `portfolio-guided-path`：首页单一求职主张；工作台推荐案例 + 结果优先；其他能力折叠为“更多体验” |
+| 活动工作 | 无；`portfolio-guided-path` 已完成本地用户验收，后续打磨空间留到下一次重新调查和切片，不在本轮扩展 |
 | 最近完成 | PR #50 squash 合并为 `66af626`；main CI `30629303699`、生产部署 `30629464871` 和公网完整 SHA 验收通过，工作记录归档于 `docs/work/completed/release-sha-health/` |
-| 阻碍 | 无工程阻碍；本地候选待用户体验验收。移动端响应式合同已通过机器检查，但本轮验收浏览器禁止强制移动视口，未形成移动端截图 |
+| 阻碍 | 无工程阻碍；移动端响应式合同已通过机器检查，但本轮验收浏览器禁止强制移动视口，未形成移动端截图 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=66af626ba4debf4c8a1cf91da023754168c5b908` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 用户在 `http://localhost:3411/` 验收首页与推荐案例主路径；通过后再单独决定是否推送和部署 |
+| 下一检查点 | 下次先重新调查剩余粗糙点，再确定一个有明确终止点的最小打磨切片；推送和部署仍需单独决定 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `portfolio-guided-path` | `local_acceptance` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已在本地浏览器验收；未推送、未部署 |
+| `portfolio-guided-path` | `accepted_local` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已由用户本地验收；未推送、未部署 |
 | `release-sha-health` | `delivered` | PR #50 合并部署；公网健康返回与 `66af626ba4debf4c8a1cf91da023754168c5b908` 精确一致的完整 `release_sha` |
 | `ISSUE-29-PORTFOLIO-PRESENTATION` | `delivered` | PR #43 合并为 `8da0546` 并自动部署；GitHub、真实运行 GIF、公网站点与当前事实统一，用户验收 `PASS` |
 | `TASK-TRACEABLE-LIVE-WORKBENCH` | `delivered` | PR #31 合并部署，最终生产体验验收 `PASS`；首页一致性由 PR #34 修正；Issue #28 已关闭归档 |
