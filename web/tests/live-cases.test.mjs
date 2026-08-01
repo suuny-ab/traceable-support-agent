@@ -61,18 +61,15 @@ test("boundary challenge copy declares the live-off exception honestly", async (
     new URL("../app/components/DemoWorkbench.tsx", import.meta.url),
     "utf8",
   );
-  // 实时不可用 / 未知时，状态行必须同时说明普通运行不可用和边界挑战例外，
-  // 不得再笼统声称“不能创建新运行”。
-  assert.match(workbenchSource, /普通运行不可用；边界挑战仍创建 0 次模型调用的确定性转人工/);
+  // 首屏状态收束为推荐路径；展开后的运行边界仍必须讲清普通运行和边界挑战例外，
+  // 不得笼统声称“不能创建新运行”。
+  assert.match(workbenchSource, /普通运行不可用时不会创建/);
   assert.doesNotMatch(workbenchSource, /不能创建新运行，可查看已验证回放/);
 
-  const pageSource = await readFile(
-    new URL("../app/app/page.tsx", import.meta.url),
-    "utf8",
-  );
-  assert.match(pageSource, /唯一的例外是固定边界挑战/);
-  assert.match(pageSource, /Provider 调用为 0/);
-  assert.doesNotMatch(pageSource, /不可用时不能创建新运行/);
+  // 详细例外允许放进“更多体验”，但不能从公开工作台消失。
+  assert.match(workbenchSource, /唯一的例外是固定边界挑战/);
+  assert.match(workbenchSource, /Provider 调用为 0/);
+  assert.doesNotMatch(workbenchSource, /不可用时不能创建新运行/);
 
   // 规格不得再保留两处旧概括原文（实时不可用时不能创建任何新运行）。
   const specSource = await readFile(

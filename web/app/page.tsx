@@ -2,9 +2,9 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "./components/SiteChrome";
 
 const outcomes = [
-  ["每个事实可回读", "客户可见结论绑定批准来源，主管能回到原始证据。"],
-  ["不确定就转人工", "证据不足、型号冲突或运行异常不会被包装成成功。"],
-  ["决定权留给团队", "系统给出候选与检查结果，但不发送、不退款、不结单。"],
+  ["真实运行", "公网接入真实模型，同时保留明确标记的已验证回放。"],
+  ["结论有据", "每条客户可见结论都绑定批准来源，可以回到原文。"],
+  ["失败有出口", "证据不足或越界时停止生成，把最终决定交还给人。"],
 ];
 
 const stages = [
@@ -22,26 +22,26 @@ export default function Home() {
       <main>
         <section className="hero shell">
           <div className="hero-copy">
-            <p className="eyebrow"><span>公开 Beta</span> 可追溯客服决策支持</p>
-            <h1>让客服 AI 的结论<br /><em>有证据，能退出。</em></h1>
+            <p className="eyebrow"><span>AI 应用工程作品</span> RAG · Guardrails · Full-stack</p>
+            <h1>客服 AI 不只回答，<br /><em>有证据，也会停手。</em></h1>
             <p className="hero-lede">
-              Traceable Support Agent 把检索证据、业务义务、质量门和人工决定放进一条可检查
-              的工作流。团队得到的是可信候选，不是一个无法解释的答案框。
+              真实模型负责生成，RAG 为结论绑定来源；证据不足或越界时立即停止，
+              最终决定始终留给人工。
             </p>
             <div className="hero-actions">
-              <Link className="button button-primary" href="/app">体验工作台 <span>→</span></Link>
-              <Link className="button button-secondary" href="/design">查看工程证据</Link>
+              <Link className="button button-primary" href="/app">运行推荐案例 <span>→</span></Link>
+              <Link className="hero-detail-link" href="/design">两分钟查看架构与评测 →</Link>
             </div>
-            <ul className="trust-line" aria-label="核心边界">
-              <li>只用合成数据</li>
-              <li>失败关闭</li>
-              <li>人工最终决定</li>
+            <ul className="trust-line" aria-label="核心工程证据">
+              <li>真实模型运行</li>
+              <li>来源可以回读</li>
+              <li>失败时转人工</li>
             </ul>
           </div>
 
           <aside className="decision-preview" aria-label="一次可追溯决定预览">
             <div className="preview-topline">
-              <span className="status-pill status-success">证据检查通过</span>
+              <span className="status-pill status-success">已验证结果</span>
               <code>RUN · VERIFIED REPLAY</code>
             </div>
             <div className="customer-question">

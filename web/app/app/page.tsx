@@ -14,14 +14,13 @@ export default function AppPage() {
       <main className="shell inner-page app-page">
         <header className="page-intro compact-intro">
           <div>
-            <p className="eyebrow"><span>在线体验</span> Product workbench</p>
-            <h1>从输入到决定，<br /><em>看见完整证据链。</em></h1>
+            <p className="eyebrow"><span>引导演示</span> Guided product demo</p>
+            <h1>运行一个案例，<br /><em>看懂整个系统。</em></h1>
           </div>
           <div className="workbench-intro-copy">
-            <p>先选一个默认案例，看检索、义务、生成、机械门和来源如何形成候选或转人工。
-              普通案例只在实时可用时创建新运行；回放不创建运行。唯一的例外是固定边界挑战：
-              实时不可用时仍会创建一次 Provider 调用为 0 的确定性转人工运行。</p>
-            <div className="beta-notice"><strong>合成数据 · 不执行客服动作</strong><span>实时状态现场检测 · 回放不调用模型</span></div>
+            <p>从推荐案例开始。一次运行会依次展示回答、批准来源、质量门和人工决定；
+              其他案例、自由提问与回放都收在“更多体验”里。</p>
+            <div className="beta-notice"><strong>点击后才创建运行</strong><span>只用合成数据 · 不执行客服动作</span></div>
           </div>
         </header>
         <DemoWorkbench />

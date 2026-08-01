@@ -45,9 +45,9 @@ after(() => {
 });
 
 const routes = [
-  ["/", /让客服 AI 的结论/],
+  ["/", /客服 AI 不只回答/],
   ["/design", /把模型放进一条/],
-  ["/app", /从输入到决定/],
+  ["/app", /运行一个案例/],
   ["/privacy", /这里不是客服入口/],
 ];
 
@@ -65,7 +65,7 @@ for (const [pathname, expected] of routes) {
   });
 }
 
-test("renders explicit live-health and replay choices", async () => {
+test("renders one guided path while preserving explicit advanced choices", async () => {
   const response = await fetch(`${baseUrl}/app`);
   const html = await response.text();
   assert.match(html, /正在检测实时服务/);
@@ -75,10 +75,26 @@ test("renders explicit live-health and replay choices", async () => {
   assert.match(html, /GEN-DEV-IE-001/);
   assert.match(html, /唯一的例外是固定边界挑战/);
   assert.match(html, /Provider 调用为 0/);
-  assert.match(html, /推荐先试/);
+  assert.match(html, /推荐案例 · 约 30 秒/);
+  assert.match(html, /点击左侧按钮开始/);
+  assert.match(html, /<details class="experience-options">/);
+  assert.match(html, /更多体验/);
+  assert.match(html, /其他实时案例、自由提问与已验证回放/);
   assert.match(html, /回放不调用模型/);
   assert.match(html, /不执行客服动作/);
   assert.doesNotMatch(html, /不可用时不能创建新运行/);
+});
+
+test("homepage leads with the job-search proof and one primary demo action", async () => {
+  const response = await fetch(`${baseUrl}/`);
+  const html = await response.text();
+  assert.match(html, /AI 应用工程作品/);
+  assert.match(html, /RAG · Guardrails · Full-stack/);
+  assert.match(html, /运行推荐案例/);
+  assert.match(html, /真实模型运行/);
+  assert.match(html, /来源可以回读/);
+  assert.match(html, /失败时转人工/);
+  assert.doesNotMatch(html, /button-secondary/);
 });
 
 test("homepage preview answer matches the verified replay and approved clause", async () => {

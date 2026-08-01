@@ -28,6 +28,14 @@ test("mobile navigation exposes keyboard state and the real repository", async (
   assert.match(source, /rel="noreferrer"/);
 });
 
+test("guided workbench collapses to one column on narrow screens", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.guided-grid\s*\{[^}]*grid-template-columns:\s*\.76fr 1\.24fr/);
+  assert.match(css, /@media \(max-width: 1100px\)[\s\S]*?\.guided-grid\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.guided-proof-list\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /\.experience-options\s*\{[^}]*border-top/);
+});
+
 test("core text palette meets WCAG AA contrast", () => {
   function luminance(hex) {
     const channels = hex.match(/../g).map((value) => Number.parseInt(value, 16) / 255);
