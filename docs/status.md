@@ -6,24 +6,25 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| `state` | `accepted_local` |
+| `state` | `delivery` |
 | 更新时间 | `2026-08-01` |
-| 当前产品目标 | 打磨求职展示，不增加产品功能；把首页、工作台、设计证据、隐私边界和公共导航收束成招聘方 10 秒理解、2 分钟体验、需要时继续深挖的统一路径 |
-| 当前集成任务 | `frontend-polish` |
-| 复杂度 | 标准 / `R0`；改变四个页面与公共 Chrome 的用户可见信息层级，不改变运行、Provider、数据或安全合同 |
-| 风险 / 成熟度 | 最大风险是视觉简化后隐藏关键边界或把回放误解为实时生成；当前候选保留实时 / 回放区分、边界挑战、自由输入、完整证据和隐私说明，并由渲染、交互与响应式测试失败关闭 |
-| 产品候选 | 本地分支 `codex/frontend-polish`，固定实现提交 `a6ff775`（包含此前已验收的 `14e4c6b`）；四页整体打磨已通过机器、桌面浏览器、独立只读复核和用户体验验收，尚未推送、未部署 |
+| 当前产品目标 | 将已验收的四页前端整体打磨候选交付到公网；不继续增加功能、布局或字体微调 |
+| 当前集成任务 | `frontend-polish-delivery`；工作记录见 `docs/work/active/frontend-polish-delivery/` |
+| 复杂度 | 完整 / `R2`；只包含 GitHub 推送、受保护 `main` 合并和既有生产部署，不改变 Provider、数据或安全合同 |
+| 风险 / 成熟度 | 最大风险是 CI 未完整执行或生产运行版本与合并提交错配；required checks、不可变 manifest、健康完整 SHA 和四路由冒烟均失败关闭，部署不自动重试 |
+| 产品候选 | Draft PR #52，分支 `codex/frontend-polish`；实现提交 `a6ff775` 已通过本地用户验收，最终 PR head 等待补齐交付记录后重新固定 |
 | 项目基线 | `origin/main` 的 `e52bae3`；唯一权威位置为主 worktree `traceable-support-agent` |
-| 活动工作 | 无；`frontend-polish` 已完成本地验收。剩余布局与字体审美优化当前边际收益较低，不继续投入；推送、部署仍是单独动作 |
+| 活动工作 | `docs/work/active/frontend-polish-delivery/`：用户已授权推送、合并和部署；当前修复 governance 的活动记录阻断，随后等待同一 head 全绿 |
 | 最近完成 | PR #50 squash 合并为 `66af626`；main CI `30629303699`、生产部署 `30629464871` 和公网完整 SHA 验收通过，工作记录归档于 `docs/work/completed/release-sha-health/` |
-| 阻碍 | 无；移动端响应式合同已通过机器检查，但验收浏览器禁止强制移动视口，未形成独立移动端截图，该证据边界不阻断本地验收结论 |
+| 阻碍 | PR #52 首次 head 的 governance 因 `active_increment_count:0` 失败；web、api、containers 通过。当前只补齐活动交付记录，不修改产品候选 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=66af626ba4debf4c8a1cf91da023754168c5b908` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 当前停止继续做布局与字体微调；只有新的面试反馈或明确体验问题出现时才重开前端切片。推送和部署仍需单独决定 |
+| 下一检查点 | 新 head 的四个 required checks 全绿后转 Ready 并 squash merge；再等待自动部署并核对公网完整 SHA 与四个页面 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
+| `frontend-polish-delivery` | `active` | Draft PR #52；首次 head 仅 governance 因缺少活动记录失败，最小纯文档修复进行中；Provider 调用 0，尚未合并或部署 |
 | `frontend-polish` | `accepted_local` | `a6ff775`；生产构建、36 项测试、lint、桌面浏览器检查和独立只读复核通过，用户于 `2026-08-01` 完成整体体验验收；未推送、未部署 |
 | `portfolio-guided-path` | `accepted_local` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已由用户本地验收；未推送、未部署 |
 | `release-sha-health` | `delivered` | PR #50 合并部署；公网健康返回与 `66af626ba4debf4c8a1cf91da023754168c5b908` 精确一致的完整 `release_sha` |
