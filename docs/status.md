@@ -6,26 +6,26 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| `state` | `delivery` |
+| `state` | `ready` |
 | 更新时间 | `2026-08-01` |
-| 当前产品目标 | 将已验收的四页前端整体打磨候选交付到公网；不继续增加功能、布局或字体微调 |
-| 当前集成任务 | `frontend-polish-delivery`；工作记录见 `docs/work/active/frontend-polish-delivery/` |
-| 复杂度 | 完整 / `R2`；只包含 GitHub 推送、受保护 `main` 合并和既有生产部署，不改变 Provider、数据或安全合同 |
-| 风险 / 成熟度 | 最大风险是 CI 未完整执行或生产运行版本与合并提交错配；required checks、不可变 manifest、健康完整 SHA 和四路由冒烟均失败关闭，部署不自动重试 |
-| 产品候选 | Draft PR #52，分支 `codex/frontend-polish`；实现提交 `a6ff775` 已通过本地用户验收，最终 PR head 等待补齐交付记录后重新固定 |
-| 项目基线 | `origin/main` 的 `e52bae3`；唯一权威位置为主 worktree `traceable-support-agent` |
-| 活动工作 | `docs/work/active/frontend-polish-delivery/`：用户已授权推送、合并和部署；当前修复 governance 的活动记录阻断，随后等待同一 head 全绿 |
-| 最近完成 | PR #50 squash 合并为 `66af626`；main CI `30629303699`、生产部署 `30629464871` 和公网完整 SHA 验收通过，工作记录归档于 `docs/work/completed/release-sha-health/` |
-| 阻碍 | PR #52 首次 head 的 governance 因 `active_increment_count:0` 失败；web、api、containers 通过。当前只补齐活动交付记录，不修改产品候选 |
-| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=66af626ba4debf4c8a1cf91da023754168c5b908` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 新 head 的四个 required checks 全绿后转 Ready 并 squash merge；再等待自动部署并核对公网完整 SHA 与四个页面 |
+| 当前产品目标 | 四页求职展示整体打磨已公开交付并收口；不继续增加功能、布局或字体微调 |
+| 当前集成任务 | 无 |
+| 复杂度 | 无活动增量；产品保持 `S1 公开 Beta`、单机、无 SLA |
+| 风险 / 成熟度 | 新版信息层级已通过本地用户验收、CI、自动部署和公网核验；移动端没有独立真机截图，且本次结果不证明模型质量、高可用或长期稳定性 |
+| 产品候选 | 无；前端整体打磨已通过 PR #52 合并、部署和公网验收 |
+| 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
+| 活动工作 | 无 |
+| 最近完成 | PR #52 squash 合并为 `915ca4e`；main CI `30690110223`、生产部署 `30690199064` 和公网完整 SHA / 四页新版文案及样式验收通过，工作记录归档于 `docs/work/completed/frontend-polish-delivery/` |
+| 阻碍 | 无；剩余布局与字体审美优化边际收益较低，只有出现新的面试反馈或明确体验问题时才重开 |
+| Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=915ca4ef7820870ee42fbef69ea719498d7f402d` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
+| 下一检查点 | 暂停继续打磨本项目；只有新的面试反馈或明确体验问题出现时再决定前端切片，Issue #14 的 `product/0.1.0` 判断继续后置 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `frontend-polish-delivery` | `active` | Draft PR #52；首次 head 仅 governance 因缺少活动记录失败，最小纯文档修复进行中；Provider 调用 0，尚未合并或部署 |
-| `frontend-polish` | `accepted_local` | `a6ff775`；生产构建、36 项测试、lint、桌面浏览器检查和独立只读复核通过，用户于 `2026-08-01` 完成整体体验验收；未推送、未部署 |
+| `frontend-polish-delivery` | `delivered` | PR #52 合并为 `915ca4e`；main CI、生产部署、公网完整 SHA、四页文案与样式检查通过；Provider 调用 0，工作记录已归档 |
+| `frontend-polish` | `delivered` | 本地候选 `a6ff775` 经后续最小治理记录形成 PR #52 并公开交付；用户于 `2026-08-01` 完成整体体验验收 |
 | `portfolio-guided-path` | `accepted_local` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已由用户本地验收；未推送、未部署 |
 | `release-sha-health` | `delivered` | PR #50 合并部署；公网健康返回与 `66af626ba4debf4c8a1cf91da023754168c5b908` 精确一致的完整 `release_sha` |
 | `ISSUE-29-PORTFOLIO-PRESENTATION` | `delivered` | PR #43 合并为 `8da0546` 并自动部署；GitHub、真实运行 GIF、公网站点与当前事实统一，用户验收 `PASS` |
