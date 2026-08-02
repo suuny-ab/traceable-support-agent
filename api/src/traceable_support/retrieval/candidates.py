@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -20,6 +21,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_MODEL_MANIFEST = Path(__file__).with_name(
     "bge-small-zh-v1.5-fastembed.json"
 )
+PRODUCT_BM25_EQUIVALENCE_MARKERS = {
+    "domain:liquid-ingress": ("吸进水", "吸入液体", "吸取液体", "进水", "进液"),
+}
 
 
 @dataclass(frozen=True)
@@ -123,20 +127,46 @@ class BM25Retriever:
 
     retriever_id = "okapi_bm25_k1_1.5_b_0.75"
 
-    def __init__(self, *, k1: float = 1.5, b: float = 0.75) -> None:
+    def __init__(
+        self,
+        *,
+        k1: float = 1.5,
+        b: float = 0.75,
+        equivalence_markers: dict[str, tuple[str, ...]] | None = None,
+    ) -> None:
         if k1 <= 0 or not 0 <= b <= 1:
             raise ValueError("bm25_parameter_invalid")
         self.k1 = float(k1)
         self.b = float(b)
+        self.equivalence_markers = equivalence_markers or {}
+        if any(
+            not marker
+            or not phrases
+            or any(not phrase for phrase in phrases)
+            for marker, phrases in self.equivalence_markers.items()
+        ):
+            raise ValueError("bm25_equivalence_markers_invalid")
+        if self.equivalence_markers:
+            self.retriever_id += "_domain_equivalence_v1"
+
+    def _terms(self, text: str) -> list[str]:
+        terms = list(tokenize(text).elements())
+        normalized = unicodedata.normalize("NFKC", text).lower()
+        terms.extend(
+            marker
+            for marker, phrases in self.equivalence_markers.items()
+            if any(phrase in normalized for phrase in phrases)
+        )
+        return terms
 
     def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]:
         chunks = index["chunks"]
         if not chunks:
             return []
-        query_terms = list(tokenize(request.query).elements())
+        query_terms = self._terms(request.query)
         if not query_terms:
             return []
-        tokenized_corpus = [list(tokenize(chunk["text"]).elements()) for chunk in chunks]
+        tokenized_corpus = [self._terms(chunk["text"]) for chunk in chunks]
         bm25 = BM25Okapi(tokenized_corpus, k1=self.k1, b=self.b)
         raw_scores = bm25.get_scores(query_terms)
         scores = {
@@ -151,6 +181,12 @@ class BM25Retriever:
             ],
             request,
         )
+
+
+def build_product_bm25_retriever() -> BM25Retriever:
+    """Build the product lexical candidate with explicit domain equivalences."""
+
+    return BM25Retriever(equivalence_markers=PRODUCT_BM25_EQUIVALENCE_MARKERS)
 
 
 class DenseBgeRetriever:

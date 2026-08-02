@@ -16,6 +16,7 @@ from .candidates import (
     DenseBgeRetriever,
     RetrievalRequest,
     build_dense_retriever,
+    build_product_bm25_retriever,
 )
 
 
@@ -226,7 +227,9 @@ class ModelAwareRrfPipeline:
             if delivery_policy == "fixed_k"
             else f"{delivery_policy}_max_{delivery_k}"
         )
-        self.candidate_id = f"{unit_strategy}_model_aware_rrf_{delivery_name}"
+        self.candidate_id = (
+            f"{unit_strategy}_model_aware_rrf_bm25_equivalence_v1_{delivery_name}"
+        )
 
     @property
     def manifest(self) -> dict[str, Any]:
@@ -236,7 +239,10 @@ class ModelAwareRrfPipeline:
             "delivery_k": self.delivery_k,
             "delivery_policy": self.delivery_policy,
             "model_filter_stage": "before_ranking",
-            "lexical": "rank-bm25==0.2.2:BM25Okapi(k1=1.5,b=0.75)",
+            "lexical": (
+                "rank-bm25==0.2.2:BM25Okapi(k1=1.5,b=0.75)"
+                "+domain_equivalence_v1"
+            ),
             "dense": "fastembed==0.8.0:BAAI/bge-small-zh-v1.5",
             "fusion": "rrf(k=60,candidate_depth=20)",
             "unit_inventory_sha256": _unit_inventory_digest(self.units),
@@ -329,7 +335,10 @@ class ModelAwareRrfPipeline:
             return BusinessRetrievalResult(candidate_hits=(), delivery_hits=())
         if scope not in self._indexes:
             self._indexes[scope] = _index_for(scoped_units, f"{self.unit_strategy}:{scope}")
-            self._retrievers[scope] = (BM25Retriever(), build_dense_retriever())
+            self._retrievers[scope] = (
+                build_product_bm25_retriever(),
+                build_dense_retriever(),
+            )
         index = self._indexes[scope]
         lexical, dense = self._retrievers[scope]
         component_depth = min(max(request.candidate_pool_limit, 20), len(scoped_units))

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from tools.retrieval_checkup import (
+    DEFAULT_CANDIDATE_RESULT,
     DEFAULT_RESULT,
     DEFAULT_SUITE,
     build_result,
@@ -59,12 +60,36 @@ def test_frozen_retrieval_checkup_result_is_repeatable() -> None:
 
 
 @pytest.mark.skipif(not _model_is_available(), reason="pinned local BGE model unavailable")
+def test_product_candidate_closes_one_bm25_badcase_without_weakening_boundaries() -> None:
+    baseline = json.loads(DEFAULT_RESULT.read_text(encoding="utf-8"))
+    candidate = json.loads(DEFAULT_CANDIDATE_RESULT.read_text(encoding="utf-8"))
+    assert build_result(DEFAULT_SUITE, profile="product_candidate") == candidate
+    assert candidate["runtime_identity"]["provider_calls"] == 0
+    assert {
+        item["retriever_id"]: (
+            item["full_coverage_at_5"]["passed_cases"],
+            item["full_coverage_at_10"]["passed_cases"],
+            item["wrong_model_hits_at_10"],
+        )
+        for item in candidate["retrievers"]
+    } == {
+        "bm25": (15, 16, 0),
+        "bge": (14, 16, 0),
+        "rrf": (16, 16, 0),
+    }
+    baseline_case = next(case for case in baseline["cases"] if case["case_id"] == "RET-DEV-R2-008")
+    candidate_case = next(case for case in candidate["cases"] if case["case_id"] == "RET-DEV-R2-008")
+    assert baseline_case["retrievals"]["bm25"]["required_source_ranks"]["COMMON-FAQ/wet-environment"] == 6
+    assert candidate_case["retrievals"]["bm25"]["required_source_ranks"]["COMMON-FAQ/wet-environment"] == 5
+
+
+@pytest.mark.skipif(not _model_is_available(), reason="pinned local BGE model unavailable")
 def test_checkup_rrf_matches_the_current_product_candidate_ranking(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("TRACEABLE_RETRIEVAL_VECTOR_DSN", raising=False)
     suite = json.loads(DEFAULT_SUITE.read_text(encoding="utf-8"))
-    result = json.loads(DEFAULT_RESULT.read_text(encoding="utf-8"))
+    result = json.loads(DEFAULT_CANDIDATE_RESULT.read_text(encoding="utf-8"))
     expected = {case["case_id"]: case for case in result["cases"]}
     pipeline = ModelAwareRrfPipeline(unit_strategy="native_section", delivery_k=5)
     for case in suite["cases"]:

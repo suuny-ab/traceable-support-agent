@@ -20,6 +20,7 @@ from traceable_support.retrieval.candidates import (
     DenseBgeRetriever,
     ReciprocalRankFusionRetriever,
     RetrievalRequest,
+    build_product_bm25_retriever,
 )
 from traceable_support.retrieval.hybrid import (
     _index_for,
@@ -31,6 +32,7 @@ from traceable_support.retrieval.hybrid import (
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SUITE = ROOT / "evals" / "retrieval-checkup-v1.json"
 DEFAULT_RESULT = ROOT / "web" / "app" / "lib" / "retrieval-checkup-v1.json"
+DEFAULT_CANDIDATE_RESULT = ROOT / "evals" / "retrieval-badcase-candidate-v1.json"
 EXPECTED_DOCUMENTS = {
     "AFTER-SALES-POLICY",
     "COMMON-FAQ",
@@ -212,14 +214,24 @@ def _select_public_examples(case_results: list[dict[str, Any]]) -> list[dict[str
     return examples
 
 
-def build_result(suite_path: Path = DEFAULT_SUITE) -> dict[str, Any]:
+def build_result(
+    suite_path: Path = DEFAULT_SUITE,
+    *,
+    profile: str = "baseline",
+) -> dict[str, Any]:
+    if profile not in {"baseline", "product_candidate"}:
+        raise ValueError("retrieval_checkup_profile_invalid")
     suite, units = load_and_validate_suite(suite_path)
     unit_by_id = {unit.unit_id: unit for unit in units}
     engines: dict[str, tuple[dict[str, Any], BM25Retriever, DenseBgeRetriever, ReciprocalRankFusionRetriever]] = {}
     for model in ("CZ-R1", "CZ-R2"):
         scoped_units = tuple(unit for unit in units if model in unit.applicable_models)
         index = _index_for(scoped_units, f"native_section:{model}")
-        lexical = BM25Retriever()
+        lexical = (
+            BM25Retriever()
+            if profile == "baseline"
+            else build_product_bm25_retriever()
+        )
         dense = DenseBgeRetriever()
         engines[model] = (
             index,
@@ -286,9 +298,25 @@ def build_result(suite_path: Path = DEFAULT_SUITE) -> dict[str, Any]:
     required_sources = {
         source for case in suite["cases"] for source in case["required_source_sections"]
     }
+    limitations = [
+        "This is a 16-case public synthetic development set, not an unseen HOLDOUT or a product success-rate claim.",
+        "It measures whether all labeled source sections appear in Top 5 or Top 10; it does not measure answer correctness or generation quality.",
+        "All rankings are model-filtered before retrieval, so wrong-model hits test that boundary rather than unrestricted cross-model search.",
+        "No Provider, credential, private data or external business system is used.",
+    ]
+    if profile == "product_candidate":
+        limitations.insert(
+            0,
+            "This local candidate was tuned against the same public development set; its change from the frozen baseline is not unseen evidence.",
+        )
+    lexical_contract = next(iter(engines.values()))[1].retriever_id
     return {
         "schema_version": "retrieval-checkup-result-v1",
-        "status": "first_frozen_public_development_result_not_product_release_claim",
+        "status": (
+            "first_frozen_public_development_result_not_product_release_claim"
+            if profile == "baseline"
+            else "local_candidate_public_development_result_not_product_release_claim"
+        ),
         "dataset": {
             "path": suite_path.relative_to(ROOT).as_posix(),
             "sha256": _sha256(suite_path),
@@ -310,21 +338,20 @@ def build_result(suite_path: Path = DEFAULT_SUITE) -> dict[str, Any]:
             "unit_inventory_sha256": _unit_inventory_digest(units),
             "embedding_model_manifest_sha256": _sha256(DEFAULT_MODEL_MANIFEST),
             "retriever_contracts": {
-                "bm25": "okapi_bm25_k1_1.5_b_0.75",
+                "bm25": lexical_contract,
                 "bge": "fastembed_bge_small_zh_v1.5",
-                "rrf": "rrf_bm25_bge_k60_depth20",
+                "rrf": (
+                    "rrf_bm25_bge_k60_depth20"
+                    if profile == "baseline"
+                    else "rrf_bm25_domain_equivalence_v1_bge_k60_depth20"
+                ),
             },
             "provider_calls": 0,
         },
         "retrievers": summaries,
         "public_examples": _select_public_examples(case_results),
         "cases": case_results,
-        "limitations": [
-            "This is a 16-case public synthetic development set, not an unseen HOLDOUT or a product success-rate claim.",
-            "It measures whether all labeled source sections appear in Top 5 or Top 10; it does not measure answer correctness or generation quality.",
-            "All rankings are model-filtered before retrieval, so wrong-model hits test that boundary rather than unrestricted cross-model search.",
-            "No Provider, credential, private data or external business system is used.",
-        ],
+        "limitations": limitations,
     }
 
 
@@ -332,27 +359,37 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--suite", type=Path, default=DEFAULT_SUITE)
     parser.add_argument("--output", type=Path, default=DEFAULT_RESULT)
+    parser.add_argument("--candidate-output", type=Path, default=DEFAULT_CANDIDATE_RESULT)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--write", action="store_true")
     mode.add_argument("--check", action="store_true")
+    mode.add_argument("--candidate-write", action="store_true")
+    mode.add_argument("--candidate-check", action="store_true")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    result = build_result(args.suite.resolve())
+    candidate_mode = args.candidate_write or args.candidate_check
+    result = build_result(
+        args.suite.resolve(),
+        profile="product_candidate" if candidate_mode else "baseline",
+    )
     rendered = _canonical_json(result)
-    if args.write:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(rendered, encoding="utf-8")
+    output = args.candidate_output if candidate_mode else args.output
+    if args.write or args.candidate_write:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
         print(
-            f"retrieval_checkup=written cases=16 provider_calls=0 output={args.output}"
+            f"retrieval_checkup=written profile={'product_candidate' if candidate_mode else 'baseline'} cases=16 provider_calls=0 output={output}"
         )
         return 0
-    if not args.output.is_file() or args.output.read_text(encoding="utf-8") != rendered:
+    if not output.is_file() or output.read_text(encoding="utf-8") != rendered:
         print("retrieval_checkup=drifted")
         return 1
-    print("retrieval_checkup=passed cases=16 provider_calls=0")
+    print(
+        f"retrieval_checkup=passed profile={'product_candidate' if candidate_mode else 'baseline'} cases=16 provider_calls=0"
+    )
     return 0
 
 
