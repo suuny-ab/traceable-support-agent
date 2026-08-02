@@ -8,22 +8,23 @@
 | --- | --- |
 | `state` | `ready` |
 | 更新时间 | `2026-08-01` |
-| 当前产品目标 | 四页求职展示整体打磨已公开交付并收口；不继续增加功能、布局或字体微调 |
-| 当前集成任务 | 无 |
-| 复杂度 | 无活动增量；产品保持 `S1 公开 Beta`、单机、无 SLA |
-| 风险 / 成熟度 | 新版信息层级已通过本地用户验收、CI、自动部署和公网核验；移动端没有独立真机截图，且本次结果不证明模型质量、高可用或长期稳定性 |
-| 产品候选 | 无；前端整体打磨已通过 PR #52 合并、部署和公网验收 |
+| 当前产品目标 | README 首屏量化证据与 Stage 12 修复路径已进入 Draft PR #54；当前只等待同一 head 的 required Checks，不继续增加产品功能、布局或字体微调 |
+| 当前集成任务 | `portfolio-evidence-first-screen`；Draft PR [#54](https://github.com/suuny-ab/traceable-support-agent/pull/54) 指向 `main` |
+| 复杂度 | 标准 / `R2`；只包含公开 README、状态回执、GitHub 分支与 Draft PR，不含合并、部署、Provider 调用或产品运行 |
+| 风险 / 成熟度 | 新增公开主张已绑定既有证据并通过本地相关检查；仍须以 PR 同一 head 的 required Checks 为准，且本次结果不证明模型质量、线上成功率、未见集表现、高可用或长期稳定性 |
+| 产品候选 | Draft PR #54，分支 `codex/portfolio-evidence-first-screen`；README 提交 `54c5abd`，状态回执随后写入同一分支，不改变运行产品 |
 | 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | 无 |
-| 最近完成 | PR #52 squash 合并为 `915ca4e`；main CI `30690110223`、生产部署 `30690199064` 和公网完整 SHA / 四页新版文案及样式验收通过，工作记录归档于 `docs/work/completed/frontend-polish-delivery/` |
-| 阻碍 | 无；剩余布局与字体审美优化边际收益较低，只有出现新的面试反馈或明确体验问题时才重开 |
+| 最近完成 | 已按用户当次授权推送 `codex/portfolio-evidence-first-screen` 并创建 Draft PR #54；候选只含 README 与状态回执，详细回执见下文 |
+| 阻碍 | PR #54 的 governance、web、api、containers 四个 required Checks 在创建时均为 queued；本执行环境的 `.git` 只读且终端 GitHub 网络不可用，因此远端通过已登录 GitHub 页面交付，本地 Git 分支元数据尚未同步 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=915ca4ef7820870ee42fbef69ea719498d7f402d` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 暂停继续打磨本项目；只有新的面试反馈或明确体验问题出现时再决定前端切片，Issue #14 的 `product/0.1.0` 判断继续后置 |
+| 下一检查点 | 等待 PR #54 同一 head 的四个 required Checks；本次不转 Ready、不合并、不部署，后续动作需按既有授权与交付流程另行执行 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
+| `portfolio-evidence-first-screen` | `candidate_pr` | Draft PR #54；分支 `codex/portfolio-evidence-first-screen`，README 提交 `54c5abd`，四个 required Checks 创建时均 queued；未合并、未部署 |
 | `frontend-polish-delivery` | `delivered` | PR #52 合并为 `915ca4e`；main CI、生产部署、公网完整 SHA、四页文案与样式检查通过；Provider 调用 0，工作记录已归档 |
 | `frontend-polish` | `delivered` | 本地候选 `a6ff775` 经后续最小治理记录形成 PR #52 并公开交付；用户于 `2026-08-01` 完成整体体验验收 |
 | `portfolio-guided-path` | `accepted_local` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已由用户本地验收；未推送、未部署 |
@@ -34,6 +35,34 @@
 
 Task 可以并行；required Checks、所需当次授权、触发时的评审兜底、受保护 `main`、部署和
 用户验收仍按依赖串行。
+
+## 2026-08-01 派发交付回执：README 首屏量化证据
+
+- 外部交付：按用户当次明确授权创建分支 `codex/portfolio-evidence-first-screen` 与 Draft PR
+  [#54](https://github.com/suuny-ab/traceable-support-agent/pull/54)，base 为 `main`；README 提交为
+  `54c5abd896a57cee3fb41881fe72c9bdba089289`，首次状态提交为
+  `fbcb268f7cb18f62ae3e140c11418ca8883f36cf`。
+- PR 门：运行 `30700792626` 已创建，governance、web、api、containers 四个 required Checks
+  在 PR 创建时均为 queued；本回执不把排队状态写成通过。
+- 本地验证：在 `origin/main + README/docs/status` 的干净快照上，
+  `python tools/check_public_repo.py --scope index` 通过（214 files、8 public cases）；检索体检
+  通过（16 cases、Provider 调用 0）；检索 / Stage 12 定向测试 `16 passed`。
+- 工作区边界：直接扫描当前工作树会被范围外的 `AGENTS.md` 本机路径与未跟踪 `clean/` 缓存
+  拦截，因此没有把该失败冒充候选失败，也没有修改或提交这些范围外内容。
+- 通道回执：本执行环境的 `.git` 只读，终端访问 GitHub 被阻断，`gh` 本地令牌也已失效；
+  远端内容通过已登录 GitHub 页面从本地 README / 状态文件逐字交付。本地工作文件保持同一内容，
+  但 Git 分支元数据需在具备正常 Git 权限的会话中再 `fetch` 同步。
+
+- 指标块：RRF Top-5 必需来源覆盖 `16/16`、错误型号来源 `0`；边界明确为 16 个冻结公开
+  合成开发题的来源覆盖，不写回答质量、线上成功率或未见集结论。
+- 自动化证据：部署候选 `915ca4e` 的 main CI `30690110223` 五个 job 全部成功；API 日志为
+  `137 passed / 2 skipped`，Stage 12 runner 为 `13 passed`。派发中的旧数字 `132` 未写入。
+- Stage 12：README 保留原始 `19/24`、`9` 通过观测，说明 Issue #21 已修复已知边界机制但
+  未重跑未见集，并把新的验证说明卡、另行授权和 Issue #14 发布判断列为条件式下一步。
+- 链接核验：Issue #21 为 `CLOSED`；main CI 结论为 `success`；公网 health 返回
+  `status=ok`、`live_experience=available`、`release_sha=915ca4ef7820870ee42fbef69ea719498d7f402d`。
+- 本次派发只修改 README 和状态回执；工作树中的 `AGENTS.md` 属单独批准的规则变更，不计入
+  本派发。Provider 调用 `0`、产品运行 `0`，未修改产品代码、评测本体、检索、凭据、预算或部署。
 
 ## 当前产品事实
 
