@@ -8,6 +8,7 @@ corpus exactly like the reviewed api product tests do.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -536,6 +537,82 @@ class Stage12FreezeCheckTest(unittest.TestCase):
         set_path = self._write_set("missing.json", [case])
         problems = stage12_freeze_check.validate_set(set_path, self.corpus_root)
         self.assertTrue(any("not in corpus" in problem for problem in problems))
+
+
+class Stage12PublishedAggregateTest(unittest.TestCase):
+    def _load(self, name: str) -> dict:
+        return json.loads((REPO_ROOT / "evals" / name).read_text(encoding="utf-8"))
+
+    def test_original_and_post_fix_observations_remain_distinct(self) -> None:
+        original = self._load("stage12-aggregate-v1.json")
+        post_fix = self._load("stage12-post-fix-revalidation-v1.json")
+
+        self.assertEqual(original["totals"]["cases_planned"], 24)
+        self.assertEqual(original["totals"]["cases_executed"], 19)
+        self.assertEqual(sum(case["passed"] for case in original["cases"]), 9)
+        self.assertEqual(original["totals"]["stop_code"], "execution_failure_stop")
+
+        self.assertEqual(post_fix["totals"]["cases_planned"], 24)
+        self.assertEqual(post_fix["totals"]["cases_executed"], 24)
+        self.assertEqual(sum(case["passed"] for case in post_fix["cases"]), 2)
+        self.assertEqual(post_fix["totals"]["provider_calls"], 39)
+        self.assertEqual(post_fix["totals"]["estimated_cost_cny_nanos"], 1_259_912_400)
+        self.assertFalse(post_fix["totals"]["stopped_early"])
+        self.assertIsNone(post_fix["totals"]["stop_code"])
+        self.assertEqual(post_fix["envelope"]["automatic_retry_count"], 0)
+        original_ids = {case["case_id"] for case in original["cases"]}
+        post_fix_ids = {case["case_id"] for case in post_fix["cases"]}
+        self.assertLess(original_ids, post_fix_ids)
+        self.assertEqual(
+            post_fix_ids - original_ids,
+            {
+                "STG12-01-FC-002", "STG12-01-FC-003",
+                "STG12-01-SO-001", "STG12-01-SO-002", "STG12-01-SO-003",
+            },
+        )
+        self.assertEqual(
+            post_fix["identity"]["unseen_set_sha256"],
+            original["identity"]["unseen_set_sha256"],
+        )
+
+    def test_post_fix_identity_and_public_projection_are_frozen(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-post-fix-revalidation-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "2de8d63be45974bcb58fdbc2d43d75d470854ae4268a7a30d229989a136b57b9",
+        )
+        self.assertEqual(
+            payload["identity"],
+            {
+                "git_sha": "df01968c56350626544ca4acc4ed88cf13dfd337",
+                "image_digest": (
+                    "sha256:95d6a0b5dad4d4a9a9e070525fccdef78cf2301a4e98ae6682678ba423fd48a1"
+                ),
+                "model": "deepseek-v4-pro",
+                "prompt_sha256": (
+                    "108ab9aae60eb86806383cc2fea4511d358955f50503531e0da2e82be1ba8584"
+                ),
+                "unseen_set_sha256": (
+                    "7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0"
+                ),
+            },
+        )
+        forbidden_keys = {
+            "input", "required_facts", "source_sections", "answer", "proposal",
+            "request_headers", "provider_response",
+        }
+
+        def walk(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertTrue(forbidden_keys.isdisjoint(value))
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+
+        walk(payload)
 
 
 if __name__ == "__main__":
