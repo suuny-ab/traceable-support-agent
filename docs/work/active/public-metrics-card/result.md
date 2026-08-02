@@ -26,4 +26,11 @@
 - `git diff --check` 通过；差异全部位于 `docs/`，没有产品代码、评测资产、Workflow 或依赖
   变化。
 
-待形成 Draft PR 回执。本任务没有修改 Provider、生产或公开页面。
+本任务没有修改 Provider、生产或公开页面。
+
+## Draft PR 回执
+
+文档候选 head `b01adb9b160bc07f1f1c9f5d330e861f0ebdb07f` 已推送到既有 Draft PR
+[#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)。`ci-release` run
+`30753847922` 成功，governance、web、api、containers 全绿；publish 因 Draft 跳过，
+没有转 Ready、合并或部署。状态回执提交会形成最终 head，再确认其 required Checks 全绿。
