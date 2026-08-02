@@ -6,8 +6,8 @@
 
 ## 启动顺序
 
-1. 读取 `PROJECT.md` 和 `docs/status.md`。
-2. 读取 `docs/status.md` 列出的当前产品工作、后台 Task 和候选队列。
+1. 读取 `PROJECT.md`、当前层 `docs/status.md`；需要恢复历史回执时，按月读取只追加的 `docs/status-log/YYYY-MM.md`。
+2. 读取 `docs/status.md` 列出的当前产品工作、后台 Task 和候选队列；旧队列、历史证据与环境回执只从 `docs/status-log/YYYY-MM.md` 追溯。
 3. 安排结果顺序时读取 `ROADMAP.md`；只有任务触及对应边界时，才读取 `docs/engineering/` 下的相关文件。
 4. 在相信文档前，检查 Git 状态、相关代码和测试。
 5. 开始实质工作前，说明产品目的、当前能力、相关 Task / 候选、阻碍和下一检查点。
@@ -17,7 +17,7 @@
 ## 事实来源
 
 - 稳定产品事实：`PROJECT.md`
-- 当前项目状态与候选队列：`docs/status.md`
+- 当前项目状态与候选队列：`docs/status.md`；只追加的历史回执与证据：`docs/status-log/YYYY-MM.md`
 - 项目内部依赖顺序：`ROADMAP.md`（不代表用户现实执行顺序）
 - 当前架构和公开主张：`docs/product/`
 - 开发、质量、评测、运维和安全：`docs/engineering/`
