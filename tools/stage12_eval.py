@@ -242,6 +242,10 @@ def score_case(
 
     observed_outcome = package["outcome"]
     detail["observed_outcome"] = observed_outcome
+    matched_handoff = expected["outcome"] == observed_outcome == "handoff"
+    detail["scoring_profile"] = (
+        "matched_handoff" if matched_handoff else "full_candidate_contract"
+    )
     if observed_outcome != expected["outcome"]:
         failures.append("outcome_mismatch")
     if expected.get("handoff_reason") is not None:
@@ -251,24 +255,31 @@ def score_case(
 
     used_sections = _used_source_sections(package, task_type)
     detail["used_source_sections"] = used_sections
-    if used_sections != sorted(expected["source_sections"]):
-        failures.append("source_sections_mismatch")
+    if not matched_handoff:
+        if used_sections != sorted(expected["source_sections"]):
+            failures.append("source_sections_mismatch")
 
-    visible = _score_text(_customer_visible_text(package, task_type))
-    missing_facts = [
-        index
-        for index, fact in enumerate(expected["required_facts"])
-        if _score_text(fact) not in visible
-    ]
-    if missing_facts:
-        failures.append("required_fact_missing")
-        detail["missing_required_fact_ordinals"] = missing_facts
+        visible = _score_text(_customer_visible_text(package, task_type))
+        missing_facts = [
+            index
+            for index, fact in enumerate(expected["required_facts"])
+            if _score_text(fact) not in visible
+        ]
+        if missing_facts:
+            failures.append("required_fact_missing")
+            detail["missing_required_fact_ordinals"] = missing_facts
 
-    if task_type == "ticket":
-        if expected.get("category") is not None and package.get("category") != expected["category"]:
-            failures.append("category_mismatch")
-        if expected.get("priority") is not None and package.get("priority") != expected["priority"]:
-            failures.append("priority_mismatch")
+        if task_type == "ticket":
+            if (
+                expected.get("category") is not None
+                and package.get("category") != expected["category"]
+            ):
+                failures.append("category_mismatch")
+            if (
+                expected.get("priority") is not None
+                and package.get("priority") != expected["priority"]
+            ):
+                failures.append("priority_mismatch")
 
     if (
         package["worst_cost_cny_nanos"] > reserved_cny_nanos

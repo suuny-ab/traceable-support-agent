@@ -93,3 +93,10 @@ Top-10 未出现冻结期望来源 / 事实缺失；至少存在评分合同错�
 Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
 
 本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。
+
+## R3 后续回执
+
+R3 matched handoff 评分合同已在后续切片按独立 profile 离线修复；24 份既有 package 重评分
+只改变预登记的 4 题 / 6 码，其余 20 题逐题失败码不变。结果见
+[`stage12-handoff-scoring-contract/result.md`](../stage12-handoff-scoring-contract/result.md)。这不
+改写历史 `24/24、2 通过`，也不是新的 Stage 12 或模型质量观测。

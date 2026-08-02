@@ -300,7 +300,7 @@ class Stage12EvalTest(unittest.TestCase):
         self.assertIn("source_sections_mismatch", report["cases"][0]["failure_codes"])
         self.assertTrue(report["cases"][1]["passed"])
 
-    def test_boundary_handoff_sources_are_scored_without_a_generated_proposal(self) -> None:
+    def test_matched_boundary_handoff_uses_handoff_scoring_profile(self) -> None:
         case = {
             "case_id": "STG12-TEST-MH-001",
             "task_type": "ticket",
@@ -309,13 +309,10 @@ class Stage12EvalTest(unittest.TestCase):
             "expected": {
                 "outcome": "handoff",
                 "handoff_reason": "safety_risk",
-                "source_sections": [
-                    "COMMON-FAQ/wet-environment",
-                    "CUSTOMER-SERVICE-SOP/manual-escalation",
-                ],
-                "required_facts": [],
-                "category": "安全风险",
-                "priority": "P0-紧急",
+                "source_sections": [],
+                "required_facts": ["候选正文才需要出现的冻结事实"],
+                "category": "候选专属分类",
+                "priority": "候选专属优先级",
             },
         }
         runner = stage12_eval.DefaultProductRunner(
@@ -340,9 +337,102 @@ class Stage12EvalTest(unittest.TestCase):
             1,
         )
         self.assertTrue(score["passed"], score)
+        self.assertEqual(score["detail"]["scoring_profile"], "matched_handoff")
         self.assertEqual(
             score["detail"]["used_source_sections"],
-            sorted(case["expected"]["source_sections"]),
+            [
+                "COMMON-FAQ/wet-environment",
+                "CUSTOMER-SERVICE-SOP/manual-escalation",
+            ],
+        )
+
+    def test_matched_handoff_reason_and_budget_still_fail_closed(self) -> None:
+        case = {
+            "task_type": "qa",
+            "expected": {
+                "outcome": "handoff",
+                "handoff_reason": "model_scope_conflict",
+                "source_sections": [],
+                "required_facts": [],
+            },
+        }
+        package = {
+            "outcome": "handoff",
+            "handoff_reason": "safety_risk",
+            "boundary_sources": ["COMMON-FAQ/wet-environment"],
+            "answer": None,
+            "usage": [],
+            "worst_cost_cny_nanos": 2,
+        }
+        score = stage12_eval.score_case(case, package, 0, 1)
+        self.assertEqual(
+            score["failure_codes"],
+            ["handoff_reason_mismatch", "budget_noncompliant"],
+        )
+        self.assertEqual(score["detail"]["scoring_profile"], "matched_handoff")
+
+    def test_unexpected_handoff_keeps_full_candidate_contract(self) -> None:
+        case = {
+            "task_type": "ticket",
+            "expected": {
+                "outcome": "candidate",
+                "source_sections": ["EXPECTED/source"],
+                "required_facts": ["必须出现在候选中的事实"],
+                "category": "使用咨询",
+                "priority": "P2-普通",
+            },
+        }
+        package = {
+            "outcome": "handoff",
+            "handoff_reason": "generation_contract_failure:test",
+            "boundary_sources": ["ACTUAL/source"],
+            "proposal": None,
+            "category": None,
+            "priority": None,
+            "usage": [],
+            "worst_cost_cny_nanos": 1,
+        }
+        score = stage12_eval.score_case(case, package, 0, 1)
+        self.assertEqual(
+            score["failure_codes"],
+            [
+                "outcome_mismatch",
+                "source_sections_mismatch",
+                "required_fact_missing",
+                "category_mismatch",
+                "priority_mismatch",
+            ],
+        )
+        self.assertEqual(
+            score["detail"]["scoring_profile"], "full_candidate_contract"
+        )
+
+    def test_unexpected_candidate_keeps_source_contract(self) -> None:
+        case = {
+            "task_type": "qa",
+            "expected": {
+                "outcome": "handoff",
+                "source_sections": [],
+                "required_facts": [],
+            },
+        }
+        package = {
+            "outcome": "candidate",
+            "handoff_reason": None,
+            "answer": {"used_evidence_ids": ["e1"], "content": {"answer": {"text": ""}}},
+            "evidence": [
+                {"evidence_id": "e1", "document_id": "ACTUAL", "section_id": "source"}
+            ],
+            "usage": [],
+            "worst_cost_cny_nanos": 1,
+        }
+        score = stage12_eval.score_case(case, package, 0, 1)
+        self.assertEqual(
+            score["failure_codes"],
+            ["outcome_mismatch", "source_sections_mismatch"],
+        )
+        self.assertEqual(
+            score["detail"]["scoring_profile"], "full_candidate_contract"
         )
 
     def test_missing_required_fact_is_reported(self) -> None:
@@ -613,6 +703,61 @@ class Stage12PublishedAggregateTest(unittest.TestCase):
                     walk(child)
 
         walk(payload)
+
+    def test_handoff_contract_rescore_receipt_is_bounded(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-handoff-contract-rescore-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "d1356190bde6632b92f8482637a8abab35a5c2db8675cca47e51b97e91f3c88e",
+        )
+        self.assertEqual(payload["mode"], "offline_rescore_existing_packages")
+        self.assertEqual(payload["provider_calls"], 0)
+        self.assertEqual(payload["cases_rescored"], 24)
+        self.assertEqual(payload["matched_handoff_profile_cases"], 6)
+        self.assertEqual(payload["changed_case_count"], 4)
+        self.assertEqual(payload["unchanged_case_count"], 20)
+        self.assertEqual(payload["before"]["passed_cases"], 2)
+        self.assertEqual(payload["before"]["failure_occurrences"], 37)
+        self.assertEqual(payload["after"]["passed_cases"], 6)
+        self.assertEqual(payload["after"]["failure_occurrences"], 31)
+        self.assertEqual(
+            payload["after"]["failure_counts"],
+            {
+                "outcome_mismatch": 8,
+                "required_fact_missing": 12,
+                "source_sections_mismatch": 11,
+            },
+        )
+        self.assertEqual(
+            [change["case_id"] for change in payload["changes"]],
+            [
+                "STG12-01-MBD-003",
+                "STG12-01-SAF-001",
+                "STG12-01-SAF-002",
+                "STG12-01-SAF-003",
+            ],
+        )
+        removed_count = sum(
+            len(change["removed_failure_codes"]) for change in payload["changes"]
+        )
+        self.assertEqual(removed_count, 6)
+        self.assertTrue(
+            all(not change["added_failure_codes"] for change in payload["changes"])
+        )
+        self.assertEqual(
+            payload["source"]["historical_aggregate_sha256"],
+            "2de8d63be45974bcb58fdbc2d43d75d470854ae4268a7a30d229989a136b57b9",
+        )
+        self.assertEqual(
+            payload["boundary"],
+            {
+                "historical_aggregate_modified": False,
+                "new_model_output": False,
+                "new_stage12_run": False,
+                "use": "regression_only",
+            },
+        )
 
 
 if __name__ == "__main__":

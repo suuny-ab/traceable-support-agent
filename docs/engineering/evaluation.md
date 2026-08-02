@@ -52,3 +52,8 @@ Stage 12 是描述性测量，不设任意数值阈值、不做"通过/阻止发
 `2026-08-02` 的修复后复验复用了原 24 题已消费私有集，因此只是一条回归观测，不是一轮
 新的正式未见评测。它必须与原始结果并列、绑定新的候选 / prompt / 镜像身份，并禁止从
 前后差异推导单一改动的因果效果；未来正式结果仍需全新未见集与独立授权。
+
+Stage 12 评分按 outcome profile 分离：只有 expected 与 observed 都是 `handoff` 时，评分器
+检查 outcome、明确登记的 handoff reason 与预算，并保留 boundary sources 供审计；来源精确
+集合、客户可见必需事实及工单 category / priority 属于候选合同，不对 matched handoff 计分。
+任一 outcome 不匹配仍执行完整候选合同，不能借 handoff profile 隐藏生成失败或边界策略分歧。

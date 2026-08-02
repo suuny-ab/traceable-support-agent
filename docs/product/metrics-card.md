@@ -49,6 +49,11 @@
   边界 / outcome 策略 12、handoff 评分合同 6、额外来源精确集合门 3、义务规划遗漏 4、
   字面事实门与语义绑定不一致 6；完整证据、取样限制和修复候选见
   [`stage12-failure-root-cause/result.md`](../work/active/stage12-failure-root-cause/result.md)。
+- **handoff 合同离线回归**：不重跑 Stage 12、不产生新模型输出，只把同一 24 份既有 package
+  交给分离后的 matched-handoff scorer；通过题 2→6、失败码出现次数 37→31，仅四个已定位
+  handoff 案例移除六个候选专属字段码，其余 20 题逐题不变。历史 `24/24、2 通过`聚合不改；
+  脱敏回执见 [`stage12-handoff-contract-rescore-v1.json`](../../evals/stage12-handoff-contract-rescore-v1.json)，
+  因而这些数字不是新评测、模型改善或发布结论。
 - **单次 / 可复跑**：原始是全新未见正式观测；`2026-08-02` 使用已经消费的同一集，只是
   修复后首次回归观测。该集今后只能回归，任何新的正式结论都要全新未见集、验证卡和授权。
 - **边界 / 不是什么**：两次数字都不是线上成功率、“Stage 12 通过”或上线门。候选、prompt

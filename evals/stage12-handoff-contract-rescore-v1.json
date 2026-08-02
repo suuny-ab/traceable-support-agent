@@ -1,0 +1,68 @@
+{
+  "schema_version": "stage12-handoff-contract-rescore-v1",
+  "mode": "offline_rescore_existing_packages",
+  "source": {
+    "historical_aggregate": "evals/stage12-post-fix-revalidation-v1.json",
+    "historical_aggregate_sha256": "2de8d63be45974bcb58fdbc2d43d75d470854ae4268a7a30d229989a136b57b9",
+    "private_raw_records_sha256": "6eab96586c03abb15366c6e8c11ef7c1dd8617c8a8aa82fa7127c1e5913368af",
+    "private_unseen_set_sha256": "7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0"
+  },
+  "provider_calls": 0,
+  "automatic_retry_count": 0,
+  "cases_rescored": 24,
+  "matched_handoff_profile_cases": 6,
+  "changed_case_count": 4,
+  "unchanged_case_count": 20,
+  "before": {
+    "passed_cases": 2,
+    "failure_occurrences": 37,
+    "failure_counts": {
+      "category_mismatch": 1,
+      "outcome_mismatch": 8,
+      "priority_mismatch": 1,
+      "required_fact_missing": 12,
+      "source_sections_mismatch": 15
+    }
+  },
+  "after": {
+    "passed_cases": 6,
+    "failure_occurrences": 31,
+    "failure_counts": {
+      "outcome_mismatch": 8,
+      "required_fact_missing": 12,
+      "source_sections_mismatch": 11
+    }
+  },
+  "changes": [
+    {
+      "case_id": "STG12-01-MBD-003",
+      "removed_failure_codes": ["source_sections_mismatch"],
+      "added_failure_codes": []
+    },
+    {
+      "case_id": "STG12-01-SAF-001",
+      "removed_failure_codes": ["source_sections_mismatch"],
+      "added_failure_codes": []
+    },
+    {
+      "case_id": "STG12-01-SAF-002",
+      "removed_failure_codes": ["source_sections_mismatch"],
+      "added_failure_codes": []
+    },
+    {
+      "case_id": "STG12-01-SAF-003",
+      "removed_failure_codes": [
+        "source_sections_mismatch",
+        "category_mismatch",
+        "priority_mismatch"
+      ],
+      "added_failure_codes": []
+    }
+  ],
+  "boundary": {
+    "historical_aggregate_modified": false,
+    "new_model_output": false,
+    "new_stage12_run": false,
+    "use": "regression_only"
+  }
+}
