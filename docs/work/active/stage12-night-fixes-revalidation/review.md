@@ -25,3 +25,7 @@
 
 Provider 调用 28、自动重试 0、机制估算 ¥0.7169342；本次授权已耗尽。后续只允许离线检查、
 状态、提交、推送和 Draft PR Checks；不转 Ready、不合并、不部署。
+
+实现 head `adf5c74a53756019f6ceae7b745468b2fd703802` 的 CI run `30765242124` 四项
+required jobs 全绿，publish 因 Draft 跳过；没有新阻断 finding。最终状态回执 head 只需通过
+同一 required Checks，不扩展授权。

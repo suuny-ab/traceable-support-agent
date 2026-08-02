@@ -97,3 +97,11 @@
 
 能够证明：固定候选、模型、prompt 与同一已消费集上的一次描述性机械结果。不能证明：开放域
 质量、稳定成功率、单一修复因果效果、生产 SLA、用户验收或 `product/0.1.0` 发布成熟度。
+
+## Draft PR 实现回执
+
+结果实现 head `adf5c74a53756019f6ceae7b745468b2fd703802` 已推送到既有 Draft PR #62；
+`ci-release` run `30765242124` 的 governance、web、api、containers 四个 required jobs 全部
+成功，publish 因 Draft 跳过。PR 未转 Ready、未合并、未部署。
+
+本状态回执提交将形成最终 head；只确认其 required Checks，全绿后停止。
