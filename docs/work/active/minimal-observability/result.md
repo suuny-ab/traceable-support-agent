@@ -19,7 +19,10 @@
 - 文档园丁：`stale=0 / review=1`；唯一 review 是既有迁移记录的历史相对措辞，不是候选阻断。
 - `git diff --check` 通过；没有新增依赖、服务、逐请求明细、Provider 调用、token 或费用。
 
-## 待执行
+## 候选交付
 
-候选尚待提交、推送、创建 Draft PR 和确认同一 head 的 required Checks 启动。当前证据只证明
-本地候选合同，不证明生产已部署、跨实例聚合、高吞吐、SLA 或线上回答质量。
+实现提交 `44de2a4d1dccfd8cbc856e5b877a540bca6af20b` 已推送到 `night-20260802`，并创建
+Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)。PR 必须保持 Draft；
+回执提交后只确认同一最终 head 的 required Checks 启动，不转 Ready、不合并、不部署。
+
+当前证据只证明本地候选合同，不证明生产已部署、跨实例聚合、高吞吐、SLA 或线上回答质量。
