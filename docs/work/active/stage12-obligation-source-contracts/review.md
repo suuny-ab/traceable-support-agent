@@ -21,3 +21,6 @@ R1 / R2 / R3 / R6 与其余 18 题逐题不变。通过题保持 6，说明本�
 没有未关闭的方案级疑问，因此不触发独立 Reviewer。
 
 候选只允许更新 `night-20260802` / Draft PR #62；不转 Ready、不合并、不部署、不发布。
+
+实现 head `dd96538` 的 CI run `30761545320` 四个 required jobs 已全绿，publish 因 Draft
+跳过；没有新阻断 finding。最终状态回执 head 只需通过同一 required Checks，不扩展授权。

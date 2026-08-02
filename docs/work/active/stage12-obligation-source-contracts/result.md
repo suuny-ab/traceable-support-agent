@@ -1,6 +1,6 @@
 # 结果
 
-> 状态：`candidate_local_green`
+> 状态：`candidate_ci_green`
 
 ## 两个机械合同
 
@@ -95,3 +95,11 @@ R5 仍是失败，只是从正文粗码前移到可行动的规划账本；R4 �
 - Provider / product / generation / Stage 12 调用均为 0。
 
 本地候选已绿；待提交、推送并确认 Draft PR #62 最终 head required Checks。
+
+## Draft PR 实现回执
+
+实现 head `dd96538850017dac94d87e41940887bcecbc828d` 已推送到既有 Draft PR #62；
+`ci-release` run `30761545320` 的 governance、web、api、containers 全部成功，publish 因
+Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
+
+本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。
