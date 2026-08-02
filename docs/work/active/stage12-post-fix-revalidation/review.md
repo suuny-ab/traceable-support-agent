@@ -26,3 +26,6 @@
 本次 Provider / 费用授权已由唯一一次执行消费完毕；不允许第二轮、失败题补跑、调案例、
 换 model、扩大费用或把 PR 转 Ready / 合并 / 部署。后续只做本地检查、状态、提交、推送和
 Draft PR Checks。
+
+实现 head `989f2eb` 的 CI run `30756898578` 四个 required jobs 已全绿，publish 因 Draft
+跳过；没有新阻断 finding。最终状态回执 head 只需通过同一 required Checks，不扩展授权。

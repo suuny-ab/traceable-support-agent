@@ -78,3 +78,11 @@
   未见集 SHA 仍为 `7d730...8ab0`。
 
 本地候选已绿；待提交推送并确认 Draft PR #62 最终 head required Checks。
+
+## Draft PR 实现回执
+
+结果候选 `989f2eba23c0b074f77178bfae3e8f050f9c978c` 已推送到既有 Draft PR #62；
+`ci-release` run `30756898578` 的 governance、web、api、containers 四个 required jobs
+全部成功，publish 因 Draft 跳过。PR 未转 Ready、未合并、未部署。
+
+本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。
