@@ -44,6 +44,11 @@
   [`stage12-post-fix-revalidation-v1.json`](../../evals/stage12-post-fix-revalidation-v1.json)；
   回执分别见 [`stage12-formal-eval/result.md`](../work/completed/stage12-formal-eval/result.md) 与
   [`stage12-post-fix-revalidation/result.md`](../work/active/stage12-post-fix-revalidation/result.md)。
+- **失败根因口径**：复验的五种机器失败码合计 37 个出现次数；派发所称 36 个分组信号把
+  `SAF-003` 的 category / priority 两码合成了一个“其他案例”。逐码归类为生成合同形状 6、
+  边界 / outcome 策略 12、handoff 评分合同 6、额外来源精确集合门 3、义务规划遗漏 4、
+  字面事实门与语义绑定不一致 6；完整证据、取样限制和修复候选见
+  [`stage12-failure-root-cause/result.md`](../work/active/stage12-failure-root-cause/result.md)。
 - **单次 / 可复跑**：原始是全新未见正式观测；`2026-08-02` 使用已经消费的同一集，只是
   修复后首次回归观测。该集今后只能回归，任何新的正式结论都要全新未见集、验证卡和授权。
 - **边界 / 不是什么**：两次数字都不是线上成功率、“Stage 12 通过”或上线门。候选、prompt
