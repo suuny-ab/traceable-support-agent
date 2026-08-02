@@ -12,19 +12,19 @@
 | 当前集成任务 | `retrieval-badcase-loop`；Draft PR [#55](https://github.com/suuny-ab/traceable-support-agent/pull/55)，分支 `codex/retrieval-badcase-loop` |
 | 复杂度 | 标准 / `R2`；用户已批准同步 `origin/main`、更新公开 PR 分支并触发 Checks；不含合并、部署、Provider 调用或产品运行 |
 | 风险 / 成熟度 | 候选直接针对同一 16 题公开开发集调优，只能证明该开发集的来源覆盖变化；不是未见集、回答质量、线上成功率或发布结论 |
-| 产品候选 | 原 PR head `45db89f` 已在本地合入 `origin/main@8a306165`；同步提交 `8b7c4cb`，同步后本地相关检查已全绿，最终公开 head 待状态提交后推送 |
+| 产品候选 | Draft PR #55 已用同步/验证 head `c5953a87` 解锁冲突并启动远端 Checks；本文件的完成回执只追加状态事实，不改产品候选语义 |
 | 项目基线 | `origin/main@8a306165221387805ee33e6c20b45d9260c48658`；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | 无 |
 | 最近完成 | PR #54 已 squash merge 为 `8a306165`；main CI `30738245420` 成功，部署链 `30738264198` preflight 成功且 deploy 按 `governance_only` 跳过，运行产品未改变 |
-| 阻碍 | 本地文本冲突与相关复验均已关闭；分支推送和 PR #55 新 head 的 Checks 启动仍待完成 |
+| 阻碍 | 无文本冲突；PR #55 已恢复为 `MERGEABLE`，required Checks 已启动但尚未完成 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=915ca4ef7820870ee42fbef69ea719498d7f402d` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 提交本回执并推送更新 PR #55，确认新 head 的 required Checks 已创建；本次不合并 PR |
+| 下一检查点 | 只等待 PR #55 最终状态回执 head 的 required Checks；本次不转 Ready、不合并、不部署 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `retrieval-badcase-loop` | `validated_local_push_pending` | Draft PR #55；原 head `45db89f`，同步提交 `8b7c4cb`；`docs/status.md` 已先恢复为 `origin/main` 完整版本再重写；同步后本地相关检查全绿，待推送 |
+| `retrieval-badcase-loop` | `draft_pr_checks_running` | Draft PR #55；同步/验证 head `c5953a87` 已推送，PR 为 `MERGEABLE`；`ci-release` run `30739622243` 已启动，未合并 |
 | `portfolio-evidence-first-screen` | `delivered` | PR #54 head `d8cd208` squash merge 为 `8a306165`；main CI 成功，部署链 preflight 成功且 deploy 跳过，运行产品未改变 |
 | `frontend-polish-delivery` | `delivered` | PR #52 合并为 `915ca4e`；main CI、生产部署、公网完整 SHA、四页文案与样式检查通过；Provider 调用 0，工作记录已归档 |
 | `frontend-polish` | `delivered` | 本地候选 `a6ff775` 经后续最小治理记录形成 PR #52 并公开交付；用户于 `2026-08-01` 完成整体体验验收 |
@@ -37,7 +37,7 @@
 Task 可以并行；required Checks、所需当次授权、触发时的评审兜底、受保护 `main`、部署和
 用户验收仍按依赖串行。
 
-## 2026-08-02 派发进行中回执：PR #55 冲突解锁
+## 2026-08-02 派发交付回执：PR #55 冲突解锁
 
 - 授权：用户当次明确批准同步 `origin/main`、以 `main` 为准重写 `docs/status.md`、复跑相关
   检查并推送更新 PR #55；不含合并、部署或 Provider 调用。
@@ -51,8 +51,12 @@ Task 可以并行；required Checks、所需当次授权、触发时的评审兜
 - 同步后验证：baseline / product candidate 检索检查各 16 题通过、Provider 调用 0；检索定向
   测试 4 通过；API 全集 138 通过 / 2 跳过（另 24 subtests）；Stage 12 runner 13 通过；
   `check_public_repo --scope worktree` 通过（215 files、8 public cases）；`git diff --check` 通过。
-- 当前检查点：本地候选已通过相关检查，待提交、推送并确认 PR #55 新 head 的远端 Checks 启动；
-  本地绿不冒充远端 CI 绿。
+- 外部回执：同步/验证 head `c5953a87fd3795976ec34da08c9fe8f0fa5230c3` 已推送并与远端
+  分支精确一致；PR #55 从 `CONFLICTING` 恢复为 `MERGEABLE`。`ci-release` run
+  `30739622243` 已在该 head 启动，governance、web、api、containers 四个 required Checks
+  均已创建；这里只证明远端验证已启动，不写成 CI 全绿。
+- 状态收口：本段完成回执会形成一个只修改 `docs/status.md` 的后续 head；推送后仍须确认该
+  最终 head 的 Checks 已创建。本次不转 Ready、不合并 PR #55、不部署、不调用 Provider。
 
 ## 2026-08-01 派发交付回执：README 首屏量化证据
 
