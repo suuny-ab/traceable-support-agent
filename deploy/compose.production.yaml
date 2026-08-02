@@ -41,11 +41,14 @@ services:
       TRACEABLE_PUBLIC_DB: /var/lib/traceable/public.sqlite3
       TRACEABLE_PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN is required}
       TRACEABLE_PUBLIC_LIVE_ENABLED: ${TRACEABLE_PUBLIC_LIVE_ENABLED:-false}
+      TRACEABLE_RETRIEVAL_VECTOR_DSN: postgresql://traceable@pgvector:5432/traceable
+      PGPASSFILE: /run/traceable-pgvector/pgpass
     env_file:
       - path: /opt/traceable-support/provider.env
         required: false
     volumes:
       - traceable-data:/var/lib/traceable
+      - traceable-pgvector-secret:/run/traceable-pgvector:ro
     ports:
       - 127.0.0.1:8000:8000
     mem_limit: 768m
@@ -57,7 +60,81 @@ services:
       options:
         max-size: 5m
         max-file: "2"
+    networks:
+      - default
+      - retrieval
+
+  pgvector:
+    image: pgvector/pgvector:pg17@sha256:7ae6051efd0e60444282c27c7e141af07f322ce033300e727a49c3dd11075e38
+    restart: unless-stopped
+    init: true
+    read_only: true
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        umask 077
+        secret_dir=/run/traceable-pgvector
+        password_file=$${secret_dir}/password
+        pgpass_file=$${secret_dir}/pgpass
+        if ! test -s "$${password_file}"; then
+          password="$$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
+          printf '%s\n' "$${password}" > "$${password_file}.tmp"
+          chmod 600 "$${password_file}.tmp"
+          mv "$${password_file}.tmp" "$${password_file}"
+        fi
+        password="$$(cat "$${password_file}")"
+        rm -f "$${pgpass_file}.tmp"
+        printf 'pgvector:5432:traceable:traceable:%s\n' "$${password}" > "$${pgpass_file}.tmp"
+        chmod 600 "$${pgpass_file}.tmp"
+        chown 10001:10001 "$${pgpass_file}.tmp"
+        mv "$${pgpass_file}.tmp" "$${pgpass_file}"
+        export POSTGRES_PASSWORD_FILE="$${password_file}"
+        exec /usr/local/bin/docker-entrypoint.sh postgres
+    environment:
+      POSTGRES_USER: traceable
+      POSTGRES_DB: traceable
+      PGDATA: /var/lib/postgresql/data
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /var/run/postgresql:rw,noexec,nosuid,size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    volumes:
+      - traceable-pgvector-data:/var/lib/postgresql/data
+      - traceable-pgvector-secret:/run/traceable-pgvector
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U traceable -d traceable"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 180
+    stop_grace_period: 60s
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+    networks:
+      - retrieval
 
 volumes:
   traceable-data:
     name: traceable-support-data-canonical
+  traceable-pgvector-data:
+    name: traceable-support-pgvector-data-canonical
+  traceable-pgvector-secret:
+    name: traceable-support-pgvector-secret-canonical
+
+networks:
+  retrieval:
+    internal: true

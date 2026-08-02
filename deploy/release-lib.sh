@@ -138,6 +138,37 @@ release_wait_local() {
   release_fail "release_health_timeout"
 }
 
+release_has_pgvector() {
+  local release_dir="$1"
+  release_compose "$release_dir" config --services | grep -Fxq pgvector
+}
+
+release_wait_pgvector() {
+  local release_dir="$1"
+  local attempt
+  if ! release_has_pgvector "$release_dir"; then
+    return 0
+  fi
+  for attempt in $(seq 1 30); do
+    if release_compose "$release_dir" exec -T api python -c \
+      'from traceable_support.retrieval.vector_store import pgvector_store_from_env; store=pgvector_store_from_env(); assert store is not None; readiness=store.readiness(); assert readiness.ready, readiness.reason' \
+      >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  release_fail "release_pgvector_readiness_timeout"
+}
+
+release_wait_ready() {
+  local release_dir="$1"
+  local public_origin="$2"
+  local live_enabled="${3:-false}"
+  local expected_release_sha="${4:-}"
+  release_wait_local "$public_origin" "$live_enabled" "$expected_release_sha"
+  release_wait_pgvector "$release_dir"
+}
+
 release_wait_project_stopped() {
   local attempt containers networks
   for attempt in $(seq 1 20); do
@@ -238,6 +269,10 @@ PY
       docker pull "$image" >/dev/null || release_fail "image_pull_failed"
     fi
   done
+  if release_has_pgvector "$release_dir"; then
+    release_compose "$release_dir" pull pgvector >/dev/null \
+      || release_fail "pgvector_image_pull_failed"
+  fi
   for image in "$web_image" "$api_image"; do
     user="$(docker image inspect --format '{{.Config.User}}' "$image")"
     test -n "$user" && test "$user" != "0" && test "$user" != "root" \

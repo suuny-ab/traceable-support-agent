@@ -1,0 +1,503 @@
+{
+  "all_top10_rankings_exact_match": true,
+  "backends": {
+    "memory": {
+      "cold_total_ms": 2035.846,
+      "full_coverage_at_10_passed_cases": 16,
+      "full_coverage_at_5_passed_cases": 16,
+      "warm_total_ms_median": 192.534,
+      "warm_total_ms_samples": [
+        171.957,
+        192.534,
+        198.149
+      ],
+      "wrong_model_hits_at_10": 0
+    },
+    "pgvector": {
+      "cold_total_ms": 1955.757,
+      "full_coverage_at_10_passed_cases": 16,
+      "full_coverage_at_5_passed_cases": 16,
+      "warm_total_ms_median": 580.385,
+      "warm_total_ms_samples": [
+        618.725,
+        559.529,
+        580.385
+      ],
+      "wrong_model_hits_at_10": 0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "RET-DEV-R1-001",
+      "memory_top10": [
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/reset",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "AFTER-SALES-POLICY/exclusions",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R1-MANUAL/setup",
+        "AFTER-SALES-POLICY/replacement"
+      ],
+      "pgvector_top10": [
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/reset",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "AFTER-SALES-POLICY/exclusions",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R1-MANUAL/setup",
+        "AFTER-SALES-POLICY/replacement"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-002",
+      "memory_top10": [
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R1-MANUAL/setup",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "FAULT-CODES/r1-e210-dock",
+        "COMMON-FAQ/model-difference",
+        "CZ-R1-MANUAL/maintenance",
+        "CZ-R1-MANUAL/reset",
+        "FAULT-CODES/e102-cliff-sensor",
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "pgvector_top10": [
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R1-MANUAL/setup",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "FAULT-CODES/r1-e210-dock",
+        "COMMON-FAQ/model-difference",
+        "CZ-R1-MANUAL/maintenance",
+        "CZ-R1-MANUAL/reset",
+        "FAULT-CODES/e102-cliff-sensor",
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-003",
+      "memory_top10": [
+        "FAULT-CODES/e101-wheel-blocked",
+        "AFTER-SALES-POLICY/repair",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "COMMON-FAQ/map-recovery",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/replacement",
+        "CZ-R1-MANUAL/maintenance",
+        "FAULT-CODES/r1-e210-dock",
+        "CZ-R1-MANUAL/reset",
+        "COMMON-FAQ/before-cleaning"
+      ],
+      "pgvector_top10": [
+        "FAULT-CODES/e101-wheel-blocked",
+        "AFTER-SALES-POLICY/repair",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "COMMON-FAQ/map-recovery",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/replacement",
+        "CZ-R1-MANUAL/maintenance",
+        "FAULT-CODES/r1-e210-dock",
+        "CZ-R1-MANUAL/reset",
+        "COMMON-FAQ/before-cleaning"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-004",
+      "memory_top10": [
+        "FAULT-CODES/r1-e210-dock",
+        "CZ-R1-MANUAL/setup",
+        "CZ-R1-MANUAL/maintenance",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/model-difference",
+        "AFTER-SALES-POLICY/exclusions",
+        "AFTER-SALES-POLICY/warranty",
+        "FAULT-CODES/e101-wheel-blocked"
+      ],
+      "pgvector_top10": [
+        "FAULT-CODES/r1-e210-dock",
+        "CZ-R1-MANUAL/setup",
+        "CZ-R1-MANUAL/maintenance",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/model-difference",
+        "AFTER-SALES-POLICY/exclusions",
+        "AFTER-SALES-POLICY/warranty",
+        "FAULT-CODES/e101-wheel-blocked"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-005",
+      "memory_top10": [
+        "COMMON-FAQ/charging",
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R1-MANUAL/maintenance",
+        "FAULT-CODES/r1-e210-dock",
+        "CZ-R1-MANUAL/setup",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "COMMON-FAQ/before-cleaning",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e102-cliff-sensor"
+      ],
+      "pgvector_top10": [
+        "COMMON-FAQ/charging",
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R1-MANUAL/maintenance",
+        "FAULT-CODES/r1-e210-dock",
+        "CZ-R1-MANUAL/setup",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "COMMON-FAQ/before-cleaning",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e102-cliff-sensor"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-006",
+      "memory_top10": [
+        "CZ-R1-MANUAL/dust-bin",
+        "COMMON-FAQ/model-difference",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R1-MANUAL/setup",
+        "CZ-R1-MANUAL/reset",
+        "COMMON-FAQ/map-recovery",
+        "FAULT-CODES/r1-e210-dock",
+        "AFTER-SALES-POLICY/exclusions",
+        "COMMON-FAQ/charging"
+      ],
+      "pgvector_top10": [
+        "CZ-R1-MANUAL/dust-bin",
+        "COMMON-FAQ/model-difference",
+        "CZ-R1-MANUAL/cleaning-modes",
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R1-MANUAL/setup",
+        "CZ-R1-MANUAL/reset",
+        "COMMON-FAQ/map-recovery",
+        "FAULT-CODES/r1-e210-dock",
+        "AFTER-SALES-POLICY/exclusions",
+        "COMMON-FAQ/charging"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-007",
+      "memory_top10": [
+        "AFTER-SALES-POLICY/replacement",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/repair",
+        "FAULT-CODES/e101-wheel-blocked",
+        "CUSTOMER-SERVICE-SOP/evidence-check",
+        "COMMON-FAQ/map-recovery",
+        "AFTER-SALES-POLICY/exclusions",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "AFTER-SALES-POLICY/priority",
+        "COMMON-FAQ/before-cleaning"
+      ],
+      "pgvector_top10": [
+        "AFTER-SALES-POLICY/replacement",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/repair",
+        "FAULT-CODES/e101-wheel-blocked",
+        "CUSTOMER-SERVICE-SOP/evidence-check",
+        "COMMON-FAQ/map-recovery",
+        "AFTER-SALES-POLICY/exclusions",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "AFTER-SALES-POLICY/priority",
+        "COMMON-FAQ/before-cleaning"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R1-008",
+      "memory_top10": [
+        "AFTER-SALES-POLICY/repair",
+        "AFTER-SALES-POLICY/replacement",
+        "CUSTOMER-SERVICE-SOP/evidence-check",
+        "AFTER-SALES-POLICY/warranty",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "AFTER-SALES-POLICY/priority",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e101-wheel-blocked",
+        "CZ-R1-MANUAL/maintenance"
+      ],
+      "pgvector_top10": [
+        "AFTER-SALES-POLICY/repair",
+        "AFTER-SALES-POLICY/replacement",
+        "CUSTOMER-SERVICE-SOP/evidence-check",
+        "AFTER-SALES-POLICY/warranty",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "AFTER-SALES-POLICY/priority",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e101-wheel-blocked",
+        "CZ-R1-MANUAL/maintenance"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-001",
+      "memory_top10": [
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/auto-empty",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "CZ-R2-MANUAL/reset",
+        "COMMON-FAQ/map-recovery",
+        "FAULT-CODES/e102-cliff-sensor",
+        "CZ-R2-MANUAL/maintenance",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e101-wheel-blocked",
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "pgvector_top10": [
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/auto-empty",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "CZ-R2-MANUAL/reset",
+        "COMMON-FAQ/map-recovery",
+        "FAULT-CODES/e102-cliff-sensor",
+        "CZ-R2-MANUAL/maintenance",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e101-wheel-blocked",
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-002",
+      "memory_top10": [
+        "FAULT-CODES/r2-e310-dust-bag",
+        "CZ-R2-MANUAL/reset",
+        "CZ-R2-MANUAL/auto-empty",
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/maintenance",
+        "COMMON-FAQ/model-difference",
+        "AFTER-SALES-POLICY/warranty",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/exclusions",
+        "COMMON-FAQ/charging"
+      ],
+      "pgvector_top10": [
+        "FAULT-CODES/r2-e310-dust-bag",
+        "CZ-R2-MANUAL/reset",
+        "CZ-R2-MANUAL/auto-empty",
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/maintenance",
+        "COMMON-FAQ/model-difference",
+        "AFTER-SALES-POLICY/warranty",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/exclusions",
+        "COMMON-FAQ/charging"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-003",
+      "memory_top10": [
+        "COMMON-FAQ/wet-environment",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "COMMON-FAQ/model-difference",
+        "CZ-R2-MANUAL/maintenance",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/before-cleaning",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/exclusions"
+      ],
+      "pgvector_top10": [
+        "COMMON-FAQ/wet-environment",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "COMMON-FAQ/model-difference",
+        "CZ-R2-MANUAL/maintenance",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/before-cleaning",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "AFTER-SALES-POLICY/exclusions"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-004",
+      "memory_top10": [
+        "CZ-R2-MANUAL/reset",
+        "CZ-R2-MANUAL/auto-empty",
+        "COMMON-FAQ/model-difference",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "AFTER-SALES-POLICY/warranty",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e101-wheel-blocked"
+      ],
+      "pgvector_top10": [
+        "CZ-R2-MANUAL/reset",
+        "CZ-R2-MANUAL/auto-empty",
+        "COMMON-FAQ/model-difference",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "AFTER-SALES-POLICY/warranty",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e101-wheel-blocked"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-005",
+      "memory_top10": [
+        "FAULT-CODES/e102-cliff-sensor",
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "CZ-R2-MANUAL/maintenance",
+        "CZ-R2-MANUAL/reset",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/wet-environment",
+        "COMMON-FAQ/model-difference",
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "pgvector_top10": [
+        "FAULT-CODES/e102-cliff-sensor",
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "CZ-R2-MANUAL/maintenance",
+        "CZ-R2-MANUAL/reset",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/wet-environment",
+        "COMMON-FAQ/model-difference",
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-006",
+      "memory_top10": [
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R2-MANUAL/maintenance",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "CZ-R2-MANUAL/station-setup",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e102-cliff-sensor",
+        "COMMON-FAQ/model-difference"
+      ],
+      "pgvector_top10": [
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R2-MANUAL/maintenance",
+        "COMMON-FAQ/charging",
+        "COMMON-FAQ/map-recovery",
+        "COMMON-FAQ/before-cleaning",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "CZ-R2-MANUAL/station-setup",
+        "AFTER-SALES-POLICY/exclusions",
+        "FAULT-CODES/e102-cliff-sensor",
+        "COMMON-FAQ/model-difference"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-007",
+      "memory_top10": [
+        "COMMON-FAQ/wet-environment",
+        "COMMON-FAQ/model-difference",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "CZ-R2-MANUAL/reset",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R2-MANUAL/auto-empty",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R2-MANUAL/station-setup",
+        "AFTER-SALES-POLICY/exclusions"
+      ],
+      "pgvector_top10": [
+        "COMMON-FAQ/wet-environment",
+        "COMMON-FAQ/model-difference",
+        "CZ-R2-MANUAL/vacuum-and-mop",
+        "CZ-R2-MANUAL/reset",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "AFTER-SALES-POLICY/warranty",
+        "CZ-R2-MANUAL/auto-empty",
+        "COMMON-FAQ/map-recovery",
+        "CZ-R2-MANUAL/station-setup",
+        "AFTER-SALES-POLICY/exclusions"
+      ],
+      "top10_exact_match": true
+    },
+    {
+      "case_id": "RET-DEV-R2-008",
+      "memory_top10": [
+        "AFTER-SALES-POLICY/exclusions",
+        "AFTER-SALES-POLICY/priority",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "COMMON-FAQ/wet-environment",
+        "AFTER-SALES-POLICY/repair",
+        "AFTER-SALES-POLICY/warranty",
+        "CUSTOMER-SERVICE-SOP/evidence-check",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "AFTER-SALES-POLICY/replacement"
+      ],
+      "pgvector_top10": [
+        "AFTER-SALES-POLICY/exclusions",
+        "AFTER-SALES-POLICY/priority",
+        "CUSTOMER-SERVICE-SOP/manual-escalation",
+        "COMMON-FAQ/wet-environment",
+        "AFTER-SALES-POLICY/repair",
+        "AFTER-SALES-POLICY/warranty",
+        "CUSTOMER-SERVICE-SOP/evidence-check",
+        "CUSTOMER-SERVICE-SOP/intake-fields",
+        "FAULT-CODES/r2-e310-dust-bag",
+        "AFTER-SALES-POLICY/replacement"
+      ],
+      "top10_exact_match": true
+    }
+  ],
+  "dataset": {
+    "case_count": 16,
+    "path": "evals/retrieval-checkup-v1.json",
+    "sha256": "cec2a70ef6a354b2cc4ae910a7bc9a84a12e066a9ec5e0fefb2d5faa8252c044"
+  },
+  "execution_order": [
+    "memory",
+    "pgvector"
+  ],
+  "limitations": [
+    "The 16 questions are a public synthetic development set, not an unseen HOLDOUT or an online success-rate claim.",
+    "Cold time includes local model initialization, passage embedding and pgvector synchronization; warm time is the median of three complete 16-query passes.",
+    "Backends run in a fixed order on one machine, so operating-system cache and local Docker overhead limit cross-machine interpretation.",
+    "The comparison measures source-section retrieval only; it does not call a Provider or measure generated-answer quality."
+  ],
+  "runtime_identity": {
+    "embedding_model_manifest_sha256": "c25626d58149bd63c8081f11ca7876f18a2b4a8b3d13ee278cc5ac9ea1d5326e",
+    "pgvector_schema_version": 1,
+    "provider_calls": 0,
+    "retriever": "product_bm25_domain_equivalence_v1_bge_rrf_k60_depth20",
+    "warm_repetitions": 3
+  },
+  "schema_version": "retrieval-backend-comparison-v1",
+  "status": "public_synthetic_development_comparison_not_release_claim"
+}

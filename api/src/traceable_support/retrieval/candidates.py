@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,7 +15,11 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 
 from .corpus import tokenize
-from .vector_store import VectorStore, pgvector_store_from_env
+from .vector_store import (
+    VectorStore,
+    VectorStoreUnavailable,
+    pgvector_store_from_env,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -301,8 +306,46 @@ class PgVectorDenseRetriever(DenseBgeRetriever):
             request,
         )
 
+    def search_memory(
+        self, request: RetrievalRequest, index: dict[str, Any]
+    ) -> list[RetrievalHit]:
+        """Reuse already-computed passage vectors without touching the store."""
 
-def build_dense_retriever() -> DenseBgeRetriever:
+        return super().search(request, index)
+
+
+class FallbackDenseRetriever:
+    """Use pgvector while healthy, then latch to the in-memory implementation."""
+
+    retriever_id = DenseBgeRetriever.retriever_id
+
+    def __init__(
+        self,
+        *,
+        primary: PgVectorDenseRetriever,
+    ) -> None:
+        self._primary = primary
+        self._primary_enabled = True
+        self._state_lock = threading.Lock()
+
+    @property
+    def backend(self) -> str:
+        with self._state_lock:
+            return "pgvector" if self._primary_enabled else "memory"
+
+    def search(self, request: RetrievalRequest, index: dict[str, Any]) -> list[RetrievalHit]:
+        with self._state_lock:
+            primary_enabled = self._primary_enabled
+        if primary_enabled:
+            try:
+                return self._primary.search(request, index)
+            except VectorStoreUnavailable:
+                with self._state_lock:
+                    self._primary_enabled = False
+        return self._primary.search_memory(request, index)
+
+
+def build_dense_retriever() -> DenseBgeRetriever | FallbackDenseRetriever:
     """Dense candidate for the product pipeline.
 
     The pgvector backend is used only when ``TRACEABLE_RETRIEVAL_VECTOR_DSN``
@@ -312,7 +355,12 @@ def build_dense_retriever() -> DenseBgeRetriever:
     store = pgvector_store_from_env()
     if store is None:
         return DenseBgeRetriever()
-    return PgVectorDenseRetriever(store=store)
+    readiness = store.readiness()
+    if not readiness.ready:
+        return DenseBgeRetriever()
+    return FallbackDenseRetriever(
+        primary=PgVectorDenseRetriever(store=store),
+    )
 
 
 class ReciprocalRankFusionRetriever:

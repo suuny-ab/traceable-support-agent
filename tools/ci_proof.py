@@ -116,8 +116,8 @@ CLAIMS: dict[str, tuple[str, str, str]] = {
         QUALITY_DOC,
     ),
     "api.pgvector-store": (
-        "pgvector 向量存储在真实 Postgres 上完成建表、嵌入写入、top-k 余弦排序与幂等重复同步",
-        "只证明存储适配器的机械行为；未设置 TRACEABLE_RETRIEVAL_VECTOR_DSN 时默认检索路径不经过 Postgres",
+        "pgvector 在真实 Postgres 上通过版本化 readiness、写入与余弦排序，并与内存后端完成冻结 16 题对比",
+        "只证明公开合成开发集的存储与检索机械行为；不是未见集、生成质量或线上成功率结论",
         QUALITY_DOC,
     ),
     "api.eval-runner-tests": (

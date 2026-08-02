@@ -17,6 +17,9 @@ import pytest
 
 from traceable_support.retrieval.vector_store import (
     DEFAULT_TABLE,
+    MIGRATIONS_TABLE,
+    SCHEMA_COMPONENT,
+    SCHEMA_VERSION,
     VECTOR_STORE_DSN_ENV,
     PgVectorStore,
     pgvector_store_from_env,
@@ -52,9 +55,11 @@ def store(dsn: str):
     with psycopg.connect(dsn, autocommit=True) as connection:
         connection.execute("CREATE EXTENSION IF NOT EXISTS vector")
         connection.execute(f"DROP TABLE IF EXISTS {DEFAULT_TABLE}")
+        connection.execute(f"DROP TABLE IF EXISTS {MIGRATIONS_TABLE}")
     yield PgVectorStore(dsn, dimension=DIMENSION)
     with psycopg.connect(dsn, autocommit=True) as connection:
         connection.execute(f"DROP TABLE IF EXISTS {DEFAULT_TABLE}")
+        connection.execute(f"DROP TABLE IF EXISTS {MIGRATIONS_TABLE}")
 
 
 def test_store_is_built_only_when_the_dsn_is_configured(monkeypatch) -> None:
@@ -100,6 +105,38 @@ def test_sync_then_query_returns_cosine_order(store: PgVectorStore) -> None:
 
     top_two = store.query(FINGERPRINT, _basis(0), top_k=2)
     assert [chunk_id for chunk_id, _ in top_two] == ["chunk-exact", "chunk-near"]
+
+
+def test_readiness_applies_and_verifies_the_versioned_schema(
+    store: PgVectorStore, dsn: str
+) -> None:
+    psycopg = pytest.importorskip("psycopg")
+    assert store.readiness().ready is True
+    with psycopg.connect(dsn, autocommit=True) as connection:
+        version = connection.execute(
+            f"SELECT version FROM {MIGRATIONS_TABLE} WHERE component = %s",
+            (SCHEMA_COMPONENT,),
+        ).fetchone()[0]
+        index_definition = connection.execute(
+            "SELECT indexdef FROM pg_indexes WHERE indexname = %s",
+            (f"{DEFAULT_TABLE}_embedding_hnsw",),
+        ).fetchone()[0]
+    assert version == SCHEMA_VERSION
+    assert "USING hnsw (embedding vector_cosine_ops)" in index_definition
+
+
+def test_readiness_rejects_a_drifted_index(store: PgVectorStore, dsn: str) -> None:
+    psycopg = pytest.importorskip("psycopg")
+    assert store.readiness().ready is True
+    with psycopg.connect(dsn, autocommit=True) as connection:
+        connection.execute(f"DROP INDEX {DEFAULT_TABLE}_embedding_hnsw")
+        connection.execute(
+            f"CREATE INDEX {DEFAULT_TABLE}_embedding_hnsw "
+            f"ON {DEFAULT_TABLE} (embedding)"
+        )
+    drifted = PgVectorStore(dsn, dimension=DIMENSION).readiness()
+    assert drifted.ready is False
+    assert drifted.reason == "vector_store_index_invalid"
 
 
 def test_repeated_sync_is_idempotent(store: PgVectorStore, dsn: str) -> None:

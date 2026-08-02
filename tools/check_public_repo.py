@@ -1174,6 +1174,7 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
         if image_lines != [
             "${WEB_IMAGE:?WEB_IMAGE must be an immutable digest}",
             "${API_IMAGE:?API_IMAGE must be an immutable digest}",
+            "pgvector/pgvector:pg17@sha256:7ae6051efd0e60444282c27c7e141af07f322ce033300e727a49c3dd11075e38",
         ]:
             errors.append("production_compose_image_contract_invalid")
         live_flag_contract = (
@@ -1190,6 +1191,33 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
             # The provider flag must default to off and the credential must
             # stay an optional, host-side 0600 env file (never built in).
             errors.append("production_provider_disable_missing")
+        pgvector_contract = (
+            "TRACEABLE_RETRIEVAL_VECTOR_DSN: postgresql://traceable@pgvector:5432/traceable",
+            "PGPASSFILE: /run/traceable-pgvector/pgpass",
+            "traceable-support-pgvector-data-canonical",
+            "traceable-support-pgvector-secret-canonical",
+            'test: ["CMD-SHELL", "pg_isready -U traceable -d traceable"]',
+            "internal: true",
+        )
+        if any(line not in compose for line in pgvector_contract) or re.search(
+            r"(?m)^\s*-\s*(?:127\.0\.0\.1:)?(?:\$\{[^}]+\}:)?5432:5432\s*$",
+            compose,
+        ):
+            errors.append("production_pgvector_boundary_invalid")
+        release_lib = _read(mapped, "deploy/release-lib.sh")
+        activate_release = _read(mapped, "deploy/activate-release.sh")
+        rollback_release = _read(mapped, "deploy/rollback-release.sh")
+        release_pgvector_contract = (
+            "release_compose \"$release_dir\" pull pgvector",
+            "release_wait_pgvector()",
+            "readiness=store.readiness(); assert readiness.ready, readiness.reason",
+        )
+        if (
+            any(line not in release_lib for line in release_pgvector_contract)
+            or activate_release.count("release_wait_ready") != 3
+            or rollback_release.count("release_wait_ready") != 2
+        ):
+            errors.append("production_pgvector_release_gate_invalid")
     except (UnicodeDecodeError, ValueError) as exc:
         errors.append(str(exc))
     try:
