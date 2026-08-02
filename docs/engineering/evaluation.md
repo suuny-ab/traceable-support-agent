@@ -63,3 +63,10 @@ Stage 12 历史 `top10_v6_content_invalid` 只保留了失败码，没有 Provid
 合同把它细分为 content 外形、content identity、answer 外形和 claims 数量四个隐私安全码，
 全部仍归 `generation_contract / generation_shape` 并失败关闭。该夹具只能验证合同诊断，
 不能恢复历史响应、判断历史案例命中的精确分支或形成新的 Stage 12 / 模型质量结论。
+
+Stage 12 candidate 评分还分离两个 host-owned 账本。冻结必需事实必须由同一 obligation 的
+有序 approved source spans 完整承接，否则报 `required_obligation_missing`；规划完整但正文
+字面缺失仍报 `required_fact_missing`。来源评分要求全部冻结必需来源出现；额外来源只有在
+产品型号适用、进入 host-derived used evidence、由 claim 使用且被每个绑定 obligation 批准时
+才不误扣。缺必需来源、无绑定 extra 或 outcome 不匹配继续失败。这是已消费 package 的离线
+评分合同，不修改生成或产品 outcome，也不形成新 Stage 12 质量观测。

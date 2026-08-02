@@ -215,6 +215,129 @@ def _used_source_sections(package: dict[str, Any], task_type: str) -> list[str]:
     })
 
 
+def _candidate_result(package: dict[str, Any], task_type: str) -> Any:
+    return package.get("answer") if task_type == "qa" else package.get("proposal")
+
+
+def _invalid_extra_source_sections(
+    package: dict[str, Any],
+    task_type: str,
+    extra_sections: list[str],
+) -> list[str]:
+    """Fail closed unless every extra source has the full host-owned binding ledger."""
+
+    result = _candidate_result(package, task_type)
+    evidence = package.get("evidence")
+    if type(result) is not dict or type(evidence) is not list:
+        return extra_sections
+    used_evidence_ids = result.get("used_evidence_ids")
+    obligation_plan = result.get("obligation_plan")
+    content = result.get("content")
+    if (
+        type(used_evidence_ids) is not list
+        or type(obligation_plan) is not list
+        or type(content) is not dict
+        or type(content.get("claims")) is not list
+    ):
+        return extra_sections
+    evidence_by_id = {
+        entry.get("evidence_id"): entry
+        for entry in evidence
+        if type(entry) is dict and type(entry.get("evidence_id")) is str
+    }
+    plan_by_id = {
+        entry.get("obligation_id"): entry
+        for entry in obligation_plan
+        if type(entry) is dict and type(entry.get("obligation_id")) is str
+    }
+    claims = content["claims"]
+    product_model = package.get("product_model")
+    invalid: list[str] = []
+    for section in extra_sections:
+        section_evidence_ids = [
+            evidence_id
+            for evidence_id in used_evidence_ids
+            if evidence_id in evidence_by_id
+            and (
+                f"{evidence_by_id[evidence_id].get('document_id')}/"
+                f"{evidence_by_id[evidence_id].get('section_id')}"
+            )
+            == section
+        ]
+        section_valid = bool(section_evidence_ids)
+        for evidence_id in section_evidence_ids:
+            evidence_entry = evidence_by_id[evidence_id]
+            applicable_models = evidence_entry.get("applicable_models")
+            bound_claims = [
+                claim
+                for claim in claims
+                if type(claim) is dict
+                and type(claim.get("evidence_ids")) is list
+                and evidence_id in claim["evidence_ids"]
+            ]
+            if (
+                type(product_model) is not str
+                or type(applicable_models) is not list
+                or product_model not in applicable_models
+                or not bound_claims
+            ):
+                section_valid = False
+                continue
+            for claim in bound_claims:
+                obligation_ids = claim.get("obligation_ids")
+                if (
+                    type(obligation_ids) is not list
+                    or not obligation_ids
+                    or any(
+                        obligation_id not in plan_by_id
+                        or type(plan_by_id[obligation_id].get("evidence_ids"))
+                        is not list
+                        or evidence_id
+                        not in plan_by_id[obligation_id]["evidence_ids"]
+                        for obligation_id in obligation_ids
+                    )
+                ):
+                    section_valid = False
+        if not section_valid:
+            invalid.append(section)
+    return invalid
+
+
+def _missing_required_obligation_ordinals(
+    package: dict[str, Any], required_facts: list[str]
+) -> list[int]:
+    """Check whether one obligation completely carries each frozen fact."""
+
+    checklist = package.get("checklist")
+    if type(checklist) is not dict or type(checklist.get("obligations")) is not list:
+        return list(range(len(required_facts)))
+    obligation_texts: list[str] = []
+    for obligation in checklist["obligations"]:
+        if type(obligation) is not dict:
+            continue
+        spans = obligation.get("approved_source_spans")
+        if (
+            type(spans) is not list
+            or not spans
+            or any(
+                type(span) is not dict
+                or type(span.get("clause_id")) is not str
+                or type(span.get("exact_span_text")) is not str
+                for span in spans
+            )
+        ):
+            continue
+        ordered = sorted(spans, key=lambda span: span["clause_id"])
+        obligation_texts.append(
+            _score_text("".join(span["exact_span_text"] for span in ordered))
+        )
+    return [
+        index
+        for index, fact in enumerate(required_facts)
+        if not any(_score_text(fact) in text for text in obligation_texts)
+    ]
+
+
 def _estimated_cost_nanos(package: dict[str, Any]) -> int:
     return sum(
         entry["cost"]["amount_cny_nanos"]
@@ -256,18 +379,46 @@ def score_case(
     used_sections = _used_source_sections(package, task_type)
     detail["used_source_sections"] = used_sections
     if not matched_handoff:
-        if used_sections != sorted(expected["source_sections"]):
+        expected_sections = sorted(expected["source_sections"])
+        candidate_match = expected["outcome"] == observed_outcome == "candidate"
+        if candidate_match:
+            missing_sections = sorted(set(expected_sections) - set(used_sections))
+            extra_sections = sorted(set(used_sections) - set(expected_sections))
+            invalid_extra_sections = _invalid_extra_source_sections(
+                package,
+                task_type,
+                extra_sections,
+            )
+            detail["missing_required_source_sections"] = missing_sections
+            detail["extra_source_sections"] = extra_sections
+            detail["invalid_extra_source_sections"] = invalid_extra_sections
+            source_mismatch = bool(missing_sections or invalid_extra_sections)
+        else:
+            source_mismatch = used_sections != expected_sections
+        if source_mismatch:
             failures.append("source_sections_mismatch")
+
+        required_facts = expected["required_facts"]
+        missing_obligations: list[int] = []
+        if candidate_match and required_facts:
+            missing_obligations = _missing_required_obligation_ordinals(
+                package,
+                required_facts,
+            )
+            detail["missing_required_obligation_ordinals"] = missing_obligations
+            if missing_obligations:
+                failures.append("required_obligation_missing")
 
         visible = _score_text(_customer_visible_text(package, task_type))
         missing_facts = [
             index
-            for index, fact in enumerate(expected["required_facts"])
+            for index, fact in enumerate(required_facts)
             if _score_text(fact) not in visible
         ]
         if missing_facts:
-            failures.append("required_fact_missing")
             detail["missing_required_fact_ordinals"] = missing_facts
+            if not missing_obligations:
+                failures.append("required_fact_missing")
 
         if task_type == "ticket":
             if (

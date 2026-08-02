@@ -108,3 +108,11 @@ R1 已用四个公开合成 malformed 响应覆盖旧粗码的全部机械分支
 结果见 [`stage12-generation-shape-diagnostics/result.md`](../stage12-generation-shape-diagnostics/result.md)。
 历史 Provider 正文未保留，因此两个目标案例命中哪个子分支仍不可知；这不是历史候选修复或
 新的 Stage 12 质量观测。
+
+## R4 / R5 后续回执
+
+R4 / R5 已在后续切片用 host-owned obligation / claim / evidence 账本分离机械合同：三个有
+完整绑定的 extra-source 误扣被移除，四个规划遗漏粗码一对一改为
+`required_obligation_missing`；24 题通过数保持 6，其余根因逐题不变。结果见
+[`stage12-obligation-source-contracts/result.md`](../stage12-obligation-source-contracts/result.md)。
+这不修改生成或历史 package，也不是新的 Stage 12 / 模型质量观测。

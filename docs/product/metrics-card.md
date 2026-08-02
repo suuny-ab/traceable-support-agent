@@ -58,6 +58,11 @@
   隐私安全子码，产品链 4/4 仍转 handoff；这是合成合同覆盖数，不是历史案例被修复或 Stage 12
   通过数。机器回执见
   [`generation-shape-diagnostics-v1.json`](../../evals/generation-shape-diagnostics-v1.json)。
+- **义务 / 来源合同离线回归**：同一 24 份既有 package 在 handoff scorer 基础上重评分，
+  通过题仍为 6；R4 三个合法额外来源误扣删除，R5 四个 `required_fact_missing` 一对一改为
+  `required_obligation_missing`，失败码出现次数 31→28。它只提高机械归因分辨率，不表示回答
+  修复或模型改善；脱敏回执见
+  [`stage12-obligation-source-rescore-v1.json`](../../evals/stage12-obligation-source-rescore-v1.json)。
 - **单次 / 可复跑**：原始是全新未见正式观测；`2026-08-02` 使用已经消费的同一集，只是
   修复后首次回归观测。该集今后只能回归，任何新的正式结论都要全新未见集、验证卡和授权。
 - **边界 / 不是什么**：两次数字都不是线上成功率、“Stage 12 通过”或上线门。候选、prompt

@@ -300,6 +300,73 @@ class Stage12EvalTest(unittest.TestCase):
         self.assertIn("source_sections_mismatch", report["cases"][0]["failure_codes"])
         self.assertTrue(report["cases"][1]["passed"])
 
+    def test_obligation_and_source_fixture_has_specific_mechanical_results(
+        self,
+    ) -> None:
+        fixture = json.loads(
+            (
+                REPO_ROOT
+                / "evals"
+                / "fixtures"
+                / "stage12-obligation-source-equivalent-v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        scores = {}
+        for entry in fixture["cases"]:
+            score = stage12_eval.score_case(
+                entry["case"],
+                entry["package"],
+                0,
+                1,
+            )
+            scores[entry["kind"]] = score
+            self.assertEqual(
+                score["failure_codes"],
+                entry["expected_failure_codes"],
+                entry["case_id"],
+            )
+
+        self.assertEqual(
+            scores["obligation_missing"]["detail"][
+                "missing_required_obligation_ordinals"
+            ],
+            [0],
+        )
+        self.assertNotIn(
+            "required_obligation_missing",
+            scores["visible_fact_missing_only"]["failure_codes"],
+        )
+        self.assertEqual(
+            scores["bound_extra_source"]["detail"]["extra_source_sections"],
+            ["SYNTH-GUIDE/context"],
+        )
+        self.assertEqual(
+            scores["unbound_extra_source"]["detail"][
+                "invalid_extra_source_sections"
+            ],
+            ["SYNTH-GUIDE/context"],
+        )
+        bound_entry = next(
+            entry
+            for entry in fixture["cases"]
+            if entry["kind"] == "bound_extra_source"
+        )
+        wrong_model_package = json.loads(json.dumps(bound_entry["package"]))
+        wrong_model_package["evidence"][1]["applicable_models"] = ["CZ-R2"]
+        wrong_model_score = stage12_eval.score_case(
+            bound_entry["case"], wrong_model_package, 0, 1
+        )
+        self.assertIn("source_sections_mismatch", wrong_model_score["failure_codes"])
+
+        missing_plan_package = json.loads(json.dumps(bound_entry["package"]))
+        missing_plan_package["answer"]["obligation_plan"] = [
+            missing_plan_package["answer"]["obligation_plan"][0]
+        ]
+        missing_plan_score = stage12_eval.score_case(
+            bound_entry["case"], missing_plan_package, 0, 1
+        )
+        self.assertIn("source_sections_mismatch", missing_plan_score["failure_codes"])
+
     def test_matched_boundary_handoff_uses_handoff_scoring_profile(self) -> None:
         case = {
             "case_id": "STG12-TEST-MH-001",
@@ -436,11 +503,22 @@ class Stage12EvalTest(unittest.TestCase):
         )
 
     def test_missing_required_fact_is_reported(self) -> None:
-        cases, responses = self._passing_pair()
-        cases[0]["expected"]["required_facts"] = ["正文中绝不存在的事实片段zz"]
-        code, report, _ = self._write_run("fact", cases, responses)
-        self.assertEqual(code, 1)
-        self.assertIn("required_fact_missing", report["cases"][0]["failure_codes"])
+        fixture = json.loads(
+            (
+                REPO_ROOT
+                / "evals"
+                / "fixtures"
+                / "stage12-obligation-source-equivalent-v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        entry = next(
+            entry
+            for entry in fixture["cases"]
+            if entry["kind"] == "visible_fact_missing_only"
+        )
+        score = stage12_eval.score_case(entry["case"], entry["package"], 0, 1)
+        self.assertEqual(score["failure_codes"], ["required_fact_missing"])
+        self.assertEqual(score["detail"]["missing_required_obligation_ordinals"], [])
 
     def test_required_fact_scoring_normalizes_nfkc_punctuation(self) -> None:
         self.assertEqual(
@@ -755,6 +833,88 @@ class Stage12PublishedAggregateTest(unittest.TestCase):
                 "historical_aggregate_modified": False,
                 "new_model_output": False,
                 "new_stage12_run": False,
+                "use": "regression_only",
+            },
+        )
+
+    def test_obligation_source_rescore_receipt_is_bounded(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-obligation-source-rescore-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "93a3a0b9b2efa45abf7e141b76754c4fbf40a39559541bcb90f3429f950897fb",
+        )
+        self.assertEqual(payload["mode"], "offline_rescore_existing_packages")
+        self.assertEqual(payload["provider_calls"], 0)
+        self.assertEqual(payload["automatic_retry_count"], 0)
+        self.assertEqual(payload["cases_rescored"], 24)
+        self.assertEqual(payload["changed_case_count"], 6)
+        self.assertEqual(payload["unchanged_case_count"], 18)
+        self.assertEqual(payload["before"]["passed_cases"], 6)
+        self.assertEqual(payload["before"]["failure_occurrences"], 31)
+        self.assertEqual(payload["after"]["passed_cases"], 6)
+        self.assertEqual(payload["after"]["failure_occurrences"], 28)
+        self.assertEqual(
+            payload["after"]["failure_counts"],
+            {
+                "outcome_mismatch": 8,
+                "required_fact_missing": 8,
+                "required_obligation_missing": 4,
+                "source_sections_mismatch": 8,
+            },
+        )
+        self.assertEqual(
+            [change["case_id"] for change in payload["changes"]],
+            [
+                "STG12-01-MSQ-002",
+                "STG12-01-MSQ-003",
+                "STG12-01-ATK-002",
+                "STG12-01-ATK-003",
+                "STG12-01-SO-001",
+                "STG12-01-SO-003",
+            ],
+        )
+        self.assertEqual(
+            sum(
+                change["root_cause"] in {
+                    "obligation_planning",
+                    "obligation_planning_and_bound_extra_source",
+                }
+                for change in payload["changes"]
+            ),
+            4,
+        )
+        self.assertEqual(
+            sum(
+                change["root_cause"] in {
+                    "bound_extra_source",
+                    "obligation_planning_and_bound_extra_source",
+                }
+                for change in payload["changes"]
+            ),
+            3,
+        )
+        for source_key, path_key in (
+            ("historical_aggregate_sha256", "historical_aggregate"),
+            ("previous_rescore_sha256", "previous_rescore"),
+            ("generation_shape_receipt_sha256", "generation_shape_receipt"),
+            ("public_fixture_sha256", "public_fixture"),
+        ):
+            source_path = REPO_ROOT / payload["source"][path_key]
+            self.assertEqual(
+                hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                payload["source"][source_key],
+            )
+        self.assertEqual(
+            payload["boundary"],
+            {
+                "historical_aggregate_modified": False,
+                "previous_rescore_modified": False,
+                "generation_shape_receipt_modified": False,
+                "new_model_output": False,
+                "new_stage12_run": False,
+                "product_generation_changed": False,
+                "product_outcome_changed": False,
                 "use": "regression_only",
             },
         )
