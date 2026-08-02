@@ -1,6 +1,6 @@
 # 结果
 
-> 状态：`candidate_local_green`
+> 状态：`candidate_ci_green`
 
 ## 决策表已编译
 
@@ -58,3 +58,11 @@ answer / proposal 均为空。
 
 不能证明：历史 Stage 12 通过数或模型回答得到改善、规则覆盖任意开放表达、线上成功率上升，
 或 `product/0.1.0` 已达到发布条件。本切片没有运行模型或生产验证。
+
+## Draft PR 实现回执
+
+实现 head `ace8a0e90044e6968d93cccd765ed2ad9b791580` 已推送到既有 Draft PR #62；
+`ci-release` run `30762836230` 的 governance、web、api、containers 全部成功，publish 因
+Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
+
+本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。

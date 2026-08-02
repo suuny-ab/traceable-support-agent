@@ -13,5 +13,5 @@
   方案级疑问需要 Reviewer。
 - 新字段是 additive：candidate 的 `handoff_type=null`，已有 handoff reason / outcome 不变；
   生成失败统一投影为 `generation_failure`，确定性边界使用细分 type。
-- 当前结论只到本地候选；实现 head 与最终状态 head 的 required Checks 尚未形成，不能写成
-  可合并或可部署候选。
+- 实现 head `ace8a0e90044e6968d93cccd765ed2ad9b791580` 的 CI 四项 required jobs 全绿；本状态
+  回执会形成最终 head，仍须确认该 head Checks。PR 继续保持 Draft，不能写成可合并或可部署。
