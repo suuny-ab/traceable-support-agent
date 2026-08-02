@@ -42,7 +42,7 @@ GitHub main → CI → GHCR linux/amd64 images → release manifest
 
 部署使用受限服务器用户与 GitHub production environment。服务器主机、用户和私钥作为 Actions secrets 保存；服务器匿名拉取公开 GHCR 镜像。
 
-`main` 的 `ci-release` 全部成功后，GitHub 自动把该次运行的不可变发布清单送入生产环境并直接部署；PR、失败运行、非 `main` push 和其他仓库来源均不得进入该队列。自动路径把清单精确绑定到触发运行的 ID、Git SHA 和运行尝试号；手动恢复路径至少把清单绑定到用户选择的运行 ID，再验证清单自洽且提交属于 `main`。`production` environment 只接受受保护分支，不再要求逐次人工 reviewer；这是用户明确授予的常设 R2 自动部署授权。手动 `workflow_dispatch` 入口只作为有界恢复通道保留，并与自动路径共享清单、健康和回滚门。
+`main` 的 `ci-release` 全部成功后，GitHub 自动把该次运行的不可变发布清单送入生产环境并直接部署；PR、失败运行、非 `main` push 和其他仓库来源均不得进入该队列。自动路径把清单精确绑定到触发运行的 ID、Git SHA 和运行尝试号；手动恢复路径至少把清单绑定到用户选择的运行 ID，再验证清单自洽且提交属于 `main`。`production` environment 只接受受保护分支，不要求逐次人工 reviewer；本段只描述执行机制，不授予候选权限，授权默认值的唯一正文见 [`review.md`](review.md#授权层唯一默认值正文)。手动 `workflow_dispatch` 入口只作为有界恢复通道保留，并与自动路径共享清单、健康和回滚门。
 
 每次 PR 和 `main` 运行都会先生成不可变 `release-decision`，绑定 schema、Git SHA、GitHub
 run ID / attempt、影响分类、是否部署和规范化变化路径哈希。只有明确列入白名单的仓库治理
