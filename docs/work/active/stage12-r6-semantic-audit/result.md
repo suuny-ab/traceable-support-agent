@@ -78,3 +78,11 @@
 - Provider 调用 0、自动重试 0、费用 0；未修改 scorer、产品或历史评测资产。
 
 本地候选已绿；待提交推送并确认 Draft PR #62 最终 head required Checks。
+
+## Draft PR 审计实现回执
+
+审计实现 head `1b9f67e3f1afe42f0d4d0de531092b84802ae809` 已推送到既有 Draft PR #62；
+`ci-release` run `30766175961` 的 governance、web、api、containers 四项 required jobs 全部
+成功，publish 因 Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
+
+本状态回执提交将形成最终 head；只确认该 head required Checks，全绿后停止。
