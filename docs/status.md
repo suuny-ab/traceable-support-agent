@@ -6,21 +6,22 @@
 | --- | --- |
 | `state` | `candidate` |
 | 更新时间 | `2026-08-02` |
-| 当前产品目标 | 不新增或重算数字，为当前公开量化结果与运行约束建立统一口径卡，使定义、方法、数据集、复跑属性、证据与否定边界可回查 |
+| 当前产品目标 | 用既有 Stage 12 runner 对同一已消费私有冻结集执行一次生成门修复后复验，并把新观测与原 `19/24、9 通过`并列，不倒写历史 |
 | 项目基线 | `origin/main@8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 当前治理结果 | PR [#61](https://github.com/suuny-ab/traceable-support-agent/pull/61) 已从精确 head `074bab2bb00268957321da40348a58fca1b82797` squash merge 为 `8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24`；main CI、部署与公网完整 SHA 已核验 |
-| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）已含三项夜班切片；数字口径卡实现 head `b01adb9b160bc07f1f1c9f5d330e861f0ebdb07f` 的 CI run `30753847922` 四项 required jobs 全绿，待回执提交后的最终 head Checks |
-| 活动工作 | [`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）：数字口径统一；[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）：冻结观察；[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
-| 风险 / 授权 | 本切片只复述已有公开数字，不形成新测量；HOLDOUT 继续只可回归。用户授权推送 `night-20260802` 和更新 Draft PR #62，不授权 Ready、合并、部署、Provider、费用或生产修改 |
-| Provider | `provider_enabled=true`；凭据仍仅在服务器 `/opt/traceable-support/provider.env`（0600）；预算日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0；本任务 Provider 调用 0 |
-| 阻碍 | 无；状态回执提交推送后只等待最终 head required Checks，PR 保持 Draft |
-| 当前证据 | 8 张卡 / 22 个仓库链接逐项一致；治理 114 / 8 skipped；公开仓 246 files / 8 public cases；园丁 stale 0 / review 1；实现 CI run `30753847922` 四项全绿；差异仅 docs；正式评测、Provider、generation、产品运行均为 0 |
+| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）；复验绑定候选 `df01968c56350626544ca4acc4ed88cf13dfd337`，后续只增加结果与状态回执并证明产品 / runner / prompt 身份未漂移 |
+| 活动工作 | [`stage12-post-fix-revalidation`](work/active/stage12-post-fix-revalidation/spec.md)（`docs/work/active/stage12-post-fix-revalidation/`）：一次真实复验；[`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）、[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）、[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
+| 风险 / 授权 | 完整 / R2；用户在夜班派发中批准既有 runner 的一次复验：DeepSeek `deepseek-v4-pro`、24 案例 / 150 调用 / ¥10 上限、自动重试 0、不补跑；只更新 Draft PR #62，不授权 Ready、合并、部署或发布 |
+| Provider | `provider_enabled=true`；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600）。本任务执行前调用 0；验证卡固定最多 24 案例、150 调用、机制估算 ¥10、整套 1 次、自动重试 0；凭据与私有输入只在 Git 外使用 |
+| 阻碍 | 无；镜像身份绑定后执行唯一一次复验，任一信封 / 身份 / 执行失败立即停止且不补跑 |
+| 当前证据 | 未见集冻结检查 24 题 / SHA `7d730...8ab0` 通过；runner 与 main blob 一致；Stage 12 定向测试 13 通过；旧响应离线回归完成 24 题且 Provider 0；真实复验待执行 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
+| `stage12-post-fix-revalidation` | `preflight_passed` | 构建并绑定 `df01968` live 镜像后执行唯一一次真实复验；不补跑 |
 | `public-metrics-card` | `candidate_ci_green` | 实现 head `b01adb9b` 与 run `30753847922` 全绿；待回执提交最终 head Checks，不自动 Ready / 合并 / 部署 |
 | `retrieval-unseen-holdout` | `observed_frozen` | 首次检索观察已落盘；只作回归，不改检索 / 题 / 标签 / 知识；待全集、治理和 Draft PR #62 最终 head Checks |
 | `minimal-observability` | `candidate` | Draft PR #62；等待最终 head 的 required Checks，不自动转 Ready、合并或部署 |
@@ -30,5 +31,5 @@
 
 ## 下一检查点
 
-本切片停止点：状态回执提交形成最终 head 后，确认 Draft PR #62 的 required Checks 全绿；
-不转 Ready、不合并、不部署。
+本切片停止点：唯一一次真实复验如实落盘、相关检查与 Draft PR #62 最终 head required Checks
+全绿；不转 Ready、不合并、不部署、不发布 `product/0.1.0`。
