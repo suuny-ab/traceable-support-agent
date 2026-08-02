@@ -11,6 +11,7 @@ from __future__ import annotations
 import math
 import os
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, Sequence
 
 if TYPE_CHECKING:
@@ -18,7 +19,20 @@ if TYPE_CHECKING:
 
 VECTOR_STORE_DSN_ENV = "TRACEABLE_RETRIEVAL_VECTOR_DSN"
 DEFAULT_TABLE = "traceable_retrieval_vectors"
+MIGRATIONS_TABLE = "traceable_retrieval_schema_migrations"
+SCHEMA_COMPONENT = "pgvector_dense_store"
+SCHEMA_VERSION = 1
 _TABLE_NAME_RE = re.compile(r"[a-z][a-z0-9_]*")
+
+
+class VectorStoreUnavailable(RuntimeError):
+    """Stable, credential-free boundary error for an unavailable backend."""
+
+
+@dataclass(frozen=True)
+class VectorStoreReadiness:
+    ready: bool
+    reason: str
 
 
 class VectorStore(Protocol):
@@ -31,6 +45,8 @@ class VectorStore(Protocol):
     def query(
         self, fingerprint: str, vector: Sequence[float], top_k: int
     ) -> list[tuple[str, float]]: ...
+
+    def readiness(self) -> VectorStoreReadiness: ...
 
 
 def _validate_vector(vector: Sequence[float], dimension: int) -> list[float]:
@@ -89,6 +105,12 @@ class PgVectorStore:
         if self._schema_ready:
             return
         connection.execute(
+            f"CREATE TABLE IF NOT EXISTS {MIGRATIONS_TABLE} ("
+            "component text PRIMARY KEY, "
+            "version integer NOT NULL CHECK (version > 0), "
+            "updated_at timestamptz NOT NULL DEFAULT now())"
+        )
+        connection.execute(
             f"CREATE TABLE IF NOT EXISTS {self._table} ("
             "fingerprint text NOT NULL, "
             "chunk_id text NOT NULL, "
@@ -99,7 +121,77 @@ class PgVectorStore:
             f"CREATE INDEX IF NOT EXISTS {self._table}_embedding_hnsw "
             f"ON {self._table} USING hnsw (embedding vector_cosine_ops)"
         )
+        connection.execute(
+            f"INSERT INTO {MIGRATIONS_TABLE} (component, version) VALUES (%s, %s) "
+            "ON CONFLICT (component) DO NOTHING",
+            (SCHEMA_COMPONENT, SCHEMA_VERSION),
+        )
         self._schema_ready = True
+
+    def _verify_schema(self, connection: psycopg.Connection[Any]) -> None:
+        health = connection.execute("SELECT 1").fetchone()
+        if health != (1,):
+            raise VectorStoreUnavailable("vector_store_health_invalid")
+        extension = connection.execute(
+            "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')"
+        ).fetchone()
+        if extension != (True,):
+            raise VectorStoreUnavailable("vector_store_extension_missing")
+        migration = connection.execute(
+            f"SELECT version FROM {MIGRATIONS_TABLE} WHERE component = %s",
+            (SCHEMA_COMPONENT,),
+        ).fetchone()
+        if migration != (SCHEMA_VERSION,):
+            raise VectorStoreUnavailable("vector_store_migration_invalid")
+        column_type = connection.execute(
+            "SELECT format_type(attribute.atttypid, attribute.atttypmod) "
+            "FROM pg_attribute AS attribute "
+            "WHERE attribute.attrelid = to_regclass(%s) "
+            "AND attribute.attname = 'embedding' AND NOT attribute.attisdropped",
+            (self._table,),
+        ).fetchone()
+        if column_type != (f"vector({self._dimension})",):
+            raise VectorStoreUnavailable("vector_store_dimension_mismatch")
+        primary_key = connection.execute(
+            "SELECT array_agg(attribute.attname ORDER BY key_column.ordinality) "
+            "FROM pg_constraint AS constraint_row "
+            "CROSS JOIN LATERAL unnest(constraint_row.conkey) "
+            "WITH ORDINALITY AS key_column(attnum, ordinality) "
+            "JOIN pg_attribute AS attribute "
+            "ON attribute.attrelid = constraint_row.conrelid "
+            "AND attribute.attnum = key_column.attnum "
+            "WHERE constraint_row.contype = 'p' "
+            "AND constraint_row.conrelid = to_regclass(%s)",
+            (self._table,),
+        ).fetchone()
+        if primary_key != (["fingerprint", "chunk_id"],):
+            raise VectorStoreUnavailable("vector_store_primary_key_invalid")
+        index_name = f"{self._table}_embedding_hnsw"
+        index_definition = connection.execute(
+            "SELECT indexdef FROM pg_indexes "
+            "WHERE schemaname = current_schema() AND tablename = %s AND indexname = %s",
+            (self._table, index_name),
+        ).fetchone()
+        if (
+            index_definition is None
+            or "USING hnsw (embedding vector_cosine_ops)" not in index_definition[0]
+        ):
+            raise VectorStoreUnavailable("vector_store_index_invalid")
+
+    def readiness(self) -> VectorStoreReadiness:
+        """Migrate and verify every prerequisite before the backend is selected."""
+
+        try:
+            with self._connect() as connection:
+                self._ensure_schema(connection)
+                self._verify_schema(connection)
+        except VectorStoreUnavailable as exc:
+            return VectorStoreReadiness(ready=False, reason=str(exc))
+        except Exception:
+            return VectorStoreReadiness(
+                ready=False, reason="vector_store_readiness_unavailable"
+            )
+        return VectorStoreReadiness(ready=True, reason="ready")
 
     def sync(
         self, fingerprint: str, items: Sequence[tuple[str, Sequence[float]]]
@@ -118,21 +210,24 @@ class PgVectorStore:
             raise ValueError("vector_store_chunk_id_duplicate")
         if not rows:
             return 0
-        from pgvector import Vector
+        try:
+            from pgvector import Vector
 
-        with self._connect() as connection:
-            self._ensure_schema(connection)
-            with connection.cursor() as cursor:
-                cursor.executemany(
-                    f"INSERT INTO {self._table} (fingerprint, chunk_id, embedding) "
-                    "VALUES (%s, %s, %s) "
-                    "ON CONFLICT (fingerprint, chunk_id) "
-                    "DO UPDATE SET embedding = EXCLUDED.embedding",
-                    [
-                        (fingerprint, chunk_id, Vector(values))
-                        for fingerprint, chunk_id, values in rows
-                    ],
-                )
+            with self._connect() as connection:
+                self._ensure_schema(connection)
+                with connection.cursor() as cursor:
+                    cursor.executemany(
+                        f"INSERT INTO {self._table} (fingerprint, chunk_id, embedding) "
+                        "VALUES (%s, %s, %s) "
+                        "ON CONFLICT (fingerprint, chunk_id) "
+                        "DO UPDATE SET embedding = EXCLUDED.embedding",
+                        [
+                            (fingerprint, chunk_id, Vector(values))
+                            for fingerprint, chunk_id, values in rows
+                        ],
+                    )
+        except Exception as exc:
+            raise VectorStoreUnavailable("vector_store_sync_unavailable") from exc
         return len(rows)
 
     def query(
@@ -143,19 +238,22 @@ class PgVectorStore:
         if not isinstance(top_k, int) or isinstance(top_k, bool) or top_k < 1:
             raise ValueError("vector_store_top_k_invalid")
         values = _validate_vector(vector, self._dimension)
-        from pgvector import Vector
+        try:
+            from pgvector import Vector
 
-        probe = Vector(values)
-        with self._connect() as connection:
-            self._ensure_schema(connection)
-            rows = connection.execute(
-                f"SELECT chunk_id, 1 - (embedding <=> %s) AS similarity "
-                f"FROM {self._table} "
-                "WHERE fingerprint = %s "
-                "ORDER BY embedding <=> %s, chunk_id "
-                "LIMIT %s",
-                (probe, fingerprint, probe, top_k),
-            ).fetchall()
+            probe = Vector(values)
+            with self._connect() as connection:
+                self._ensure_schema(connection)
+                rows = connection.execute(
+                    f"SELECT chunk_id, 1 - (embedding <=> %s) AS similarity "
+                    f"FROM {self._table} "
+                    "WHERE fingerprint = %s "
+                    "ORDER BY embedding <=> %s, chunk_id "
+                    "LIMIT %s",
+                    (probe, fingerprint, probe, top_k),
+                ).fetchall()
+        except Exception as exc:
+            raise VectorStoreUnavailable("vector_store_query_unavailable") from exc
         return [(str(chunk_id), float(similarity)) for chunk_id, similarity in rows]
 
 
@@ -172,8 +270,13 @@ def pgvector_store_from_env() -> PgVectorStore | None:
 
 __all__ = [
     "DEFAULT_TABLE",
+    "MIGRATIONS_TABLE",
+    "SCHEMA_COMPONENT",
+    "SCHEMA_VERSION",
     "VECTOR_STORE_DSN_ENV",
     "PgVectorStore",
     "VectorStore",
+    "VectorStoreReadiness",
+    "VectorStoreUnavailable",
     "pgvector_store_from_env",
 ]

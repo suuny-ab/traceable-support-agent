@@ -398,12 +398,21 @@ jobs:
         env:
           PYTHONPATH: api/src
           PGVECTOR_TEST_DSN: postgresql://traceable@127.0.0.1:5432/traceable_test
+          TRACEABLE_MODEL_ROOT: ${{ runner.temp }}/traceable-model/artifacts/models/fastembed/fast-bge-small-zh-v1.5
         run: |
-          python3 tools/ci_proof.py run \
+          set +e
+          status=0
+          python -m pytest api/tests/test_pgvector_store.py || status=1
+          if [[ "$status" == 0 ]]; then
+            python tools/retrieval_backend_compare.py \
+              --output "$RUNNER_TEMP/retrieval-backend-comparison-v1.json" || status=1
+          fi
+          python3 tools/ci_proof.py record \
             --claim api.pgvector-store \
             --category product \
-            --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
-            python -m pytest api/tests/test_pgvector_store.py
+            --exit-code "$status" \
+            --proof "$RUNNER_TEMP/ci-proof.jsonl"
+          exit "$status"
       - name: Run Stage 12 evaluation runner and freeze checker tests
         if: steps.impact.outputs.classification == 'runtime'
         env:

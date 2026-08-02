@@ -33,3 +33,21 @@ def test_http_main_keeps_replay_only_without_the_explicit_switch(monkeypatch):
 
     monkeypatch.delenv("TRACEABLE_PUBLIC_LIVE_ENABLED", raising=False)
     assert http._parse_bool(os.environ.get("TRACEABLE_PUBLIC_LIVE_ENABLED")) is False
+
+
+def test_unavailable_pgvector_does_not_disable_the_live_dependency_gate(
+    monkeypatch, tmp_path
+):
+    for name in live_assembly.EXPECTED_KNOWLEDGE_FILES:
+        (tmp_path / name).write_text("synthetic", encoding="utf-8")
+    monkeypatch.setenv(live_assembly.CREDENTIAL_ENV, "placeholder-not-read")
+    monkeypatch.setenv(
+        "TRACEABLE_RETRIEVAL_VECTOR_DSN",
+        "postgresql://unreachable.invalid/traceable",
+    )
+    monkeypatch.setattr(live_assembly, "KNOWLEDGE_DIR", tmp_path)
+    monkeypatch.setattr(live_assembly, "load_local_model_manifest", lambda: {})
+    monkeypatch.setattr(live_assembly, "validate_local_model_files", lambda manifest: tmp_path)
+    monkeypatch.setattr(live_assembly.importlib.util, "find_spec", lambda name: object())
+
+    assert live_assembly.live_dependencies_ready() is True

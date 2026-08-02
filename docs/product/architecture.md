@@ -13,7 +13,7 @@ Run service / SQLite / budget / queue
     ↓
 ProductRunner
     ├─ Boundary: deterministic safety / model-scope handoff
-    ├─ Retrieval: model filter + BM25/BGE/RRF
+    ├─ Retrieval: model filter + BM25/BGE/RRF + readiness-gated pgvector/memory fallback
     ├─ Generation: semantic obligation/clause selection → customer-visible candidate
     ├─ Provider: DeepSeek transport + usage/budget
     └─ Validation: source, LLM-declared visible span, obligation, schema and handoff gates
@@ -31,10 +31,17 @@ ProductRunner
 - `traceable_support.provider`：负责传输合同、DeepSeek 适配、用量与原子预算。
 - `evals`：承载公开回归和未来评测适配器；它依赖产品层，产品层不得反向依赖它。
 
+稠密检索始终使用同一份本地 BGE 模型和模型预过滤。生产配置提供仅容器内部可达的
+PostgreSQL + pgvector 存储；DSN、连接、迁移版本、向量维度、复合主键、HNSW cosine 索引
+和数据库健康全部通过才启用。启动检查或运行中同步 / 查询失败时，同一请求回到已计算的
+进程内向量，公开 API 和 Provider 边界不随存储后端改变。
+
 ## 公开状态
 
 一次运行依次经过 `queued → preflight → retrieving → planning → generating → validating → completed|handoff`。Provider 关闭时，合法输入返回 `503 live_experience_unavailable`，Web 则提供明确标注的独立回放。敏感输入、声明的安全事件或型号独占能力冲突触发前置转人工时，不构造 transport、不调用 Provider，并以稳定原因码确定性完成。
 
 ## 部署
 
-Web 与回放 API 使用两个独立的非 root 镜像。Caddy 终止 HTTPS 并代理同源请求。SQLite 是单节点持久化层；本项目不宣称多节点一致性或生产级高可用。
+Web 与回放 API 使用两个独立的非 root 镜像。Caddy 终止 HTTPS 并代理同源请求。SQLite 是
+运行记录的单节点持久化层；pgvector 只保存公开合成知识的可再生 embedding。本项目不宣称
+多节点一致性或生产级高可用。
