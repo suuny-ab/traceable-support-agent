@@ -85,3 +85,11 @@ Top-10 未出现冻结期望来源 / 事实缺失；至少存在评分合同错�
 - Provider 调用 0、自动重试 0、费用 0；未修改代码、评测资产、prompt、Workflow 或知识。
 
 本地候选已绿；待提交、推送并确认 Draft PR #62 最终 head required Checks。
+
+## Draft PR 实现回执
+
+文档实现 head `8b5d1e6ef37ea4c1d0aba3da63471027c5b1933e` 已推送到既有 Draft PR #62；
+`ci-release` run `30757693288` 的 governance、web、api、containers 全部成功，publish 因
+Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
+
+本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。
