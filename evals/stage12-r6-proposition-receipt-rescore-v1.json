@@ -1,0 +1,84 @@
+{
+  "schema_version": "stage12-r6-proposition-receipt-rescore-v1",
+  "mode": "offline_rescore_existing_packages",
+  "source": {
+    "historical_aggregate": "evals/stage12-night-fixes-revalidation-v1.json",
+    "historical_aggregate_sha256": "b4de502835e5142c62efccbf52a331f844869239de6e7a83b397c4f6cd9367e8",
+    "semantic_audit": "evals/stage12-r6-semantic-audit-v1.json",
+    "semantic_audit_sha256": "80b01635b527c0ba5d64fda2fe746628d84b19379283cc1dd7642085c0522132",
+    "public_fixture": "evals/fixtures/stage12-proposition-receipt-equivalent-v1.json",
+    "public_fixture_sha256": "50597e8466754b2c3841a1d09ad4ebe46780cf2b68d1de0e639dbd29efe48a77",
+    "scorer": "tools/stage12_eval.py",
+    "scorer_sha256": "2adc6b5522f9a4488c005273b0286da09351ea8bca872c30317a3efe582bef3a",
+    "raw_records_sha256": "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850"
+  },
+  "cases_rescored": 24,
+  "provider_calls": 0,
+  "automatic_retry_count": 0,
+  "changed_case_count": 6,
+  "unchanged_case_count": 18,
+  "before": {
+    "passed_cases": 11,
+    "failure_occurrences": 14,
+    "failure_counts": {
+      "outcome_mismatch": 1,
+      "required_fact_missing": 6,
+      "required_obligation_missing": 6,
+      "source_sections_mismatch": 1
+    }
+  },
+  "after_regression_view": {
+    "passed_cases": 17,
+    "failure_occurrences": 8,
+    "failure_counts": {
+      "outcome_mismatch": 1,
+      "required_obligation_missing": 6,
+      "source_sections_mismatch": 1
+    }
+  },
+  "r6": {
+    "registered_cases": 6,
+    "passing_under_candidate_scorer": 6,
+    "cases": [
+      {
+        "case_id": "STG12-01-MSQ-001",
+        "removed_failure_codes": ["required_fact_missing"],
+        "added_failure_codes": []
+      },
+      {
+        "case_id": "STG12-01-SCQ-001",
+        "removed_failure_codes": ["required_fact_missing"],
+        "added_failure_codes": []
+      },
+      {
+        "case_id": "STG12-01-SCQ-002",
+        "removed_failure_codes": ["required_fact_missing"],
+        "added_failure_codes": []
+      },
+      {
+        "case_id": "STG12-01-ATK-003",
+        "removed_failure_codes": ["required_fact_missing"],
+        "added_failure_codes": []
+      },
+      {
+        "case_id": "STG12-01-SO-002",
+        "removed_failure_codes": ["required_fact_missing"],
+        "added_failure_codes": []
+      },
+      {
+        "case_id": "STG12-01-SO-003",
+        "removed_failure_codes": ["required_fact_missing"],
+        "added_failure_codes": []
+      }
+    ]
+  },
+  "boundary": {
+    "historical_aggregate_modified": false,
+    "new_stage12_run": false,
+    "new_model_output": false,
+    "new_quality_claim": false,
+    "product_generation_changed": false,
+    "product_outcome_changed": false,
+    "use": "consumed_set_scorer_regression_only"
+  }
+}

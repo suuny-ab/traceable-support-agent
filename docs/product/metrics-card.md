@@ -68,6 +68,11 @@
   `required_obligation_missing`，失败码出现次数 31→28。它只提高机械归因分辨率，不表示回答
   修复或模型改善；脱敏回执见
   [`stage12-obligation-source-rescore-v1.json`](../../evals/stage12-obligation-source-rescore-v1.json)。
+- **R6 命题绑定收据离线回归**：同一 24 份今夜已消费 package 只替换 scorer 的客户可见字面
+  子串门；六个审计登记的 R6 案例只移除 `required_fact_missing`，其余 18 例逐题不变。候选
+  scorer 视图为 17 通过 / 8 个失败码，但不是新评测或新质量分数；历史 11 通过 / 14 码不改。
+  脱敏回执见
+  [`stage12-r6-proposition-receipt-rescore-v1.json`](../../evals/stage12-r6-proposition-receipt-rescore-v1.json)。
 - **今夜修复后唯一复跑**：六个预登记 typed handoff 全部命中、均 0 Provider 调用并满足
   冻结评分；连同既有边界共 10 个零调用案例。首次复验的 2 通过 / 37 码、matched-handoff
   重评分的 6 通过 / 31 码、最新 obligation/source 重评分的 6 通过 / 28 码与本轮 11 通过 /

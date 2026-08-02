@@ -70,8 +70,15 @@ Stage 12 历史 `top10_v6_content_invalid` 只保留了失败码，没有 Provid
 不能恢复历史响应、判断历史案例命中的精确分支或形成新的 Stage 12 / 模型质量结论。
 
 Stage 12 candidate 评分还分离两个 host-owned 账本。冻结必需事实必须由同一 obligation 的
-有序 approved source spans 完整承接，否则报 `required_obligation_missing`；规划完整但正文
-字面缺失仍报 `required_fact_missing`。来源评分要求全部冻结必需来源出现；额外来源只有在
-产品型号适用、进入 host-derived used evidence、由 claim 使用且被每个绑定 obligation 批准时
-才不误扣。缺必需来源、无绑定 extra 或 outcome 不匹配继续失败。这是已消费 package 的离线
-评分合同，不修改生成或产品 outcome，也不形成新 Stage 12 质量观测。
+有序 approved source spans 完整承接，否则报 `required_obligation_missing`；承接 obligation
+存在时，scorer 不再搜索客户可见正文的字面子串，而是核对 checklist / obligation plan、used
+evidence 与 claim 的真实 ID、范围及完整性。没有覆盖 proposition 所需 evidence 的合法绑定
+收据时报 `required_proposition_binding_missing`。host 只证明绑定存在、身份和范围，不证明
+claim 开放域语义真实；人工最终决定不变。来源评分要求全部冻结必需来源出现；额外来源只有在
+产品型号适用、进入 host-derived used evidence、由 claim 使用且被绑定 obligation 批准时才不
+误扣。缺必需来源、无绑定 extra 或 outcome 不匹配继续失败。这是已消费 package 的离线评分
+合同，不修改生成或产品 outcome，也不形成新 Stage 12 质量观测。
+
+公开合成正反例固定自然改写通过、缺 obligation / claim、越源与伪造 ID 失败关闭。已消费六个
+R6 案例只读重评分均移除旧 `required_fact_missing`，其余 18 例分类不变；17/24 只作候选 scorer
+回归视图，历史 24/24、11 通过和 14 个失败码保持原样。

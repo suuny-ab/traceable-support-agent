@@ -86,3 +86,9 @@
 成功，publish 因 Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
 
 本状态回执提交将形成最终 head；只确认该 head required Checks，全绿后停止。
+
+## 后续实现指针
+
+本审计冻结收据保持“方案尚未实现”的历史事实。后续获准切片已按本方案添加公开正反例、实现
+host 侧 proposition binding receipt，并对已消费六例只读回归；见
+[`stage12-r6-proposition-receipt/result.md`](../stage12-r6-proposition-receipt/result.md)。

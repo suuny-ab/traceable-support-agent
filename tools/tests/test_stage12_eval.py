@@ -321,9 +321,13 @@ class Stage12EvalTest(unittest.TestCase):
                 1,
             )
             scores[entry["kind"]] = score
+            expected_failure_codes = entry["expected_failure_codes"]
+            if entry["kind"] == "visible_fact_missing_only":
+                self.assertEqual(expected_failure_codes, ["required_fact_missing"])
+                expected_failure_codes = []
             self.assertEqual(
                 score["failure_codes"],
-                entry["expected_failure_codes"],
+                expected_failure_codes,
                 entry["case_id"],
             )
 
@@ -503,23 +507,46 @@ class Stage12EvalTest(unittest.TestCase):
             score["detail"]["scoring_profile"], "full_candidate_contract"
         )
 
-    def test_missing_required_fact_is_reported(self) -> None:
+    def test_missing_required_proposition_binding_is_reported(self) -> None:
         fixture = json.loads(
             (
                 REPO_ROOT
                 / "evals"
                 / "fixtures"
-                / "stage12-obligation-source-equivalent-v1.json"
+                / "stage12-proposition-receipt-equivalent-v1.json"
             ).read_text(encoding="utf-8")
         )
         entry = next(
             entry
             for entry in fixture["cases"]
-            if entry["kind"] == "visible_fact_missing_only"
+            if entry["kind"] == "missing_claim"
         )
         score = stage12_eval.score_case(entry["case"], entry["package"], 0, 1)
-        self.assertEqual(score["failure_codes"], ["required_fact_missing"])
+        self.assertEqual(
+            score["failure_codes"], ["required_proposition_binding_missing"]
+        )
         self.assertEqual(score["detail"]["missing_required_obligation_ordinals"], [])
+        self.assertEqual(
+            score["detail"]["missing_required_proposition_binding_ordinals"], [0]
+        )
+
+    def test_public_proposition_receipt_contracts(self) -> None:
+        fixture = json.loads(
+            (
+                REPO_ROOT
+                / "evals"
+                / "fixtures"
+                / "stage12-proposition-receipt-equivalent-v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        for entry in fixture["cases"]:
+            with self.subTest(kind=entry["kind"]):
+                score = stage12_eval.score_case(
+                    entry["case"], entry["package"], 0, 1
+                )
+                self.assertEqual(
+                    score["failure_codes"], entry["expected_failure_codes"]
+                )
 
     def test_required_fact_scoring_normalizes_nfkc_punctuation(self) -> None:
         self.assertEqual(
@@ -956,6 +983,95 @@ class Stage12PublishedAggregateTest(unittest.TestCase):
                     walk(child)
 
         walk(payload)
+
+    def test_r6_proposition_receipt_rescore_is_bounded_and_frozen(self) -> None:
+        path = (
+            REPO_ROOT
+            / "evals"
+            / "stage12-r6-proposition-receipt-rescore-v1.json"
+        )
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "1c8fc3db786114665c48ef475ad3956f6b9011db67912c08c82ffa40ab47c273",
+        )
+        self.assertEqual(payload["mode"], "offline_rescore_existing_packages")
+        self.assertEqual(payload["provider_calls"], 0)
+        self.assertEqual(payload["automatic_retry_count"], 0)
+        self.assertEqual(payload["cases_rescored"], 24)
+        self.assertEqual(payload["changed_case_count"], 6)
+        self.assertEqual(payload["unchanged_case_count"], 18)
+        self.assertEqual(payload["before"]["passed_cases"], 11)
+        self.assertEqual(payload["before"]["failure_occurrences"], 14)
+        self.assertEqual(
+            payload["before"]["failure_counts"],
+            {
+                "outcome_mismatch": 1,
+                "required_fact_missing": 6,
+                "required_obligation_missing": 6,
+                "source_sections_mismatch": 1,
+            },
+        )
+        self.assertEqual(payload["after_regression_view"]["passed_cases"], 17)
+        self.assertEqual(
+            payload["after_regression_view"]["failure_occurrences"], 8
+        )
+        self.assertEqual(
+            payload["after_regression_view"]["failure_counts"],
+            {
+                "outcome_mismatch": 1,
+                "required_obligation_missing": 6,
+                "source_sections_mismatch": 1,
+            },
+        )
+        expected_ids = {
+            "STG12-01-MSQ-001",
+            "STG12-01-SCQ-001",
+            "STG12-01-SCQ-002",
+            "STG12-01-ATK-003",
+            "STG12-01-SO-002",
+            "STG12-01-SO-003",
+        }
+        self.assertEqual(payload["r6"]["registered_cases"], 6)
+        self.assertEqual(payload["r6"]["passing_under_candidate_scorer"], 6)
+        self.assertEqual(
+            {case["case_id"] for case in payload["r6"]["cases"]},
+            expected_ids,
+        )
+        self.assertTrue(
+            all(
+                case["removed_failure_codes"] == ["required_fact_missing"]
+                and case["added_failure_codes"] == []
+                for case in payload["r6"]["cases"]
+            )
+        )
+        for hash_key, path_key in (
+            ("historical_aggregate_sha256", "historical_aggregate"),
+            ("semantic_audit_sha256", "semantic_audit"),
+            ("public_fixture_sha256", "public_fixture"),
+            ("scorer_sha256", "scorer"),
+        ):
+            source_path = REPO_ROOT / payload["source"][path_key]
+            self.assertEqual(
+                hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                payload["source"][hash_key],
+            )
+        self.assertEqual(
+            payload["source"]["raw_records_sha256"],
+            "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850",
+        )
+        self.assertEqual(
+            payload["boundary"],
+            {
+                "historical_aggregate_modified": False,
+                "new_stage12_run": False,
+                "new_model_output": False,
+                "new_quality_claim": False,
+                "product_generation_changed": False,
+                "product_outcome_changed": False,
+                "use": "consumed_set_scorer_regression_only",
+            },
+        )
 
     def test_handoff_contract_rescore_receipt_is_bounded(self) -> None:
         path = REPO_ROOT / "evals" / "stage12-handoff-contract-rescore-v1.json"

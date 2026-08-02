@@ -308,34 +308,289 @@ def _missing_required_obligation_ordinals(
 ) -> list[int]:
     """Check whether one obligation completely carries each frozen fact."""
 
+    obligation_ids_by_ordinal = _required_obligation_ids_by_ordinal(
+        package, required_facts
+    )
+    return [
+        index
+        for index, obligation_ids in enumerate(obligation_ids_by_ordinal)
+        if not obligation_ids
+    ]
+
+
+def _required_obligation_ids_by_ordinal(
+    package: dict[str, Any], required_facts: list[str]
+) -> list[list[str]]:
+    """Map frozen propositions to obligations that completely carry them."""
+
+    return [
+        [entry["obligation_id"] for entry in entries]
+        for entries in _required_obligation_receipts_by_ordinal(
+            package, required_facts
+        )
+    ]
+
+
+def _required_obligation_receipts_by_ordinal(
+    package: dict[str, Any], required_facts: list[str]
+) -> list[list[dict[str, Any]]]:
+    """Map propositions to carrying obligations and the evidence they require."""
+
     checklist = package.get("checklist")
     if type(checklist) is not dict or type(checklist.get("obligations")) is not list:
-        return list(range(len(required_facts)))
-    obligation_texts: list[str] = []
+        return [[] for _ in required_facts]
+    obligation_spans: list[tuple[str, list[dict[str, Any]]]] = []
+    seen_ids: set[str] = set()
     for obligation in checklist["obligations"]:
         if type(obligation) is not dict:
             continue
+        obligation_id = obligation.get("obligation_id")
         spans = obligation.get("approved_source_spans")
         if (
-            type(spans) is not list
+            type(obligation_id) is not str
+            or not obligation_id
+            or obligation_id in seen_ids
+            or type(spans) is not list
             or not spans
             or any(
                 type(span) is not dict
                 or type(span.get("clause_id")) is not str
                 or type(span.get("exact_span_text")) is not str
+                or type(span.get("evidence_id")) is not str
                 for span in spans
             )
         ):
             continue
+        seen_ids.add(obligation_id)
         ordered = sorted(spans, key=lambda span: span["clause_id"])
-        obligation_texts.append(
-            _score_text("".join(span["exact_span_text"] for span in ordered))
-        )
-    return [
-        index
-        for index, fact in enumerate(required_facts)
-        if not any(_score_text(fact) in text for text in obligation_texts)
-    ]
+        obligation_spans.append((obligation_id, ordered))
+
+    receipts_by_ordinal: list[list[dict[str, Any]]] = []
+    for fact in required_facts:
+        normalized_fact = _score_text(fact)
+        proposition_receipts: list[dict[str, Any]] = []
+        for obligation_id, spans in obligation_spans:
+            matching_windows: list[tuple[int, int, list[str]]] = []
+            for start in range(len(spans)):
+                for end in range(start + 1, len(spans) + 1):
+                    window = spans[start:end]
+                    window_text = _score_text(
+                        "".join(span["exact_span_text"] for span in window)
+                    )
+                    if normalized_fact in window_text:
+                        matching_windows.append(
+                            (
+                                end - start,
+                                start,
+                                list(
+                                    dict.fromkeys(
+                                        span["evidence_id"] for span in window
+                                    )
+                                ),
+                            )
+                        )
+            if matching_windows:
+                _, _, required_evidence_ids = min(matching_windows)
+                proposition_receipts.append({
+                    "obligation_id": obligation_id,
+                    "required_evidence_ids": required_evidence_ids,
+                })
+        receipts_by_ordinal.append(proposition_receipts)
+    return receipts_by_ordinal
+
+
+def _unique_nonempty_strings(value: Any) -> bool:
+    return (
+        type(value) is list
+        and bool(value)
+        and all(type(item) is str and bool(item) for item in value)
+        and len(value) == len(set(value))
+    )
+
+
+def _proposition_binding_receipts(
+    package: dict[str, Any],
+    task_type: str,
+    obligation_receipts_by_ordinal: list[list[dict[str, Any]]],
+) -> tuple[list[dict[str, Any]], list[int]]:
+    """Verify claim/evidence receipts for every obligation-backed proposition."""
+
+    result = _candidate_result(package, task_type)
+    checklist = package.get("checklist")
+    evidence = package.get("evidence")
+    if (
+        type(result) is not dict
+        or type(checklist) is not dict
+        or type(checklist.get("obligations")) is not list
+        or type(evidence) is not list
+        or type(result.get("obligation_plan")) is not list
+        or type(result.get("used_evidence_ids")) is not list
+        or type(result.get("content")) is not dict
+        or type(result["content"].get("claims")) is not list
+    ):
+        return [], [
+            index
+            for index, obligation_receipts in enumerate(
+                obligation_receipts_by_ordinal
+            )
+            if obligation_receipts
+        ]
+
+    evidence_ids = {
+        entry.get("evidence_id")
+        for entry in evidence
+        if type(entry) is dict and type(entry.get("evidence_id")) is str
+    }
+    used_evidence_ids = result["used_evidence_ids"]
+    if not _unique_nonempty_strings(used_evidence_ids):
+        used_evidence_ids = []
+    used_evidence_id_set = set(used_evidence_ids)
+
+    checklist_by_id: dict[str, dict[str, Any]] = {}
+    duplicate_checklist_ids: set[str] = set()
+    for obligation in checklist["obligations"]:
+        if (
+            type(obligation) is not dict
+            or type(obligation.get("obligation_id")) is not str
+        ):
+            continue
+        obligation_id = obligation["obligation_id"]
+        if obligation_id in checklist_by_id:
+            duplicate_checklist_ids.add(obligation_id)
+        checklist_by_id[obligation_id] = obligation
+
+    plan_by_id: dict[str, dict[str, Any]] = {}
+    duplicate_plan_ids: set[str] = set()
+    for entry in result["obligation_plan"]:
+        if type(entry) is not dict or type(entry.get("obligation_id")) is not str:
+            continue
+        obligation_id = entry["obligation_id"]
+        if obligation_id in plan_by_id:
+            duplicate_plan_ids.add(obligation_id)
+        plan_by_id[obligation_id] = entry
+
+    claims = result["content"]["claims"]
+    claim_id_counts: dict[str, int] = {}
+    for claim in claims:
+        if type(claim) is dict and type(claim.get("claim_id")) is str:
+            claim_id = claim["claim_id"]
+            claim_id_counts[claim_id] = claim_id_counts.get(claim_id, 0) + 1
+    receipts: list[dict[str, Any]] = []
+    missing: list[int] = []
+    for ordinal, proposition_obligation_receipts in enumerate(
+        obligation_receipts_by_ordinal
+    ):
+        if not proposition_obligation_receipts:
+            continue
+        valid_claim_ids: list[str] = []
+        valid_obligation_ids: list[str] = []
+        for obligation_receipt in proposition_obligation_receipts:
+            target_obligation_id = obligation_receipt["obligation_id"]
+            required_evidence_ids = set(
+                obligation_receipt["required_evidence_ids"]
+            )
+            if (
+                target_obligation_id in duplicate_checklist_ids
+                or target_obligation_id in duplicate_plan_ids
+                or target_obligation_id not in checklist_by_id
+                or target_obligation_id not in plan_by_id
+            ):
+                continue
+            checklist_evidence_ids = checklist_by_id[target_obligation_id].get(
+                "evidence_ids"
+            )
+            plan_evidence_ids = plan_by_id[target_obligation_id].get("evidence_ids")
+            if (
+                not _unique_nonempty_strings(checklist_evidence_ids)
+                or not _unique_nonempty_strings(plan_evidence_ids)
+                or set(checklist_evidence_ids) != set(plan_evidence_ids)
+            ):
+                continue
+            allowed_evidence_ids = set(checklist_evidence_ids)
+            if (
+                not required_evidence_ids
+                or not required_evidence_ids <= allowed_evidence_ids
+                or not allowed_evidence_ids <= evidence_ids
+                or not allowed_evidence_ids <= used_evidence_id_set
+            ):
+                continue
+            obligation_claim_ids: list[str] = []
+            obligation_claim_evidence_ids: set[str] = set()
+            for claim in claims:
+                if type(claim) is not dict:
+                    continue
+                claim_id = claim.get("claim_id")
+                claim_evidence_ids = claim.get("evidence_ids")
+                claim_obligation_ids = claim.get("obligation_ids")
+                if (
+                    type(claim_id) is not str
+                    or not claim_id
+                    or claim_id_counts.get(claim_id) != 1
+                    or not _unique_nonempty_strings(claim_evidence_ids)
+                    or not _unique_nonempty_strings(claim_obligation_ids)
+                    or target_obligation_id not in claim_obligation_ids
+                ):
+                    continue
+                if any(
+                    obligation_id in duplicate_checklist_ids
+                    or obligation_id in duplicate_plan_ids
+                    or obligation_id not in checklist_by_id
+                    or obligation_id not in plan_by_id
+                    for obligation_id in claim_obligation_ids
+                ):
+                    continue
+                bound_evidence_ids: set[str] | None = None
+                invalid_bound_obligation = False
+                for obligation_id in claim_obligation_ids:
+                    bound_checklist_evidence_ids = checklist_by_id[
+                        obligation_id
+                    ].get("evidence_ids")
+                    bound_plan_evidence_ids = plan_by_id[obligation_id].get(
+                        "evidence_ids"
+                    )
+                    if (
+                        not _unique_nonempty_strings(
+                            bound_checklist_evidence_ids
+                        )
+                        or not _unique_nonempty_strings(bound_plan_evidence_ids)
+                        or set(bound_checklist_evidence_ids)
+                        != set(bound_plan_evidence_ids)
+                    ):
+                        invalid_bound_obligation = True
+                        break
+                    approved_ids = set(bound_checklist_evidence_ids)
+                    if bound_evidence_ids is None:
+                        bound_evidence_ids = approved_ids
+                    else:
+                        bound_evidence_ids &= approved_ids
+                if (
+                    invalid_bound_obligation
+                    or bound_evidence_ids is None
+                    or any(
+                        evidence_id not in evidence_ids
+                        or evidence_id not in used_evidence_id_set
+                        or evidence_id not in bound_evidence_ids
+                        for evidence_id in claim_evidence_ids
+                    )
+                ):
+                    continue
+                obligation_claim_ids.append(claim_id)
+                obligation_claim_evidence_ids.update(claim_evidence_ids)
+            if (
+                obligation_claim_ids
+                and required_evidence_ids <= obligation_claim_evidence_ids
+            ):
+                valid_obligation_ids.append(target_obligation_id)
+                valid_claim_ids.extend(obligation_claim_ids)
+        receipt = {
+            "proposition_ordinal": ordinal,
+            "obligation_ids": sorted(set(valid_obligation_ids)),
+            "claim_ids": sorted(set(valid_claim_ids)),
+        }
+        receipts.append(receipt)
+        if not valid_obligation_ids:
+            missing.append(ordinal)
+    return receipts, missing
 
 
 def _estimated_cost_nanos(package: dict[str, Any]) -> int:
@@ -409,15 +664,28 @@ def score_case(
             if missing_obligations:
                 failures.append("required_obligation_missing")
 
-        visible = _score_text(_customer_visible_text(package, task_type))
-        missing_facts = [
-            index
-            for index, fact in enumerate(required_facts)
-            if _score_text(fact) not in visible
-        ]
-        if missing_facts:
-            detail["missing_required_fact_ordinals"] = missing_facts
-            if not missing_obligations:
+        if candidate_match and required_facts:
+            obligation_receipts_by_ordinal = (
+                _required_obligation_receipts_by_ordinal(package, required_facts)
+            )
+            receipts, missing_bindings = _proposition_binding_receipts(
+                package, task_type, obligation_receipts_by_ordinal
+            )
+            detail["required_proposition_receipts"] = receipts
+            detail["missing_required_proposition_binding_ordinals"] = (
+                missing_bindings
+            )
+            if missing_bindings:
+                failures.append("required_proposition_binding_missing")
+        elif required_facts:
+            visible = _score_text(_customer_visible_text(package, task_type))
+            missing_facts = [
+                index
+                for index, fact in enumerate(required_facts)
+                if _score_text(fact) not in visible
+            ]
+            if missing_facts:
+                detail["missing_required_fact_ordinals"] = missing_facts
                 failures.append("required_fact_missing")
 
         if task_type == "ticket":

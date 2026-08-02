@@ -1,0 +1,236 @@
+{
+  "schema_version": "stage12-proposition-receipt-equivalent-v1",
+  "purpose": "Synthetic packages for deterministic proposition, obligation, claim, and evidence receipt scoring.",
+  "cases": [
+    {
+      "case_id": "STG12-PUBLIC-PROP-PARAPHRASE-001",
+      "kind": "semantic_paraphrase",
+      "case": {
+        "task_type": "qa",
+        "product_model": "CZ-R1",
+        "expected": {
+          "outcome": "candidate",
+          "source_sections": ["SYNTH-GUIDE/two-step"],
+          "required_facts": ["先断电。再检查舱盖。"]
+        }
+      },
+      "package": {
+        "outcome": "candidate",
+        "handoff_reason": null,
+        "product_model": "CZ-R1",
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "document_id": "SYNTH-GUIDE",
+            "section_id": "two-step",
+            "applicable_models": ["CZ-R1"],
+            "text": "先断电。再检查舱盖。"
+          }
+        ],
+        "checklist": {
+          "obligations": [
+            {
+              "obligation_id": "o1",
+              "evidence_ids": ["E1"],
+              "approved_source_spans": [
+                {"clause_id": "c001", "evidence_id": "E1", "exact_span_text": "先断电。"},
+                {"clause_id": "c002", "evidence_id": "E1", "exact_span_text": "再检查舱盖。"}
+              ]
+            }
+          ]
+        },
+        "answer": {
+          "used_evidence_ids": ["E1"],
+          "obligation_plan": [
+            {"obligation_id": "o1", "evidence_ids": ["E1"]}
+          ],
+          "content": {
+            "answer": {"text": "请切断电源，随后查看舱门是否正常。"},
+            "claims": [
+              {
+                "claim_id": "c1",
+                "customer_visible_span_text": "请切断电源，随后查看舱门是否正常。",
+                "evidence_ids": ["E1"],
+                "obligation_ids": ["o1"]
+              }
+            ]
+          }
+        },
+        "usage": [],
+        "worst_cost_cny_nanos": 1
+      },
+      "baseline_failure_codes": ["required_fact_missing"],
+      "expected_failure_codes": []
+    },
+    {
+      "case_id": "STG12-PUBLIC-PROP-OBLIGATION-001",
+      "kind": "missing_obligation",
+      "case": {
+        "task_type": "qa",
+        "product_model": "CZ-R1",
+        "expected": {
+          "outcome": "candidate",
+          "source_sections": ["SYNTH-GUIDE/two-step"],
+          "required_facts": ["先断电。再检查舱盖。"]
+        }
+      },
+      "package": {
+        "outcome": "candidate",
+        "handoff_reason": null,
+        "product_model": "CZ-R1",
+        "evidence": [
+          {"evidence_id": "E1", "document_id": "SYNTH-GUIDE", "section_id": "two-step", "applicable_models": ["CZ-R1"], "text": "先断电。再检查舱盖。"}
+        ],
+        "checklist": {
+          "obligations": [
+            {"obligation_id": "o1", "evidence_ids": ["E1"], "approved_source_spans": [{"clause_id": "c001", "evidence_id": "E1", "exact_span_text": "先断电。"}]},
+            {"obligation_id": "o2", "evidence_ids": ["E1"], "approved_source_spans": [{"clause_id": "c002", "evidence_id": "E1", "exact_span_text": "再检查舱盖。"}]}
+          ]
+        },
+        "answer": {
+          "used_evidence_ids": ["E1"],
+          "obligation_plan": [
+            {"obligation_id": "o1", "evidence_ids": ["E1"]},
+            {"obligation_id": "o2", "evidence_ids": ["E1"]}
+          ],
+          "content": {
+            "answer": {"text": "先断电，再检查舱盖。"},
+            "claims": [
+              {"claim_id": "c1", "customer_visible_span_text": "先断电", "evidence_ids": ["E1"], "obligation_ids": ["o1"]},
+              {"claim_id": "c2", "customer_visible_span_text": "再检查舱盖", "evidence_ids": ["E1"], "obligation_ids": ["o2"]}
+            ]
+          }
+        },
+        "usage": [],
+        "worst_cost_cny_nanos": 1
+      },
+      "baseline_failure_codes": ["required_obligation_missing"],
+      "expected_failure_codes": ["required_obligation_missing"]
+    },
+    {
+      "case_id": "STG12-PUBLIC-PROP-CLAIM-001",
+      "kind": "missing_claim",
+      "case": {
+        "task_type": "qa",
+        "product_model": "CZ-R1",
+        "expected": {
+          "outcome": "candidate",
+          "source_sections": ["SYNTH-GUIDE/two-step"],
+          "required_facts": ["先断电。再检查舱盖。"]
+        }
+      },
+      "package": {
+        "outcome": "candidate",
+        "handoff_reason": null,
+        "product_model": "CZ-R1",
+        "evidence": [
+          {"evidence_id": "E1", "document_id": "SYNTH-GUIDE", "section_id": "two-step", "applicable_models": ["CZ-R1"], "text": "先断电。再检查舱盖。"}
+        ],
+        "checklist": {
+          "obligations": [
+            {"obligation_id": "o1", "evidence_ids": ["E1"], "approved_source_spans": [{"clause_id": "c001", "evidence_id": "E1", "exact_span_text": "先断电。"}, {"clause_id": "c002", "evidence_id": "E1", "exact_span_text": "再检查舱盖。"}]}
+          ]
+        },
+        "answer": {
+          "used_evidence_ids": ["E1"],
+          "obligation_plan": [{"obligation_id": "o1", "evidence_ids": ["E1"]}],
+          "content": {"answer": {"text": "先断电，再检查舱盖。"}, "claims": []}
+        },
+        "usage": [],
+        "worst_cost_cny_nanos": 1
+      },
+      "baseline_failure_codes": [],
+      "expected_failure_codes": ["required_proposition_binding_missing"]
+    },
+    {
+      "case_id": "STG12-PUBLIC-PROP-SOURCE-001",
+      "kind": "cross_source_claim",
+      "case": {
+        "task_type": "qa",
+        "product_model": "CZ-R1",
+        "expected": {
+          "outcome": "candidate",
+          "source_sections": ["SYNTH-GUIDE/context", "SYNTH-GUIDE/two-step"],
+          "required_facts": ["先断电。再检查舱盖。"]
+        }
+      },
+      "package": {
+        "outcome": "candidate",
+        "handoff_reason": null,
+        "product_model": "CZ-R1",
+        "evidence": [
+          {"evidence_id": "E1", "document_id": "SYNTH-GUIDE", "section_id": "two-step", "applicable_models": ["CZ-R1"], "text": "先断电。再检查舱盖。"},
+          {"evidence_id": "E2", "document_id": "SYNTH-GUIDE", "section_id": "context", "applicable_models": ["CZ-R1"], "text": "保留故障码。"}
+        ],
+        "checklist": {
+          "obligations": [
+            {"obligation_id": "o1", "evidence_ids": ["E1"], "approved_source_spans": [{"clause_id": "c001", "evidence_id": "E1", "exact_span_text": "先断电。"}, {"clause_id": "c002", "evidence_id": "E1", "exact_span_text": "再检查舱盖。"}]},
+            {"obligation_id": "o2", "evidence_ids": ["E2"], "approved_source_spans": [{"clause_id": "c003", "evidence_id": "E2", "exact_span_text": "保留故障码。"}]}
+          ]
+        },
+        "answer": {
+          "used_evidence_ids": ["E1", "E2"],
+          "obligation_plan": [{"obligation_id": "o1", "evidence_ids": ["E1"]}, {"obligation_id": "o2", "evidence_ids": ["E2"]}],
+          "content": {
+            "answer": {"text": "请切断电源，随后查看舱门是否正常，并保留故障码。"},
+            "claims": [
+              {"claim_id": "c1", "customer_visible_span_text": "请切断电源，随后查看舱门是否正常", "evidence_ids": ["E1", "E2"], "obligation_ids": ["o1", "o2"]},
+              {"claim_id": "c2", "customer_visible_span_text": "保留故障码", "evidence_ids": ["E2"], "obligation_ids": ["o2"]}
+            ]
+          }
+        },
+        "usage": [],
+        "worst_cost_cny_nanos": 1
+      },
+      "baseline_failure_codes": ["required_fact_missing"],
+      "expected_failure_codes": ["required_proposition_binding_missing"]
+    },
+    {
+      "case_id": "STG12-PUBLIC-PROP-FAKE-001",
+      "kind": "fabricated_obligation_id",
+      "case": {
+        "task_type": "qa",
+        "product_model": "CZ-R1",
+        "expected": {
+          "outcome": "candidate",
+          "source_sections": ["SYNTH-GUIDE/two-step"],
+          "required_facts": ["先断电。再检查舱盖。"]
+        }
+      },
+      "package": {
+        "outcome": "candidate",
+        "handoff_reason": null,
+        "product_model": "CZ-R1",
+        "evidence": [
+          {"evidence_id": "E1", "document_id": "SYNTH-GUIDE", "section_id": "two-step", "applicable_models": ["CZ-R1"], "text": "先断电。再检查舱盖。"}
+        ],
+        "checklist": {
+          "obligations": [
+            {"obligation_id": "o1", "evidence_ids": ["E1"], "approved_source_spans": [{"clause_id": "c001", "evidence_id": "E1", "exact_span_text": "先断电。"}, {"clause_id": "c002", "evidence_id": "E1", "exact_span_text": "再检查舱盖。"}]}
+          ]
+        },
+        "answer": {
+          "used_evidence_ids": ["E1"],
+          "obligation_plan": [{"obligation_id": "o1", "evidence_ids": ["E1"]}],
+          "content": {
+            "answer": {"text": "请切断电源，随后查看舱门是否正常。"},
+            "claims": [
+              {"claim_id": "c1", "customer_visible_span_text": "请切断电源，随后查看舱门是否正常。", "evidence_ids": ["E1"], "obligation_ids": ["o999"]}
+            ]
+          }
+        },
+        "usage": [],
+        "worst_cost_cny_nanos": 1
+      },
+      "baseline_failure_codes": [],
+      "expected_failure_codes": ["required_proposition_binding_missing"]
+    }
+  ],
+  "boundary": {
+    "contains_private_stage12_content": false,
+    "provider_calls": 0,
+    "unbounded_llm_judge": false,
+    "product_generation_changed": false,
+    "product_outcome_changed": false
+  }
+}
