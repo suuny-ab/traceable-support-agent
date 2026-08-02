@@ -6,22 +6,23 @@
 | --- | --- |
 | `state` | `candidate` |
 | 更新时间 | `2026-08-03` |
-| 当前产品目标 | 把 Stage 12 R2 六类边界编译为生成前 typed handoff：证据不足 / 半答 / 人工售后动作不产 candidate |
+| 当前产品目标 | 如实收口今夜四类根因修复与 typed handoff 候选在同一已消费 Stage 12 集上的唯一真实复跑 |
 | 项目基线 | `origin/main@8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 当前治理结果 | PR [#61](https://github.com/suuny-ab/traceable-support-agent/pull/61) 已从精确 head `074bab2bb00268957321da40348a58fca1b82797` squash merge 为 `8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24`；main CI、部署与公网完整 SHA 已核验 |
-| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）；typed handoff 实现 head `ace8a0e90044e6968d93cccd765ed2ad9b791580` 的 CI run `30762836230` 四项 required jobs 全绿；待本回执最终 head Checks |
-| 活动工作 | [`stage12-typed-handoff-boundaries`](work/active/stage12-typed-handoff-boundaries/spec.md)（`docs/work/active/stage12-typed-handoff-boundaries/`）：R2 outcome 边界；[`stage12-obligation-source-contracts`](work/active/stage12-obligation-source-contracts/spec.md)（`docs/work/active/stage12-obligation-source-contracts/`）、[`stage12-generation-shape-diagnostics`](work/active/stage12-generation-shape-diagnostics/spec.md)（`docs/work/active/stage12-generation-shape-diagnostics/`）、[`stage12-handoff-scoring-contract`](work/active/stage12-handoff-scoring-contract/spec.md)（`docs/work/active/stage12-handoff-scoring-contract/`）、[`stage12-failure-root-cause`](work/active/stage12-failure-root-cause/spec.md)（`docs/work/active/stage12-failure-root-cause/`）、[`stage12-post-fix-revalidation`](work/active/stage12-post-fix-revalidation/spec.md)（`docs/work/active/stage12-post-fix-revalidation/`）：既有 Stage 12 证据；[`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）、[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）、[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
-| 风险 / 授权 | 完整 / R2；用户已批准 B 路线（证据不足 / 半答 typed handoff，不产 safe candidate）；夜班授权允许推送集成分支并更新 Draft PR #62，不运行 Stage 12 / Provider，不授权 Ready、合并、部署或发布 |
-| Provider | `provider_enabled=true`；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600）。既有复验授权已消费且不得补跑；本边界切片调用 0、自动重试 0、费用 0 |
-| 阻碍 | 本地实现、回归、公开扫描、泄漏专项与实现 head CI 已绿，待状态回执最终 head required Checks；R6 语义评分仍未处理，发布主张继续被历史 Stage 12 结果阻断 |
-| 当前证据 | 六个公开等价例与已消费私有 R2 六例均生成前 typed handoff，transport / Provider 调用 0；`GEN-DEV-MH-003` 差距关闭；API 163 passed / 4 skipped、治理 122 passed / 8 skipped、Web 36 passed、公开扫描 276 files / 8 cases、私有长字符串新增命中 0；实现 head CI 四项全绿，Stage 12 未运行 |
+| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）；真实复跑绑定 `fc766709f48bf2989c6589a56db3cec7593ed6cb`，结果与状态候选本地全绿，待提交推送及最终 head Checks |
+| 活动工作 | [`stage12-night-fixes-revalidation`](work/active/stage12-night-fixes-revalidation/spec.md)（`docs/work/active/stage12-night-fixes-revalidation/`）：唯一真实复跑；[`stage12-typed-handoff-boundaries`](work/active/stage12-typed-handoff-boundaries/spec.md)（`docs/work/active/stage12-typed-handoff-boundaries/`）：R2 outcome 边界；[`stage12-obligation-source-contracts`](work/active/stage12-obligation-source-contracts/spec.md)（`docs/work/active/stage12-obligation-source-contracts/`）、[`stage12-generation-shape-diagnostics`](work/active/stage12-generation-shape-diagnostics/spec.md)（`docs/work/active/stage12-generation-shape-diagnostics/`）、[`stage12-handoff-scoring-contract`](work/active/stage12-handoff-scoring-contract/spec.md)（`docs/work/active/stage12-handoff-scoring-contract/`）、[`stage12-failure-root-cause`](work/active/stage12-failure-root-cause/spec.md)（`docs/work/active/stage12-failure-root-cause/`）、[`stage12-post-fix-revalidation`](work/active/stage12-post-fix-revalidation/spec.md)（`docs/work/active/stage12-post-fix-revalidation/`）：既有 Stage 12 证据；[`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）、[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）、[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
+| 风险 / 授权 | 完整 / R2；用户批准的唯一 Stage 12 Provider 复跑已消费：24 案例 / 150 调用 / ¥10 上限、自动重试 0、不补跑；夜班授权允许推送集成分支并更新 Draft PR #62，不授权 Ready、合并、部署或发布 |
+| Provider | `provider_enabled=true`；生产凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），本轮执行凭据也只在 Git 外。本轮 28 次调用、27 条有效 usage、215,176 tokens、机制估算 ¥0.7169342，自动重试 0；缺 1 条 usage，非账单确认；授权已耗尽 |
+| 阻碍 | 最新回归仍有 13 题未满足完整机械合同，四个 candidate 维度均 0/3，发布主张继续阻断；本切片交付只待推送与最终 head Checks |
+| 当前证据 | 同一已消费集 24/24 执行、11 通过、失败码 14 次；六个新 typed handoff 全部 type + reason 命中、0 调用并通过；API 163 / 4 skipped、治理 123 / 8 skipped、Web 36、公开扫描 282 files / 8 cases、私有新敏感长字符串命中 0 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
-| `stage12-typed-handoff-boundaries` | `candidate_ci_green` | 六行决策表、公开等价回归、私有六例结构核验、全量本地门与实现 head CI 全绿；待状态回执最终 head Checks |
+| `stage12-night-fixes-revalidation` | `candidate_local_green` | 24/24、11 通过、28 调用、六个 typed handoff 全命中；本地全量门绿，待推送和最终 head Checks |
+| `stage12-typed-handoff-boundaries` | `candidate_ci_green` | 六行决策表、公开等价回归与真实复跑六例 type + reason / 0 调用 / 全通过；待最终 head Checks |
 | `stage12-obligation-source-contracts` | `candidate_ci_green` | 公开夹具、24 题 scorer-only 差异、全量治理与实现 head CI 通过；待状态回执最终 head Checks |
 | `stage12-generation-shape-diagnostics` | `candidate_ci_green` | 四分支离线复现、诊断拆码、产品 handoff、全量治理与实现 head CI 通过；待状态回执最终 head Checks |
 | `stage12-handoff-scoring-contract` | `candidate_ci_green` | 4 题 / 6 码定向修复、20 题零漂移；实现 head CI 全绿，待状态回执最终 head Checks |
@@ -36,7 +37,6 @@
 
 ## 下一检查点
 
-本切片停止点：R2 六个预登记案例与公开等价例都在生成前产生 type + reason handoff，0 transport、
-0 Provider、无 candidate；相邻可回答例保持不命中。运行公开安全 / 泄漏 / 全量治理并确认
-Draft PR #62 最终 head required Checks 全绿后停止。不运行 Stage 12 / Provider，不做 safe
-candidate，不转 Ready、不合并、不部署、不发布。
+本切片停止点：唯一真实复跑与脱敏对比已落盘；Provider 授权已耗尽，不补跑。运行公开安全 /
+泄漏 / 全量治理并确认 Draft PR #62 最终 head required Checks 全绿后停止；不转 Ready、不合并、
+不部署、不发布。

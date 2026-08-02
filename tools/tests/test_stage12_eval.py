@@ -15,6 +15,7 @@ import os
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest import mock
 
@@ -781,6 +782,115 @@ class Stage12PublishedAggregateTest(unittest.TestCase):
                     walk(child)
 
         walk(payload)
+
+    def test_night_fixes_revalidation_and_receipt_are_frozen(self) -> None:
+        aggregate_path = (
+            REPO_ROOT / "evals" / "stage12-night-fixes-revalidation-v1.json"
+        )
+        receipt_path = (
+            REPO_ROOT
+            / "evals"
+            / "stage12-night-fixes-revalidation-receipt-v1.json"
+        )
+        aggregate = self._load(aggregate_path.name)
+        receipt = self._load(receipt_path.name)
+        self.assertEqual(
+            hashlib.sha256(aggregate_path.read_bytes()).hexdigest(),
+            "b4de502835e5142c62efccbf52a331f844869239de6e7a83b397c4f6cd9367e8",
+        )
+        self.assertEqual(
+            hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+            "8c80b7713aa1d8c9995e8855ae4c404b3c9500ba4acfcdfee2f1abf0584a80fd",
+        )
+        self.assertEqual(receipt["source"]["aggregate_sha256"], hashlib.sha256(
+            aggregate_path.read_bytes()
+        ).hexdigest())
+        self.assertEqual(aggregate["totals"]["cases_planned"], 24)
+        self.assertEqual(aggregate["totals"]["cases_executed"], 24)
+        self.assertEqual(sum(case["passed"] for case in aggregate["cases"]), 11)
+        self.assertEqual(aggregate["totals"]["provider_calls"], 28)
+        self.assertEqual(
+            aggregate["totals"]["estimated_cost_cny_nanos"], 716_934_200
+        )
+        self.assertFalse(aggregate["totals"]["stopped_early"])
+        self.assertIsNone(aggregate["totals"]["stop_code"])
+        self.assertEqual(aggregate["envelope"]["automatic_retry_count"], 0)
+        failure_counts = Counter(
+            code
+            for case in aggregate["cases"]
+            for code in case["failure_codes"]
+        )
+        self.assertEqual(
+            dict(failure_counts),
+            {
+                "required_fact_missing": 6,
+                "required_obligation_missing": 6,
+                "outcome_mismatch": 1,
+                "source_sections_mismatch": 1,
+            },
+        )
+        self.assertEqual(receipt["failure_counts"], dict(failure_counts))
+        self.assertEqual(receipt["failure_occurrences"], 14)
+        self.assertEqual(receipt["usage"]["calls_with_valid_usage"], 27)
+        self.assertEqual(receipt["usage"]["calls_without_valid_usage"], 1)
+        self.assertEqual(receipt["usage"]["total_tokens"], 215_176)
+        self.assertFalse(receipt["usage"]["is_billing_confirmation"])
+        self.assertEqual(receipt["typed_handoff"]["registered_cases"], 6)
+        self.assertEqual(receipt["typed_handoff"]["matched_cases"], 6)
+        self.assertEqual(receipt["typed_handoff"]["provider_calls"], 0)
+        typed_ids = {
+            "STG12-01-MBD-001",
+            "STG12-01-MBD-002",
+            "STG12-01-IE-001",
+            "STG12-01-FC-001",
+            "STG12-01-FC-002",
+            "STG12-01-FC-003",
+        }
+        by_id = {case["case_id"]: case for case in aggregate["cases"]}
+        self.assertTrue(
+            all(
+                by_id[case_id]["passed"]
+                and by_id[case_id]["observed_outcome"] == "handoff"
+                for case_id in typed_ids
+            )
+        )
+        self.assertEqual(
+            {case["case_id"] for case in receipt["typed_handoff"]["cases"]},
+            typed_ids,
+        )
+        self.assertTrue(
+            all(
+                case["passed"] and case["provider_calls"] == 0
+                for case in receipt["typed_handoff"]["cases"]
+            )
+        )
+        self.assertEqual(receipt["zero_call"]["total_cases"], 10)
+        self.assertEqual(
+            receipt["comparison"]["against_first_real_revalidation"],
+            {
+                "passed_cases_delta": 9,
+                "failure_occurrences_delta": -23,
+                "provider_calls_delta": -11,
+                "estimated_cost_cny_nanos_delta": -542_978_200,
+                "generation_failures_delta": -3,
+            },
+        )
+        forbidden_keys = {
+            "input", "required_facts", "source_sections", "answer", "proposal",
+            "request_headers", "provider_response",
+        }
+
+        def walk(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertTrue(forbidden_keys.isdisjoint(value))
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+
+        walk(aggregate)
+        walk(receipt)
 
     def test_handoff_contract_rescore_receipt_is_bounded(self) -> None:
         path = REPO_ROOT / "evals" / "stage12-handoff-contract-rescore-v1.json"

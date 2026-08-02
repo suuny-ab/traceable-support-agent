@@ -53,6 +53,11 @@ Stage 12 是描述性测量，不设任意数值阈值、不做"通过/阻止发
 新的正式未见评测。它必须与原始结果并列、绑定新的候选 / prompt / 镜像身份，并禁止从
 前后差异推导单一改动的因果效果；未来正式结果仍需全新未见集与独立授权。
 
+`2026-08-03` 在今夜机械合同与 typed handoff 候选上执行的唯一复跑继续使用同一已消费集，
+同样只是一条回归观测：24/24 执行、11 通过、28 次 Provider 调用、自动重试 0，未提前停止。
+六个预登记 typed handoff 全部在生成前形成类型与原因并保持 0 调用；这只证明固定案例的
+机械结果，不把规则覆盖推广到开放表达，也不产生因果、线上质量或发布结论。
+
 Stage 12 评分按 outcome profile 分离：只有 expected 与 observed 都是 `handoff` 时，评分器
 检查 outcome、明确登记的 handoff reason 与预算，并保留 boundary sources 供审计；来源精确
 集合、客户可见必需事实及工单 category / priority 属于候选合同，不对 matched handoff 计分。
