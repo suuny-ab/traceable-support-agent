@@ -78,3 +78,11 @@ SHA-256 `d1356190bde6632b92f8482637a8abab35a5c2db8675cca47e51b97e91f3c88e`。
 - Provider 调用 0、自动重试 0、费用 0；没有执行 Stage 12、产品运行或 generation。
 
 本地候选已绿；待提交、推送并确认 Draft PR #62 最终 head required Checks。
+
+## Draft PR 实现回执
+
+实现 head `eab5b20c527abe0e7aab57fbda577a4a15537d44` 已推送到既有 Draft PR #62；
+`ci-release` run `30759671469` 的 governance、web、api、containers 全部成功，publish 因
+Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
+
+本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。

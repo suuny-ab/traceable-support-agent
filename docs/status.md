@@ -10,7 +10,7 @@
 | 项目基线 | `origin/main@8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 当前治理结果 | PR [#61](https://github.com/suuny-ab/traceable-support-agent/pull/61) 已从精确 head `074bab2bb00268957321da40348a58fca1b82797` squash merge 为 `8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24`；main CI、部署与公网完整 SHA 已核验 |
-| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）；前序最终 head `1d362ecd2f50fa4d9e99d9b7c9833aaff4be248f` 的 CI run `30757798202` 四项 required jobs 全绿；handoff scorer 为本地定向候选 |
+| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）；handoff scorer 实现 head `eab5b20c527abe0e7aab57fbda577a4a15537d44` 的 CI run `30759671469` 四项 required jobs 全绿；待本回执最终 head Checks |
 | 活动工作 | [`stage12-handoff-scoring-contract`](work/active/stage12-handoff-scoring-contract/spec.md)（`docs/work/active/stage12-handoff-scoring-contract/`）：matched handoff 评分修复；[`stage12-failure-root-cause`](work/active/stage12-failure-root-cause/spec.md)（`docs/work/active/stage12-failure-root-cause/`）、[`stage12-post-fix-revalidation`](work/active/stage12-post-fix-revalidation/spec.md)（`docs/work/active/stage12-post-fix-revalidation/`）：既有证据；[`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）、[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）、[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
 | 风险 / 授权 | 完整 / R2；只读已消费私有记录做离线重评分并修改评测合同，不运行 Stage 12 / Provider；夜班授权允许推送集成分支并更新 Draft PR #62，不授权 Ready、合并、部署、发布或产品 outcome 取舍 |
 | Provider | `provider_enabled=true`；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600）。既有复验授权已消费且不得补跑；本评分修复调用 0、自动重试 0、费用 0 |
@@ -21,7 +21,7 @@
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
-| `stage12-handoff-scoring-contract` | `candidate_local_green` | 4 题 / 6 码定向修复、20 题零漂移；本地全量与治理全绿，待推送与 Draft PR #62 最终 head Checks |
+| `stage12-handoff-scoring-contract` | `candidate_ci_green` | 4 题 / 6 码定向修复、20 题零漂移；实现 head CI 全绿，待状态回执最终 head Checks |
 | `stage12-failure-root-cause` | `candidate_ci_green` | 六类根因与最小修复候选已落文档；实现 head CI 全绿，待状态回执最终 head Checks，不实施修复 |
 | `stage12-post-fix-revalidation` | `candidate_ci_green` | 24/24、2 通过已落盘；结果 head CI 全绿，待状态回执最终 head Checks，不补跑 |
 | `public-metrics-card` | `candidate_ci_green` | 实现 head `b01adb9b` 与 run `30753847922` 全绿；待回执提交最终 head Checks，不自动 Ready / 合并 / 部署 |

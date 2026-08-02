@@ -22,3 +22,6 @@ false-completion 的 safe candidate vs typed handoff 会改变产品行为，继
 方案疑问。
 
 候选只允许更新 `night-20260802` / Draft PR #62；不转 Ready、不合并、不部署、不发布。
+
+实现 head `eab5b20` 的 CI run `30759671469` 四个 required jobs 已全绿，publish 因 Draft
+跳过；没有新阻断 finding。最终状态回执 head 只需通过同一 required Checks，不扩展授权。
