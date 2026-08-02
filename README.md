@@ -8,7 +8,7 @@
 
 | RAG 检索 | 型号隔离 | 自动化验证 | 线上版本 |
 | --- | --- | --- | --- |
-| [RRF Top-5 必需来源覆盖 16/16](evals/retrieval-checkup-v1.json) | [错误型号来源 0](docs/product/evidence-map.md) | [main CI 5/5 jobs 成功；API 137 passed / 2 skipped；Stage 12 runner 13 passed](https://github.com/suuny-ab/traceable-support-agent/actions/runs/30690110223) | [`release_sha=915ca4e…` 公网可验](https://47.84.34.86/api/v1/health) |
+| [RRF Top-5 必需来源覆盖 16/16](evals/retrieval-checkup-v1.json) | [错误型号来源 0](docs/product/evidence-map.md) | [main CI 5/5 jobs 成功；API 137 passed / 2 skipped；Stage 12 runner 13 passed](https://github.com/suuny-ab/traceable-support-agent/actions/runs/30690110223) | [`release_sha` 公网实时可验](https://47.84.34.86/api/v1/health) |
 
 > 检索数字来自 16 个冻结公开合成开发题，只表示必需来源覆盖，不代表回答语义正确、线上成功率或未见集表现；测试与 CI 数字绑定上述运行，`release_sha` 只证明发布身份。
 
