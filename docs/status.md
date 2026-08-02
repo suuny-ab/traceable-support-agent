@@ -7,24 +7,25 @@
 | 字段 | 内容 |
 | --- | --- |
 | `state` | `ready` |
-| 更新时间 | `2026-08-01` |
-| 当前产品目标 | README 首屏量化证据与 Stage 12 修复路径已进入 Draft PR #54；当前只等待同一 head 的 required Checks，不继续增加产品功能、布局或字体微调 |
-| 当前集成任务 | `portfolio-evidence-first-screen`；Draft PR [#54](https://github.com/suuny-ab/traceable-support-agent/pull/54) 指向 `main` |
-| 复杂度 | 标准 / `R2`；只包含公开 README、状态回执、GitHub 分支与 Draft PR，不含合并、部署、Provider 调用或产品运行 |
-| 风险 / 成熟度 | 新增公开主张已绑定既有证据并通过本地相关检查；仍须以 PR 同一 head 的 required Checks 为准，且本次结果不证明模型质量、线上成功率、未见集表现、高可用或长期稳定性 |
-| 产品候选 | Draft PR #54，分支 `codex/portfolio-evidence-first-screen`；README 提交 `54c5abd`，状态回执随后写入同一分支，不改变运行产品 |
-| 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
+| 更新时间 | `2026-08-02` |
+| 当前产品目标 | 解锁 Draft PR #55 与 `main` 的状态冲突并恢复同一 head 的远端验证；不扩大检索功能域 |
+| 当前集成任务 | `retrieval-badcase-loop`；Draft PR [#55](https://github.com/suuny-ab/traceable-support-agent/pull/55)，分支 `codex/retrieval-badcase-loop` |
+| 复杂度 | 标准 / `R2`；用户已批准同步 `origin/main`、更新公开 PR 分支并触发 Checks；不含合并、部署、Provider 调用或产品运行 |
+| 风险 / 成熟度 | 候选直接针对同一 16 题公开开发集调优，只能证明该开发集的来源覆盖变化；不是未见集、回答质量、线上成功率或发布结论 |
+| 产品候选 | 原 PR head `45db89f` 已在本地合入 `origin/main@8a306165`；同步提交 `8b7c4cb`，同步后本地相关检查已全绿，最终公开 head 待状态提交后推送 |
+| 项目基线 | `origin/main@8a306165221387805ee33e6c20b45d9260c48658`；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | 无 |
-| 最近完成 | 已按用户当次授权推送 `codex/portfolio-evidence-first-screen` 并创建 Draft PR #54；候选只含 README 与状态回执，详细回执见下文 |
-| 阻碍 | PR #54 的 governance、web、api、containers 四个 required Checks 在创建时均为 queued；本执行环境的 `.git` 只读且终端 GitHub 网络不可用，因此远端通过已登录 GitHub 页面交付，本地 Git 分支元数据尚未同步 |
+| 最近完成 | PR #54 已 squash merge 为 `8a306165`；main CI `30738245420` 成功，部署链 `30738264198` preflight 成功且 deploy 按 `governance_only` 跳过，运行产品未改变 |
+| 阻碍 | 本地文本冲突与相关复验均已关闭；分支推送和 PR #55 新 head 的 Checks 启动仍待完成 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=915ca4ef7820870ee42fbef69ea719498d7f402d` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 等待 PR #54 同一 head 的四个 required Checks；本次不转 Ready、不合并、不部署，后续动作需按既有授权与交付流程另行执行 |
+| 下一检查点 | 提交本回执并推送更新 PR #55，确认新 head 的 required Checks 已创建；本次不合并 PR |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `portfolio-evidence-first-screen` | `candidate_pr` | Draft PR #54；分支 `codex/portfolio-evidence-first-screen`，README 提交 `54c5abd`，四个 required Checks 创建时均 queued；未合并、未部署 |
+| `retrieval-badcase-loop` | `validated_local_push_pending` | Draft PR #55；原 head `45db89f`，同步提交 `8b7c4cb`；`docs/status.md` 已先恢复为 `origin/main` 完整版本再重写；同步后本地相关检查全绿，待推送 |
+| `portfolio-evidence-first-screen` | `delivered` | PR #54 head `d8cd208` squash merge 为 `8a306165`；main CI 成功，部署链 preflight 成功且 deploy 跳过，运行产品未改变 |
 | `frontend-polish-delivery` | `delivered` | PR #52 合并为 `915ca4e`；main CI、生产部署、公网完整 SHA、四页文案与样式检查通过；Provider 调用 0，工作记录已归档 |
 | `frontend-polish` | `delivered` | 本地候选 `a6ff775` 经后续最小治理记录形成 PR #52 并公开交付；用户于 `2026-08-01` 完成整体体验验收 |
 | `portfolio-guided-path` | `accepted_local` | `14e4c6b`；33 项测试、lint、typecheck、build 通过，桌面主路径与折叠入口已由用户本地验收；未推送、未部署 |
@@ -35,6 +36,23 @@
 
 Task 可以并行；required Checks、所需当次授权、触发时的评审兜底、受保护 `main`、部署和
 用户验收仍按依赖串行。
+
+## 2026-08-02 派发进行中回执：PR #55 冲突解锁
+
+- 授权：用户当次明确批准同步 `origin/main`、以 `main` 为准重写 `docs/status.md`、复跑相关
+  检查并推送更新 PR #55；不含合并、部署或 Provider 调用。
+- 同步：`origin/main@8a306165221387805ee33e6c20b45d9260c48658` 已合入
+  `codex/retrieval-badcase-loop`，形成 merge 提交 `8b7c4cb68823162cc57526b7424b147cde26fb3a`。
+- 冲突处理：merge 唯一冲突为 `docs/status.md`；该文件先整体恢复为 main blob
+  `7cd1445ee5ab19e4bc5e5bbce99fed3f4e1b0a4f`，工作树 blob 精确一致并完成 merge 后，才从
+  main 版本重写当前事实；没有拼接双方冲突块。
+- 候选边界：实现仍是 `80953b5` 的单一 BM25 badcase 改进，状态证据提交为 `45db89f`；不改
+  冻结问题、标签或知识内容，不新增 Provider、费用、部署或发布主张。
+- 同步后验证：baseline / product candidate 检索检查各 16 题通过、Provider 调用 0；检索定向
+  测试 4 通过；API 全集 138 通过 / 2 跳过（另 24 subtests）；Stage 12 runner 13 通过；
+  `check_public_repo --scope worktree` 通过（215 files、8 public cases）；`git diff --check` 通过。
+- 当前检查点：本地候选已通过相关检查，待提交、推送并确认 PR #55 新 head 的远端 Checks 启动；
+  本地绿不冒充远端 CI 绿。
 
 ## 2026-08-01 派发交付回执：README 首屏量化证据
 
@@ -67,7 +85,7 @@ Task 可以并行；required Checks、所需当次授权、触发时的评审兜
 ## 当前产品事实
 
 - 方向 B 的公开体验位于 <https://47.84.34.86/>；`2026-07-29` 起为真实 Provider live
-  模式。当前生产运行的产品发布为 `66af626ba4debf4c8a1cf91da023754168c5b908`，
+  模式。当前生产运行的产品发布为 `915ca4ef7820870ee42fbef69ea719498d7f402d`，
   公网健康同时返回该完整 `release_sha` 与 `live_experience=available`；后续仅文档收口不触发部署。
 - 生成门语义：`2026-07-29` 起为绑定式溯源（ADR-0007）：每条结论必须绑定真实存在的
   证据 / 义务 ID，证据原文随回答展示；不再要求措辞逐字复现原文。真实 Provider 本地
