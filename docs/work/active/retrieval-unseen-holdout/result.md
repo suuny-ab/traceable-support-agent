@@ -34,3 +34,11 @@ worktree 没有默认相对模型缓存，在构建检索器前失败且没有�
 - 治理工具：114 passed / 8 skipped；公开仓扫描 241 files / 8 public cases 通过。
 - 文档园丁：stale 0 / review 1；唯一 review 是既有迁移记录中的历史相对措辞。
 - `git diff --check` 通过；冻结提交后 `api/src`、生产知识、题集与排名工具均为零差异。
+
+## Draft PR 回执
+
+观察实现 head `a21afb20bd7bd7e6a4c777dc96ffd478e31fc3b0` 已推送到既有 Draft PR
+[#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)。`ci-release` run
+`30752922314` 成功，governance、web、api、containers 全绿；publish 因 Draft 状态跳过，
+没有合并或部署。状态回执提交会形成新的最终 head，只要求确认其 required Checks 启动，
+不转 Ready、不合并、不部署。
