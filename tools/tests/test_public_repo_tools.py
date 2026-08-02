@@ -21,6 +21,7 @@ from tools.check_public_repo import (
     _release_decision_workflow_errors,
     _path_errors,
     _governance_rule_errors,
+    _python_test_declaration_errors,
 )
 from tools.deploy_ssh_transport import (
     DeployInputError,
@@ -48,6 +49,28 @@ from tools.validate_deploy_port import normalize_deploy_port
 
 
 class PublicScannerTest(unittest.TestCase):
+    def test_python_test_dependency_declaration_matches_requirements_source(self) -> None:
+        entries = {
+            "api/pyproject.toml": Entry(
+                "api/pyproject.toml",
+                b'[project.optional-dependencies]\ntest = ["pytest==9.0.3"]\n',
+            ),
+            "api/requirements-test.txt": Entry(
+                "api/requirements-test.txt",
+                b"pytest==9.0.3\n",
+            ),
+        }
+        self.assertEqual(_python_test_declaration_errors(entries), [])
+
+        entries["api/pyproject.toml"] = Entry(
+            "api/pyproject.toml",
+            b'[project.optional-dependencies]\ntest = ["pytest==9.0.2"]\n',
+        )
+        self.assertEqual(
+            _python_test_declaration_errors(entries),
+            ["python_test_dependency_declaration_drift"],
+        )
+
     def test_active_increment_count_is_not_inferred_from_progress_state(self) -> None:
         scenarios = {
             "pr43_in_progress": "in_progress",

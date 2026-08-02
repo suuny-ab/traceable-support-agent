@@ -23,7 +23,7 @@ live = [
   "rank-bm25==0.2.2",
   "tokenizers==0.22.2",
 ]
-test = ["pytest==9.0.2"]
+test = ["pytest==9.0.3"]
 
 [project.scripts]
 traceable-support-api = "traceable_support.api.http:main"
