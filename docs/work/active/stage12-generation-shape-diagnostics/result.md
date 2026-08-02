@@ -1,6 +1,6 @@
 # 结果
 
-> 状态：`candidate_local_green`
+> 状态：`candidate_ci_green`
 
 ## 历史失败能定位到哪里
 
@@ -67,3 +67,11 @@ checklist 和四个 malformed step-2 响应：
   通过。Provider 调用、Stage 12 执行、generation 真实调用均为 0。
 
 本地候选已绿；待提交、推送并确认 Draft PR #62 最终 head required Checks。
+
+## Draft PR 实现回执
+
+实现 head `c606bd316bfca1ac6f124f600c65c8c7128ac6ba` 已推送到既有 Draft PR #62；
+`ci-release` run `30760606556` 的 governance、web、api、containers 全部成功，publish 因
+Draft 跳过。PR 未转 Ready、未合并、未部署，Provider 调用仍为 0。
+
+本状态回执提交将形成最终 head；最终 head required Checks 仍须另行确认。
