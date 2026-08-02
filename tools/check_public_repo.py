@@ -14,6 +14,7 @@ import json
 import os
 import re
 import subprocess
+import tomllib
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -289,6 +290,22 @@ def _read(entries: dict[str, Entry], path: str) -> str:
     if entry is None:
         raise ValueError(f"required_file_missing:{path}")
     return entry.data.decode("utf-8")
+
+
+def _python_test_declaration_errors(entries: dict[str, Entry]) -> list[str]:
+    try:
+        pyproject = tomllib.loads(_read(entries, "api/pyproject.toml"))
+        declared = pyproject["project"]["optional-dependencies"]["test"]
+        required = [
+            line.strip()
+            for line in _read(entries, "api/requirements-test.txt").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+    except (KeyError, TypeError, UnicodeDecodeError, ValueError, tomllib.TOMLDecodeError):
+        return ["python_test_dependency_declaration_invalid"]
+    if declared != required:
+        return ["python_test_dependency_declaration_drift"]
+    return []
 
 
 def _yaml_block(value: str, key: str, indent: int) -> str | None:
@@ -1072,7 +1089,11 @@ def _governance_rule_errors(entries: list[Entry]) -> list[str]:
 
 def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
     mapped = _entry_map(entries)
-    errors = _active_increment_errors(entries) + _governance_rule_errors(entries)
+    errors = (
+        _active_increment_errors(entries)
+        + _governance_rule_errors(entries)
+        + _python_test_declaration_errors(mapped)
+    )
     try:
         status = _read(mapped, "docs/status.md")
         project = _read(mapped, "PROJECT.md")

@@ -6,26 +6,26 @@
 | --- | --- |
 | `state` | `candidate` |
 | 更新时间 | `2026-08-02` |
-| 当前产品目标 | 形成 Python / Web 依赖漂移与已知安全公告快照，为后续升级切片定优先级；本任务不升级依赖或改变产品行为 |
-| 项目基线 | `origin/main@31541cfaca4f71c507fbda6f4774ed8e7c8b4a7f` |
-| 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=31541cfaca4f71c507fbda6f4774ed8e7c8b4a7f` |
-| 当前治理结果 | PR [#58](https://github.com/suuny-ab/traceable-support-agent/pull/58) 已从精确 head `3f74453612f293c75a483edb9db7b219333de22b` squash merge 为 `31541cf…`，main CI、实际部署与公网完整 SHA 均核验成功 |
-| 当前产品候选 | 无；`codex/dependency-drift` 只新增分析报告与两层状态，Draft PR / Checks 以 GitHub 实时状态为准 |
-| 活动工作 | 无产品增量；本轻量分析切片由 Git 外派发任务书定界，报告保存于 `docs/work/dependency-drift-20260802.md` |
-| 风险 / 授权 | 用户已批准本分支一次推送与创建 Draft PR；未授权转 Ready、合并或部署，PR 建成后写 Git 外授权请求并等待 |
+| 当前产品目标 | 消除依赖漂移报告已定位的 Web high advisory，并让 Python test extra 与现行锁定声明一致；不改变产品行为 |
+| 项目基线 | `origin/main@3636d24fc858d27ad0b4e35d8732650444f4ccdd` |
+| 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=3636d24fc858d27ad0b4e35d8732650444f4ccdd` |
+| 当前治理结果 | PR [#59](https://github.com/suuny-ab/traceable-support-agent/pull/59) 已 squash merge 为 `3636d24fc858d27ad0b4e35d8732650444f4ccdd`；main CI、实际部署与公网完整 SHA 均核验成功 |
+| 当前产品候选 | `codex/dependency-security-maintenance` 只含目标依赖、pytest 声明、防漂移机器检查与两层状态；Draft PR / Checks 以 GitHub 实时状态为准 |
+| 活动工作 | Web 安全补丁与 Python test 声明同步；不改产品代码、生产或 Provider 配置 |
+| 风险 / 授权 | 用户批准本分支推送与创建 Draft PR；未授权转 Ready、合并或部署，PR 建成后写 Git 外授权请求并等待当次明文批准 |
 | Provider | `provider_enabled=true`；凭据仍仅在服务器 `/opt/traceable-support/provider.env`（0600）；预算日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0；本任务 Provider 调用 0 |
-| 阻碍 | Web 锁命中 3 个 high 包 finding（2 个唯一 advisory），且 Python test 声明为 pytest 9.0.2、需求源 / 锁为 9.0.3；修复明确不在本任务范围，需另立小切片 |
-| 当前证据 | Python 三份锁去重 46 包，钉定 pip-audit 均为 0 个已知漏洞；Web 完整闭包 high 3 / critical 0，production-only high 2；治理工具 113 passed / 8 skipped，API 138 passed / 2 skipped、24 subtests，Web lint / typecheck / build 与 36 tests 通过；锁文件未变化 |
+| 阻碍 | 无本地阻断；候选必须等待 GitHub required Checks 结论，之后仍需用户另行批准精确 head 才能合并 |
+| 当前证据 | `postcss` 为 `8.5.18`、两份 `brace-expansion` 为 `1.1.18` / `5.0.9`，完整与 production-only npm audit 均为 0；Python 三份锁均 0 个已知漏洞，pytest 声明 / 需求源 / 锁均为 `9.0.3`；治理 114 passed / 8 skipped、API 138 passed / 2 skipped、24 subtests、Web 构建与 36 tests 全绿 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
-| `dependency-drift` | `candidate` | 报告与全量验证已完成；只推送一次并创建 Draft PR，不执行升级或声明修正 |
+| `dependency-security-maintenance` | `candidate` | 固定候选并创建 Draft PR；required Checks 完成后只写精确 head 授权请求，不自动转 Ready / 合并 / 部署 |
+| `dependency-drift` | `delivered` | PR #59 merge / main CI / deploy / 公网完整 SHA 均已核验；报告提出的 high advisory 与 pytest 声明漂移已由当前候选处理 |
 | `doc-gardener` | `delivered` | PR #58 merge / main CI / deploy / 公网完整 SHA 均已核验；默认 advisory，不自动修改文档 |
-| `governance-rule-slimming` | `delivered` | PR #57 merge / main CI / deploy / 公网完整 SHA 均已核验 |
-| `ISSUE-14-RELEASE-DECISION` | `deferred` | 不在本切片内；不得从开发集结果推导发布结论 |
+| `ISSUE-14-RELEASE-DECISION` | `deferred` | 不在本切片内；不得从依赖修复推导发布结论 |
 
 ## 下一检查点
 
-固定依赖漂移报告，推送一次并创建 Draft PR；确认 Checks 启动后写精确 head 授权请求并停止，不升级、不修正声明、不合并、不部署。
+推送一次并创建 Draft PR，确认 required Checks 启动及结论；随后在 Git 外提交精确 head 合并授权请求并停止。
