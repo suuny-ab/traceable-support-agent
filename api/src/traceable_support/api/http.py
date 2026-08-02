@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import re
 import socket
+import time
 from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import Any
@@ -37,6 +39,7 @@ _PREFLIGHT_HEADERS = {
 }
 _BROWSER_COOKIE = "__Host-traceable-browser"
 _SERVER_HEADER = "TraceableSupportAPI"
+_OBSERVABILITY_PATH = "/api/v1/observability"
 
 
 class _DuplicateKey(ValueError):
@@ -148,6 +151,57 @@ class _SecurityHeadersMiddleware:
         await self.app(scope, receive, send_with_security_headers)
 
 
+def _http_route_id(path: str) -> str:
+    if path == "/api/v1/health":
+        return "health"
+    if path == "/api/v1/runs":
+        return "runs"
+    if re.fullmatch(r"/api/v1/runs/[^/]+", path):
+        return "run"
+    if re.fullmatch(r"/api/v1/runs/[^/]+/decision", path):
+        return "decision"
+    return "other"
+
+
+class _ObservabilityMiddleware:
+    """Aggregate HTTP outcomes without retaining caller or request content."""
+
+    def __init__(self, app: Any, service: PublicRunService) -> None:
+        self.app = app
+        self.service = service
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if scope["type"] != "http" or scope.get("path") == _OBSERVABILITY_PATH:
+            await self.app(scope, receive, send)
+            return
+        status_code: int | None = None
+        started_ns = time.perf_counter_ns()
+
+        async def send_with_status(message: dict[str, Any]) -> None:
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = int(message["status"])
+            await send(message)
+
+        try:
+            await self.app(scope, receive, send_with_status)
+        finally:
+            try:
+                self.service.record_http_observation(
+                    route_id=_http_route_id(str(scope.get("path", ""))),
+                    method=str(scope.get("method", "")),
+                    status_code=status_code,
+                    duration_ns=max(0, time.perf_counter_ns() - started_ns),
+                )
+            except Exception as exc:
+                logging.warning(
+                    "http observation dropped route=%s method=%s type=%s",
+                    _http_route_id(str(scope.get("path", ""))),
+                    str(scope.get("method", "")),
+                    type(exc).__name__,
+                )
+
+
 def create_app(service: PublicRunService) -> FastAPI:
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None, redirect_slashes=False)
 
@@ -197,6 +251,9 @@ def create_app(service: PublicRunService) -> FastAPI:
 
     async def health(_: Request) -> Response:
         return _json_response(200, service.health())
+
+    async def observability(_: Request) -> Response:
+        return _json_response(200, service.observability())
 
     async def get_run(request: Request) -> Response:
         if RUN_ID.fullmatch(request.path_params["run_id"]) is None:
@@ -260,6 +317,7 @@ def create_app(service: PublicRunService) -> FastAPI:
         return _error_response(PublicApiError(404, "route_not_found"))
 
     app.add_route("/api/v1/health", health, methods=["GET"])
+    app.add_route(_OBSERVABILITY_PATH, observability, methods=["GET"])
     app.add_route("/api/v1/runs/{run_id}", get_run, methods=["GET"])
     app.add_route("/api/v1/runs", submit, methods=["POST"])
     app.add_route("/api/v1/runs/{run_id}/decision", decide, methods=["POST"])
@@ -298,7 +356,10 @@ class PublicApiHttpServer:
         service: PublicRunService,
     ) -> None:
         self.service = service
-        app = _SecurityHeadersMiddleware(create_app(service), service.allowed_origin)
+        app = _SecurityHeadersMiddleware(
+            _ObservabilityMiddleware(create_app(service), service),
+            service.allowed_origin,
+        )
         self._config = uvicorn.Config(
             app,
             host=host,

@@ -6,6 +6,7 @@
 | Provider 关闭时，公开服务会失败关闭 | API 集成测试和容器健康检查 | 不证明实时 Provider 的质量 |
 | 生产已显式启用真实 Provider，公开工作台为 live 优先 | 部署版本 `766ba3f` 的 release manifest v2、生产部署与回滚回执、`/api/v1/health` 返回 `live_experience=available`；上线当日首条真实 QA 与 `2026-07-30` README GIF 来源运行均为 `completed` 且 `provider_calls=2` | 只证明该部署与两次公开运行；健康状态可能变化，不构成 SLA、长期成功率或 `product/0.1.0` 主张 |
 | 运行受队列、预算和保留期控制 | API 单元/集成测试和 SQLite 重启测试 | 仅限单节点 |
+| 候选 API 请求量、延迟和错误率可由只读端点查看 | `http_request_metrics` 聚合表、ASGI 中间件定向测试、写入失败降级测试和 `GET /api/v1/observability` 合同测试 | 尚未合并或部署；只覆盖当前单机 SQLite 生命周期内的进程请求，不是外部监控、告警、分布式追踪、SLA 或线上质量结论，不保存原始请求内容 |
 | QA 与工单产品路径支持两阶段生成 | 离线 `live` target 产品 fixture 与既有固定合成运行；v14 QA003 真实两阶段合同通过并形成 candidate；Stage 12 已执行一次（19/24 案例，9 通过，`evals/stage12-aggregate-v1.json`）；PR #27 已合并并通过主线 CI/部署 | v14 仍缺公开回归必需事实；v15 未执行真实 Provider 验证；Stage 12 显示真实模型下候选生成合同失败率高，候选质量主张仍不成立 |
 | 每条客户可见结论绑定真实存在的来源和业务义务 | ADR-0007；QA / 工单合同测试覆盖措辞漂移放行、伪造 ID 拒绝、越源拒绝和义务缺绑定拒绝；本地真实 Provider 复测由 0/2 提升到 3/3，公网首条 QA 候选挂载证据原文 | 绑定存在不等于开放域语义正确；Stage 12 未重跑，候选仍需人工审核 |
 | 人工批准不会执行外部动作 | 决定 API 合同，且不存在业务动作适配器 | 仅为演示 Workflow |

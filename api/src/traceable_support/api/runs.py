@@ -45,6 +45,10 @@ RETENTION_DAYS = 30
 GLOBAL_DAILY_BLOCKED_LIMIT = 2_000
 MAX_STORED_RUNS = 20_000
 
+HTTP_OBSERVABILITY_SCHEMA = "http-observability-v1"
+HTTP_ROUTE_IDS = frozenset({"health", "runs", "run", "decision", "other"})
+HTTP_METHODS = frozenset({"GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"})
+
 TERMINAL_STATUSES = frozenset({"completed", "handoff"})
 ACTIVE_STATUSES = frozenset(
     {"queued", "retrieving", "planning", "generating", "validating"}
@@ -306,6 +310,15 @@ class PublicRunService:
                     provider_calls_unknown INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(day_key, terminal_status, decision)
                 );
+                CREATE TABLE IF NOT EXISTS http_request_metrics (
+                    route_id TEXT NOT NULL,
+                    method TEXT NOT NULL,
+                    error_class TEXT NOT NULL,
+                    request_count INTEGER NOT NULL,
+                    latency_total_ns INTEGER NOT NULL,
+                    latency_max_ns INTEGER NOT NULL,
+                    PRIMARY KEY(route_id, method, error_class)
+                );
                 CREATE TABLE IF NOT EXISTS maintenance_state (
                     singleton INTEGER PRIMARY KEY CHECK(singleton=1),
                     pending_secure_erase INTEGER NOT NULL,
@@ -409,6 +422,136 @@ class PublicRunService:
             "service": "traceable-support-public-api",
             "live_experience": "available" if self.live_available else "replay_only",
             "release_sha": self.release_sha,
+        }
+
+    def record_http_observation(
+        self,
+        *,
+        route_id: str,
+        method: str,
+        status_code: int | None,
+        duration_ns: int,
+    ) -> None:
+        """Persist one aggregate-only HTTP observation.
+
+        Callers own fail-open handling.  This method intentionally accepts only
+        normalized route identifiers and never stores paths, query strings,
+        request bodies, browser tokens, IP addresses, or exception messages.
+        """
+
+        normalized_method = method.upper() if type(method) is str else ""
+        if (
+            route_id not in HTTP_ROUTE_IDS
+            or normalized_method not in HTTP_METHODS
+            or not (
+                status_code is None
+                or (type(status_code) is int and 100 <= status_code <= 599)
+            )
+            or type(duration_ns) is not int
+            or duration_ns < 0
+        ):
+            raise ValueError("http_observation_invalid")
+        if status_code is None:
+            error_class = "transport_error"
+        elif status_code >= 500:
+            error_class = "server_error"
+        elif status_code >= 400:
+            error_class = "client_error"
+        else:
+            error_class = "none"
+        with self._db_lock, closing(self._connect()) as connection:
+            connection.execute(
+                "INSERT INTO http_request_metrics(route_id,method,error_class,request_count,latency_total_ns,latency_max_ns) "
+                "VALUES(?,?,?,?,?,?) "
+                "ON CONFLICT(route_id,method,error_class) DO UPDATE SET "
+                "request_count=http_request_metrics.request_count+1, "
+                "latency_total_ns=http_request_metrics.latency_total_ns+excluded.latency_total_ns, "
+                "latency_max_ns=MAX(http_request_metrics.latency_max_ns,excluded.latency_max_ns)",
+                (
+                    route_id,
+                    normalized_method,
+                    error_class,
+                    1,
+                    duration_ns,
+                    duration_ns,
+                ),
+            )
+
+    def observability(self) -> dict[str, Any]:
+        """Return aggregate request volume, latency, and error classifications."""
+
+        with self._db_lock, closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT route_id,method,error_class,request_count,latency_total_ns,latency_max_ns "
+                "FROM http_request_metrics ORDER BY route_id,method,error_class"
+            ).fetchall()
+
+        request_count = sum(int(row["request_count"]) for row in rows)
+        latency_total_ns = sum(int(row["latency_total_ns"]) for row in rows)
+        latency_max_ns = max((int(row["latency_max_ns"]) for row in rows), default=0)
+        errors = {
+            name: sum(
+                int(row["request_count"])
+                for row in rows
+                if row["error_class"] == name
+            )
+            for name in ("client_error", "server_error", "transport_error")
+        }
+        error_count = sum(errors.values())
+
+        grouped: dict[tuple[str, str], dict[str, int]] = {}
+        for row in rows:
+            key = (str(row["route_id"]), str(row["method"]))
+            group = grouped.setdefault(
+                key,
+                {
+                    "request_count": 0,
+                    "error_count": 0,
+                    "latency_total_ns": 0,
+                    "latency_max_ns": 0,
+                },
+            )
+            count = int(row["request_count"])
+            group["request_count"] += count
+            group["latency_total_ns"] += int(row["latency_total_ns"])
+            group["latency_max_ns"] = max(
+                group["latency_max_ns"], int(row["latency_max_ns"])
+            )
+            if row["error_class"] != "none":
+                group["error_count"] += count
+
+        routes = []
+        for (route_id, method), group in sorted(grouped.items()):
+            count = group["request_count"]
+            routes.append(
+                {
+                    "route": route_id,
+                    "method": method,
+                    "request_count": count,
+                    "error_count": group["error_count"],
+                    "error_rate": round(group["error_count"] / count, 6),
+                    "latency_ms": {
+                        "average": round(group["latency_total_ns"] / count / 1_000_000, 3),
+                        "max": round(group["latency_max_ns"] / 1_000_000, 3),
+                    },
+                }
+            )
+
+        return {
+            "schema_version": HTTP_OBSERVABILITY_SCHEMA,
+            "request_count": request_count,
+            "error_count": error_count,
+            "error_rate": round(error_count / request_count, 6) if request_count else 0.0,
+            "latency_ms": {
+                "average": (
+                    round(latency_total_ns / request_count / 1_000_000, 3)
+                    if request_count
+                    else 0.0
+                ),
+                "max": round(latency_max_ns / 1_000_000, 3),
+            },
+            "errors": errors,
+            "routes": routes,
         }
 
     def submit(self, payload: dict[str, Any], *, browser_token: str | None) -> Submission:

@@ -20,6 +20,12 @@
       "response_keys": ["status", "service", "live_experience", "release_sha"],
       "live_experience_values": ["available", "replay_only"],
       "release_sha": "40-character lowercase Git SHA for release images; development or local outside releases"
+    },
+    "GET /api/v1/observability": {
+      "success_status": 200,
+      "response_keys": ["schema_version", "request_count", "error_count", "error_rate", "latency_ms", "errors", "routes"],
+      "schema_version": "http-observability-v1",
+      "retained_request_data": false
     }
   },
   "limits": {
