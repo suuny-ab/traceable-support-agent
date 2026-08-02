@@ -8,5 +8,5 @@
    运维和回滚说明。
 4. 已用同一冻结 16 题生成内存 / pgvector 质量与冷暖耗时对比，Provider 调用为 0。
 5. 已完成定向、真数据库、API、live 容器、Web、治理和公开仓检查。
-6. 下一步重建两层状态，提交、推送一次并创建 Draft PR；确认同一 head 的 required Checks 后
-   写 Git 外精确 head 授权请求并停止。
+6. 已重建两层状态、推送并创建 Draft PR #61；下一步确认最终 head 的 required Checks，写
+   Git 外精确 head 授权请求并停止。

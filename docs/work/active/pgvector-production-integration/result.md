@@ -48,5 +48,5 @@
 
 ## 待执行
 
-候选尚未推送 / 创建 Draft PR。转 Ready、合并、生产部署和公网版本 / `live_experience` 核验
-都未获授权、未执行；因此不能声称生产已经使用 pgvector。
+候选已推送并创建 Draft PR #61。转 Ready、合并、生产部署和公网版本 / `live_experience`
+核验都未获授权、未执行；因此不能声称生产已经使用 pgvector。
