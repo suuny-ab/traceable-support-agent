@@ -6,39 +6,42 @@
 | --- | --- |
 | `state` | `candidate` |
 | 更新时间 | `2026-08-03` |
-| 当前产品目标 | 用 proposition → obligation → claim / evidence 确定性收据替换 R6 客户可见字面子串判据；自然改写通过，缺失和越界继续失败关闭 |
-| 项目基线 | `origin/main@8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
-| 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
-| 当前治理结果 | PR [#61](https://github.com/suuny-ab/traceable-support-agent/pull/61) 已从精确 head `074bab2bb00268957321da40348a58fca1b82797` squash merge 为 `8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24`；main CI、部署与公网完整 SHA 已核验 |
-| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）；真实复跑身份与历史数字不变；R6 proposition binding receipt 实现 head `44fdf33364f346d727e4c9a275269787894a6d30` 的 CI run `30767423207` 四项 required jobs 全绿，待状态回执最终 head Checks |
-| 活动工作 | [`stage12-r6-proposition-receipt`](work/active/stage12-r6-proposition-receipt/spec.md)（`docs/work/active/stage12-r6-proposition-receipt/`）：R6 判据实现与离线回归；[`stage12-r6-semantic-audit`](work/active/stage12-r6-semantic-audit/spec.md)（`docs/work/active/stage12-r6-semantic-audit/`）：前置六题确定性审计；[`stage12-night-fixes-revalidation`](work/active/stage12-night-fixes-revalidation/spec.md)（`docs/work/active/stage12-night-fixes-revalidation/`）：唯一真实复跑；[`stage12-typed-handoff-boundaries`](work/active/stage12-typed-handoff-boundaries/spec.md)（`docs/work/active/stage12-typed-handoff-boundaries/`）：R2 outcome 边界；[`stage12-obligation-source-contracts`](work/active/stage12-obligation-source-contracts/spec.md)（`docs/work/active/stage12-obligation-source-contracts/`）、[`stage12-generation-shape-diagnostics`](work/active/stage12-generation-shape-diagnostics/spec.md)（`docs/work/active/stage12-generation-shape-diagnostics/`）、[`stage12-handoff-scoring-contract`](work/active/stage12-handoff-scoring-contract/spec.md)（`docs/work/active/stage12-handoff-scoring-contract/`）、[`stage12-failure-root-cause`](work/active/stage12-failure-root-cause/spec.md)（`docs/work/active/stage12-failure-root-cause/`）、[`stage12-post-fix-revalidation`](work/active/stage12-post-fix-revalidation/spec.md)（`docs/work/active/stage12-post-fix-revalidation/`）：既有 Stage 12 证据；[`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）、[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）、[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
-| 风险 / 授权 | 完整 / R2；用户批准的唯一 Stage 12 Provider 复跑已消费：24 案例 / 150 调用 / ¥10 上限、自动重试 0、不补跑；夜班授权允许推送集成分支并更新 Draft PR #62，不授权 Ready、合并、部署或发布 |
-| Provider | `provider_enabled=true`；生产凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），本轮执行凭据也只在 Git 外。本轮 28 次调用、27 条有效 usage、215,176 tokens、机制估算 ¥0.7169342，自动重试 0；缺 1 条 usage，非账单确认；授权已耗尽 |
-| 阻碍 | 候选 scorer 只能机械证明绑定身份、范围和完整性，不能证明开放域语义真实性；离线回归仍有 7 题 / 8 码涉及义务、outcome 与来源失败，发布主张继续阻断 |
-| 当前证据 | 公开自然改写 / 缺义务 / 缺 claim / 越源 / 伪造 ID 正反例通过；已消费六个 R6 案例在候选 scorer 下 6/6 恢复，其余 18 例分类不变；Stage 12 25、API 163 / 4 skipped、治理 126 / 8 skipped、Web 36、公开扫描 293 files / 8 cases、私有新增长字符串命中 0；Provider 调用 0，历史 24/24、11 通过、14 码不改 |
+| 当前产品目标 | 夜间集成包的产品、评测与证据增量已经完成；保持候选边界真实并交给 GitHub exact-head 门、当次外部授权与公网运行身份完成后续发布核验，不继续扩展功能 |
+| 纠偏时项目基线 | `origin/main@8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24`；这是本次 pre-merge 状态纠偏的固定基线，不冒充后续 GitHub 实时状态 |
+| 纠偏时运行基线 | 公开 Beta；`product/0.1.0` 未发布；公网在本次纠偏前返回 `status=ok`、`live_experience=available`、`release_sha=8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
+| 当前治理证据 | 夜间集成 old head `463b58f50602cb8290e7d618d021ae2c00c8704f` 的 `ci-release` run `30767510251` 中 governance、web、api、containers 全部成功，PR 事件 publish 跳过；本状态纠偏必须形成新 exact head 并重新通过相同 required Checks，精确新 head 只由 GitHub / 外部回执记录 |
+| 当前产品候选 | [PR #62](https://github.com/suuny-ab/traceable-support-agent/pull/62) 的夜间集成包：P1 聚合观测、公开 HOLDOUT 首次观测、数字口径卡、Stage 12 诊断与机械合同修复、Provider 前 typed handoff、唯一复跑及 R6 命题绑定收据均已完成；本文件不声明 PR 当前 lifecycle 或部署结果，实时状态分别以 GitHub 与公网完整 `release_sha` 为准 |
+| 风险 / 授权 | 完整 / R2；唯一 Stage 12 Provider 复跑授权已消费且不得补跑。第一次发布授权只绑定 old head，并因本次必须产生新 head 而失效；任何 Ready、merge、deploy 都必须在 Git 外重新绑定 exact base/head 明文批准，Git 文件不能授予外部动作 |
+| Provider | 生产 `provider_enabled=true`；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600）。夜间唯一复跑为 28 次调用、27 条有效 usage、215,176 tokens、机制估算 ¥0.7169342、自动重试 0，缺 1 条 usage 所以不是账单确认。本状态纠偏的 Provider 调用、评测、产品运行与服务器动作均为 0 |
+| 质量边界 | 历史真实复跑保持 24/24 执行、11 通过、14 个失败码；候选 scorer 的 17/24、8 码只作同一已消费集离线回归。剩余 7 题 / 8 码继续限制 `product/0.1.0` 正式质量主张，但不替代 Public Beta 候选的独立 exact-head 发布授权判断 |
+| 当前证据 | 夜间集成本地与 required Checks 已覆盖 API、Web、容器、治理、公开安全、HOLDOUT 冻结边界、typed handoff 和 R6 收据；能证明候选合同与固定回归，不证明新 unseen/generalization、线上成功率、开放域语义真实性、SLA 或 `product/0.1.0` 发布成熟度 |
+
+## 夜间集成候选组成（均已完成）
+
+| 组成 | 状态 | 结果边界 |
+| --- | --- | --- |
+| [`minimal-observability`](work/active/minimal-observability/spec.md) (`docs/work/active/minimal-observability/`) | `candidate_complete` | SQLite 聚合观测与只读端点；无外部监控、原始请求或质量证明 |
+| [`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md) (`docs/work/active/retrieval-unseen-holdout/`) | `observed_frozen` | 10 题公开合成 HOLDOUT 首次观察已冻结，揭示后只作回归 |
+| [`public-metrics-card`](work/active/public-metrics-card/spec.md) (`docs/work/active/public-metrics-card/`) | `candidate_complete` | 统一既有数字定义与证据边界，不产生新测量 |
+| [`stage12-post-fix-revalidation`](work/active/stage12-post-fix-revalidation/spec.md) (`docs/work/active/stage12-post-fix-revalidation/`) | `candidate_complete` | 同一已消费集首次复验 24/24、2 通过；不补跑 |
+| [`stage12-failure-root-cause`](work/active/stage12-failure-root-cause/spec.md) (`docs/work/active/stage12-failure-root-cause/`) | `candidate_complete` | 失败信号完整归类，不自动形成修复或产品取舍 |
+| [`stage12-handoff-scoring-contract`](work/active/stage12-handoff-scoring-contract/spec.md) (`docs/work/active/stage12-handoff-scoring-contract/`) | `candidate_complete` | matched handoff 与 candidate 评分合同分离 |
+| [`stage12-generation-shape-diagnostics`](work/active/stage12-generation-shape-diagnostics/spec.md) (`docs/work/active/stage12-generation-shape-diagnostics/`) | `candidate_complete` | 生成外形粗码离线细分，不恢复历史私有响应 |
+| [`stage12-obligation-source-contracts`](work/active/stage12-obligation-source-contracts/spec.md) (`docs/work/active/stage12-obligation-source-contracts/`) | `candidate_complete` | 义务规划与合法额外来源机械账本 |
+| [`stage12-typed-handoff-boundaries`](work/active/stage12-typed-handoff-boundaries/spec.md) (`docs/work/active/stage12-typed-handoff-boundaries/`) | `candidate_complete` | 六类边界在 Provider 前 typed handoff，固定案例 0 调用 |
+| [`stage12-night-fixes-revalidation`](work/active/stage12-night-fixes-revalidation/spec.md) (`docs/work/active/stage12-night-fixes-revalidation/`) | `candidate_complete` | 唯一夜间真实复跑 24/24、11 通过、28 调用，不补跑 |
+| [`stage12-r6-semantic-audit`](work/active/stage12-r6-semantic-audit/spec.md) (`docs/work/active/stage12-r6-semantic-audit/`) | `candidate_complete` | 六题 / 11 命题审计：真遗漏 0、字面假阴性 6 |
+| [`stage12-r6-proposition-receipt`](work/active/stage12-r6-proposition-receipt/spec.md) (`docs/work/active/stage12-r6-proposition-receipt/`) | `candidate_complete` | 命题绑定收据取代客户可见字面门；六题回归 6/6、其余 18 题分类不变 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
-| `stage12-r6-proposition-receipt` | `candidate_ci_green` | 公开正反例、六题 / 18 题零漂移离线回归和全量治理已通过；实现 head CI 绿，待状态回执最终 head Checks |
-| `stage12-r6-semantic-audit` | `candidate_ci_green` | 六题 / 11 命题逐条完成，真遗漏 0、字面假阴性 6；后续实现由 `stage12-r6-proposition-receipt` 承接 |
-| `stage12-night-fixes-revalidation` | `candidate_ci_green` | 24/24、11 通过、28 调用、六个 typed handoff 全命中；最终 head `4a69a077` 四项 required Checks 全绿 |
-| `stage12-typed-handoff-boundaries` | `candidate_ci_green` | 六行决策表、公开等价回归与真实复跑六例 type + reason / 0 调用 / 全通过；待最终 head Checks |
-| `stage12-obligation-source-contracts` | `candidate_ci_green` | 公开夹具、24 题 scorer-only 差异、全量治理与实现 head CI 通过；待状态回执最终 head Checks |
-| `stage12-generation-shape-diagnostics` | `candidate_ci_green` | 四分支离线复现、诊断拆码、产品 handoff、全量治理与实现 head CI 通过；待状态回执最终 head Checks |
-| `stage12-handoff-scoring-contract` | `candidate_ci_green` | 4 题 / 6 码定向修复、20 题零漂移；实现 head CI 全绿，待状态回执最终 head Checks |
-| `stage12-failure-root-cause` | `candidate_ci_green` | 六类根因与最小修复候选已落文档；实现 head CI 全绿，待状态回执最终 head Checks，不实施修复 |
-| `stage12-post-fix-revalidation` | `candidate_ci_green` | 24/24、2 通过已落盘；结果 head CI 全绿，待状态回执最终 head Checks，不补跑 |
-| `public-metrics-card` | `candidate_ci_green` | 实现 head `b01adb9b` 与 run `30753847922` 全绿；待回执提交最终 head Checks，不自动 Ready / 合并 / 部署 |
-| `retrieval-unseen-holdout` | `observed_frozen` | 首次检索观察已落盘；只作回归，不改检索 / 题 / 标签 / 知识；待全集、治理和 Draft PR #62 最终 head Checks |
-| `minimal-observability` | `candidate_ci_green` | 随 Draft PR #62 上一最终 head `4a69a077` 四项 required Checks 全绿；不自动转 Ready、合并或部署 |
-| `pgvector-production-integration` | `delivered` | PR #61 merge / main CI / deploy / 公网完整 SHA 均已核验；工作记录已归档到 `docs/work/completed/` |
-| `dependency-security-maintenance` | `delivered` | PR #60 已交付；不在本切片继续依赖升级 |
-| `ISSUE-14-RELEASE-DECISION` | `deferred` | 不在本切片内；不得从依赖修复推导发布结论 |
+| `night-20260802-integration` | `candidate_complete` | 上述 12 个组成已收口；本状态提交不自指 SHA，外部 release gate 负责新 head Checks、当次授权、merge / deploy 与运行身份 |
+| `ISSUE-14-RELEASE-DECISION` | `deferred` | `product/0.1.0` 继续未发布；不得把 Public Beta 候选部署等同正式质量门通过 |
 
 ## 下一检查点
 
-本切片停止点：完成 R6 proposition binding receipt 判据、公开正反例、已消费六题 / 其余 18 题
-离线回归和脱敏收据；Provider 授权已耗尽，不重跑、不补跑。运行公开安全 / 泄漏 / 全量治理并
-确认 Draft PR #62 最终 head required Checks 全绿后停止；不转 Ready、不合并、不部署、不发布。
+本状态提交的 pre-merge 门序列固定为：状态纠偏 commit → 新 exact head required Checks → 停止并
+等待用户对该新 base/head 重新批准发布。它不声明 PR 此刻仍为 Draft 或尚未合并；后续生命周期以
+GitHub 为准，生产身份只以公网 `/api/v1/health` 的完整 `release_sha` 为准，避免未来合并后失真。
