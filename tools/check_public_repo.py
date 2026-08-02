@@ -1036,11 +1036,35 @@ def _active_increment_errors(entries: list[Entry]) -> list[str]:
         for slug in active_slugs:
             if f"docs/work/active/{slug}/" not in status:
                 errors.append(f"status_does_not_link_active_increment:{slug}")
-        if not active_paths and not (
-            "| `state` | `ready` |" in status
-            and "| 活动工作 | 无 |" in status
-        ):
-            errors.append("active_increment_count:0")
+    except (UnicodeDecodeError, ValueError) as exc:
+        errors.append(str(exc))
+    return errors
+
+
+def _governance_rule_errors(entries: list[Entry]) -> list[str]:
+    mapped = _entry_map(entries)
+    errors: list[str] = []
+    try:
+        agents = _read(mapped, "AGENTS.md")
+        if len(agents.splitlines()) > 110:
+            errors.append("agents_rule_index_too_long")
+        owner_marker = "## 授权层：唯一默认值正文"
+        rule_paths = (
+            "AGENTS.md",
+            "docs/engineering/agent-workflow.md",
+            "docs/engineering/development-flow.md",
+            "docs/engineering/github-lifecycle.md",
+            "docs/engineering/operations.md",
+            "docs/engineering/quality.md",
+            "docs/engineering/review.md",
+            "docs/work/README.md",
+        )
+        owners = [
+            path for path in rule_paths
+            if owner_marker in _read(mapped, path)
+        ]
+        if owners != ["docs/engineering/review.md"]:
+            errors.append("authorization_policy_owner_invalid")
     except (UnicodeDecodeError, ValueError) as exc:
         errors.append(str(exc))
     return errors
@@ -1048,7 +1072,7 @@ def _active_increment_errors(entries: list[Entry]) -> list[str]:
 
 def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
     mapped = _entry_map(entries)
-    errors = _active_increment_errors(entries)
+    errors = _active_increment_errors(entries) + _governance_rule_errors(entries)
     try:
         status = _read(mapped, "docs/status.md")
         project = _read(mapped, "PROJECT.md")

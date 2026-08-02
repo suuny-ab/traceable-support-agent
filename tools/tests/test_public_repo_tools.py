@@ -20,6 +20,7 @@ from tools.check_public_repo import (
     _deployment_workflow_errors,
     _release_decision_workflow_errors,
     _path_errors,
+    _governance_rule_errors,
 )
 from tools.deploy_ssh_transport import (
     DeployInputError,
@@ -47,21 +48,19 @@ from tools.validate_deploy_port import normalize_deploy_port
 
 
 class PublicScannerTest(unittest.TestCase):
-    def test_active_increment_allows_explicit_ready_idle_state(self) -> None:
-        ready = Entry(
-            "docs/status.md",
-            "| `state` | `ready` |\n| 活动工作 | 无 |\n".encode(),
-        )
-        self.assertEqual(_active_increment_errors([ready]), [])
-
-        migrating = Entry(
-            "docs/status.md",
-            "| `state` | `migrating` |\n| 活动工作 | 无 |\n".encode(),
-        )
-        self.assertIn(
-            "active_increment_count:0",
-            _active_increment_errors([migrating]),
-        )
+    def test_active_increment_count_is_not_inferred_from_progress_state(self) -> None:
+        scenarios = {
+            "pr43_in_progress": "in_progress",
+            "pr52_candidate": "candidate",
+            "retrieval_active": "active",
+        }
+        for name, state in scenarios.items():
+            with self.subTest(name=name):
+                status = Entry(
+                    "docs/status.md",
+                    f"| `state` | `{state}` |\n| 活动工作 | 无 |\n".encode(),
+                )
+                self.assertEqual(_active_increment_errors([status]), [])
 
     def test_active_increment_allows_parallel_isolated_work(self) -> None:
         entries = [
@@ -115,6 +114,40 @@ class PublicScannerTest(unittest.TestCase):
                     "active_increment_layout_invalid",
                     _active_increment_errors(active_entries(paths, linked_status)),
                 )
+
+    def test_governance_rule_index_has_one_authorization_owner(self) -> None:
+        paths = (
+            "AGENTS.md",
+            "docs/engineering/agent-workflow.md",
+            "docs/engineering/development-flow.md",
+            "docs/engineering/github-lifecycle.md",
+            "docs/engineering/operations.md",
+            "docs/engineering/quality.md",
+            "docs/engineering/review.md",
+            "docs/work/README.md",
+        )
+        entries = [Entry(path, b"pointer\n") for path in paths]
+        entries[0] = Entry("AGENTS.md", b"short index\n")
+        review_index = paths.index("docs/engineering/review.md")
+        entries[review_index] = Entry(
+            "docs/engineering/review.md",
+            "## 授权层：唯一默认值正文\n".encode(),
+        )
+        self.assertEqual(_governance_rule_errors(entries), [])
+
+        duplicate = list(entries)
+        duplicate[0] = Entry(
+            "AGENTS.md",
+            "## 授权层：唯一默认值正文\n".encode(),
+        )
+        self.assertIn(
+            "authorization_policy_owner_invalid",
+            _governance_rule_errors(duplicate),
+        )
+
+        too_long = list(entries)
+        too_long[0] = Entry("AGENTS.md", ("line\n" * 111).encode())
+        self.assertIn("agents_rule_index_too_long", _governance_rule_errors(too_long))
 
     def test_environment_examples_are_exact(self) -> None:
         self.assertNotIn("environment_file_not_allowed", _path_errors(Entry("web/.env.example", b"X=\n")))
