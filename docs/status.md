@@ -12,19 +12,19 @@
 | 当前集成任务 | `retrieval-badcase-loop`；隔离分支 `codex/retrieval-badcase-loop`，基于 `origin/main` |
 | 复杂度 | 标准 / `R0`；本地合成数据、离线 BGE 与确定性检索，不含 Provider、费用、外部业务写入、合并或部署 |
 | 风险 / 成熟度 | 候选直接针对同一 16 题公开开发集调优，只能证明该开发集的来源覆盖变化；不是未见集、回答质量、线上成功率或发布结论 |
-| 产品候选 | PR #54 head `d8cd208` 四个 required jobs 全绿、等待合并授权；检索候选尚在本地隔离分支，未推送 |
+| 产品候选 | PR #54 head `d8cd208` 四个 required jobs 全绿、等待合并授权；检索实现提交 `80953b5` 已固定在本地隔离分支，未推送 |
 | 项目基线 | `origin/main` 当前 head（本文件不固定基线 SHA，避免合并后失真）；唯一权威位置为主 worktree `traceable-support-agent` |
 | 活动工作 | 无 |
 | 最近完成 | 已 fetch 对齐远端元数据；PR #54 运行 `30700889472` 成功；检索候选把目标必需来源由 BM25 第 6 提至第 5，并通过 API、Stage 12 与治理检查 |
 | 阻碍 | 合并 PR #54 会写 `main` 并进入既有自动部署链，已写授权请求、未执行；检索候选若要推送并形成新的公开主张，也须在固定提交后取得当次确认 |
 | Provider | 生产已启用（`2026-07-29`，用户显式授权）：`provider_enabled=true`；当前公网健康返回 `release_sha=915ca4ef7820870ee42fbef69ea719498d7f402d` 与 `live_experience=available`。本增量 Provider 调用 `0` 次，没有创建产品运行，也未改变凭据、预算或默认检索后端；凭据仍只在服务器 `/opt/traceable-support/provider.env`（0600），预算仍为日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0 |
-| 下一检查点 | 固定检索候选本地提交并复核工作树；不推送、不建 PR、不合并、不部署，等待用户分别裁决 PR #54 合并与检索候选公开交付 |
+| 下一检查点 | 不推送、不建 PR、不合并、不部署，等待用户分别裁决 PR #54 合并与检索候选公开交付 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 结果 |
 | --- | --- | --- |
-| `retrieval-badcase-loop` | `candidate_local` | `RET-DEV-R2-008` 的 `COMMON-FAQ/wet-environment` 在 BM25 从第 6 到第 5；BM25 Top-5 14/16 → 15/16，BGE 14/16、RRF 16/16、三路 Top-10 16/16、错误型号来源 0；未推送 |
+| `retrieval-badcase-loop` | `candidate_local` | 实现提交 `80953b5`；`RET-DEV-R2-008` 的 `COMMON-FAQ/wet-environment` 在 BM25 从第 6 到第 5；BM25 Top-5 14/16 → 15/16，BGE 14/16、RRF 16/16、三路 Top-10 16/16、错误型号来源 0；未推送 |
 | `portfolio-evidence-first-screen` | `checks_green_awaiting_authorization` | Draft PR #54，head `d8cd2081f5b481cbef597ba5dd534f78d70851b4`；运行 `30700889472` 的 governance、web、api、containers 全绿，未合并、未部署 |
 | `frontend-polish-delivery` | `delivered` | PR #52 合并为 `915ca4e`；main CI、生产部署、公网完整 SHA、四页文案与样式检查通过；Provider 调用 0，工作记录已归档 |
 | `frontend-polish` | `delivered` | 本地候选 `a6ff775` 经后续最小治理记录形成 PR #52 并公开交付；用户于 `2026-08-01` 完成整体体验验收 |
@@ -74,6 +74,8 @@ Task 可以并行；required Checks、所需当次授权、触发时的评审兜
   未见证据。
 - 前后结果：目标来源 BM25 第 6 → 第 5；BM25 Top-5 全覆盖 14/16 → 15/16；BGE 保持
   14/16；RRF 保持 16/16；三路 Top-10 均 16/16；错误型号来源均 0；Provider 调用 0。
+- 本地实现提交：`80953b5`（`Improve one retrieval badcase`）；提交未推送，后续状态回执不改变
+  该实现证据。
 
 ### 验证
 
