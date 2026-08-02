@@ -1,0 +1,209 @@
+{
+  "schema_version": "retrieval-holdout-v1",
+  "purpose": "A frozen public synthetic unseen set for one retrieval-only observation against evaluation-only knowledge units that are disjoint from the public development corpus.",
+  "status": "frozen_public_synthetic_unseen_retrieval_set",
+  "frozen_on": "2026-08-02",
+  "freeze_rule": "Freeze questions, labels and evaluation-only knowledge before the first ranking observation. After reveal, use this version only as a regression record: do not tune retrieval, edit cases, weaken labels or replace knowledge against its result.",
+  "source_units": [
+    {
+      "source_ref": "HOLDOUT-R1-GUIDE/quiet-window",
+      "document_id": "HOLDOUT-R1-GUIDE",
+      "section_id": "quiet-window",
+      "section_heading": "静默时段",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 的静默时段只暂停提示音和按键播报，不会取消已经预约的清扫。若希望夜间完全不启动，应另行关闭对应预约；静默结束后提示音自动恢复。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-GUIDE/panel-lock",
+      "document_id": "HOLDOUT-R1-GUIDE",
+      "section_id": "panel-lock",
+      "section_heading": "面板锁定",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 暂停时，同时短按局部键与回座键可锁定顶盖按键，蓝灯会连续闪三次。解除时重复同一操作；锁定只影响机身按键，不改变预约。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-CONNECT/app-rebind",
+      "document_id": "HOLDOUT-R1-CONNECT",
+      "section_id": "app-rebind",
+      "section_heading": "重新绑定",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 更换路由器后，先在应用中移除旧的离线设备，再让主机进入配网等待状态并重新添加。重新绑定不会恢复旧路由器保存的预约，提交前应逐项核对。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-CLEAN/edge-pass",
+      "document_id": "HOLDOUT-R1-CLEAN",
+      "section_id": "edge-pass",
+      "section_heading": "沿边补扫",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 完成全屋任务后可单独启动沿边补扫。把主机放在距离墙面二十厘米以内，短按局部键两次；主机会沿当前房间边界运行一圈后原地停止。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-CARE/transport-latch",
+      "document_id": "HOLDOUT-R1-CARE",
+      "section_id": "transport-latch",
+      "section_heading": "运输锁扣",
+      "applicable_models": ["CZ-R1"],
+      "text": "寄送 CZ-R1 前应关机并取出尘盒，把底部灰色运输锁扣拨到锁定位置，再用缓冲材料固定主机。重新使用前必须先解除锁扣，不得在锁定状态启动轮组。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-CARE/filter-life",
+      "document_id": "HOLDOUT-R1-CARE",
+      "section_id": "filter-life",
+      "section_heading": "滤芯寿命提示",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 的滤芯寿命按累计风机时间估算。更换干燥的新滤芯后，应在耗材页长按滤芯卡片四秒清零；只清零但未更换会让寿命显示失真。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-MAP/room-exclusion",
+      "document_id": "HOLDOUT-R1-MAP",
+      "section_id": "room-exclusion",
+      "section_heading": "临时房间排除",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 可在单次任务中临时排除一个已命名房间。排除标记只对本次任务有效，任务结束即失效；需要长期避开时应建立固定禁区。"
+    },
+    {
+      "source_ref": "HOLDOUT-R1-GUIDE/speaker-level",
+      "document_id": "HOLDOUT-R1-GUIDE",
+      "section_id": "speaker-level",
+      "section_heading": "提示音音量",
+      "applicable_models": ["CZ-R1"],
+      "text": "CZ-R1 提示音提供低、中、高三级，调整后会播放一次样例音。音量设置不影响故障蜂鸣，安全类蜂鸣始终使用固定响度。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-STATION/drying-cycle",
+      "document_id": "HOLDOUT-R2-STATION",
+      "section_id": "drying-cycle",
+      "section_heading": "拖布风干",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 基站清洗拖布后会执行九十分钟常温风干。中途开盖会暂停风干，合盖后三分钟内续接剩余时长；直接拔电不会保存剩余进度。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-STATION/detergent-dose",
+      "document_id": "HOLDOUT-R2-STATION",
+      "section_id": "detergent-dose",
+      "section_heading": "清洁液计量",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 的合成专用清洁液只能装入基站计量盒，由基站自动稀释。不得把原液直接倒入清水桶，也不得混用起泡剂；计量盒缺失时只使用清水。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-STATION/tank-float",
+      "document_id": "HOLDOUT-R2-STATION",
+      "section_id": "tank-float",
+      "section_heading": "清水桶浮子",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 基站误报清水不足时，先取出清水桶，确认白色浮子能上下自由移动，再擦干桶底触点。浮子被水垢卡住时只可用软刷清理，不可涂油。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-MOP/lift-calibration",
+      "document_id": "HOLDOUT-R2-MOP",
+      "section_id": "lift-calibration",
+      "section_heading": "拖布抬升校准",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 更换拖布支架后若左右抬升不同步，应让主机空载回到基站，在维护页启动一次抬升校准。校准期间不得安装湿拖布或推动主机。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-CLEAN/carpet-boost",
+      "document_id": "HOLDOUT-R2-CLEAN",
+      "section_id": "carpet-boost",
+      "section_heading": "地毯增压",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 的地毯增压只在纯吸尘任务中把吸力临时提高一档。扫拖任务即使识别到短绒地毯也不会启用增压；离开地毯十秒后恢复原吸力。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-STATION/bag-odor",
+      "document_id": "HOLDOUT-R2-STATION",
+      "section_id": "bag-odor",
+      "section_heading": "集尘袋异味",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 集尘舱出现异味时应更换已受潮的密封袋，并用干布清洁舱体后保持舱盖开启二十分钟。集尘袋不可水洗、烘干或重复装填。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-SYSTEM/offline-update",
+      "document_id": "HOLDOUT-R2-SYSTEM",
+      "section_id": "offline-update",
+      "section_heading": "离线升级包",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 使用离线升级包时，主机电量必须高于百分之六十并停在基站内。校验码不匹配应立即删除升级包；升级灯熄灭前不得移动主机或切断基站电源。"
+    },
+    {
+      "source_ref": "HOLDOUT-R2-STATION/base-light",
+      "document_id": "HOLDOUT-R2-STATION",
+      "section_id": "base-light",
+      "section_heading": "基站夜灯",
+      "applicable_models": ["CZ-R2"],
+      "text": "CZ-R2 基站夜灯可设为常灭、感应或常亮。感应模式只由近距离移动触发，三十秒后自动熄灭；该设置与主机的提示音和清扫预约互不影响。"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "RET-HOLDOUT-R1-001",
+      "product_model": "CZ-R1",
+      "query": "R1 设了半夜不出声，但预约任务还是自己开跑了。怎样才能让它整晚别动，静默结束后声音会不会回来？",
+      "traits": ["single_source", "robust_expression"],
+      "required_source_sections": ["HOLDOUT-R1-GUIDE/quiet-window"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-002",
+      "product_model": "CZ-R1",
+      "query": "孩子老按 R1 顶盖，我想先把实体键锁住；最近又换了路由器，重新连应用后旧预约会自动回来吗？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["HOLDOUT-R1-GUIDE/panel-lock", "HOLDOUT-R1-CONNECT/app-rebind"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-003",
+      "product_model": "CZ-R1",
+      "query": "R1 全屋扫完墙根还剩一圈碎屑，单独沿墙补一遍要怎么摆机器、按几次键，最后会去哪？",
+      "traits": ["single_source"],
+      "required_source_sections": ["HOLDOUT-R1-CLEAN/edge-pass"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-004",
+      "product_model": "CZ-R1",
+      "query": "准备把 R1 寄走，底下的灰色卡扣怎么处理？顺便换了新滤芯，耗材寿命在哪里清零、空点清零行不行？",
+      "traits": ["multi_source", "robust_expression"],
+      "required_source_sections": ["HOLDOUT-R1-CARE/transport-latch", "HOLDOUT-R1-CARE/filter-life"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-005",
+      "product_model": "CZ-R1",
+      "query": "只想这一次不让 R1 进书房，不想永久画禁区；任务完了还会继续避开吗？另外提示音调低会连故障蜂鸣也变小吗？",
+      "traits": ["multi_source", "cross_document"],
+      "required_source_sections": ["HOLDOUT-R1-MAP/room-exclusion", "HOLDOUT-R1-GUIDE/speaker-level"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-001",
+      "product_model": "CZ-R2",
+      "query": "R2 洗完拖布正在吹风，我掀了一下基站盖子，合上后能接着吹吗？专用清洁液是倒清水桶还是放计量盒？",
+      "traits": ["multi_source", "robust_expression"],
+      "required_source_sections": ["HOLDOUT-R2-STATION/drying-cycle", "HOLDOUT-R2-STATION/detergent-dose"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-002",
+      "product_model": "CZ-R2",
+      "query": "R2 基站明明有水却说清水不足，白色浮块该怎么查？换过拖布架后两边升得不齐，校准时能挂着湿拖布吗？",
+      "traits": ["multi_source", "cross_document", "robust_expression"],
+      "required_source_sections": ["HOLDOUT-R2-STATION/tank-float", "HOLDOUT-R2-MOP/lift-calibration"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-003",
+      "product_model": "CZ-R2",
+      "query": "R2 扫到短绒地毯时吸力会自动加一档吗？如果当时装着拖布，离开地毯多久恢复？",
+      "traits": ["single_source"],
+      "required_source_sections": ["HOLDOUT-R2-CLEAN/carpet-boost"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-004",
+      "product_model": "CZ-R2",
+      "query": "R2 基站尘袋发潮有味道，能洗干净晒干再用吗？夜里只想有人靠近时亮灯，该选哪种模式、多久熄？",
+      "traits": ["multi_source"],
+      "required_source_sections": ["HOLDOUT-R2-STATION/bag-odor", "HOLDOUT-R2-STATION/base-light"]
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-005",
+      "product_model": "CZ-R2",
+      "query": "要给没联网的 R2 装升级包，电量最低要多少、机器放哪儿？校验码对不上和升级灯没灭时分别该怎么做？",
+      "traits": ["single_source", "robust_expression"],
+      "required_source_sections": ["HOLDOUT-R2-SYSTEM/offline-update"]
+    }
+  ]
+}
