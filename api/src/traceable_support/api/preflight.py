@@ -82,7 +82,11 @@ _OUT_OF_SCOPE_INTENTS = (
 )
 
 
-def preflight(text: str, product_model: str | None = None) -> str | None:
+def preflight(
+    text: str,
+    product_model: str | None = None,
+    task_type: str | None = None,
+) -> str | None:
     """Return a client-safe handoff code or ``None`` for an allowed input."""
 
     lowered = text.casefold()
@@ -90,7 +94,9 @@ def preflight(text: str, product_model: str | None = None) -> str | None:
         phrase in lowered for phrase in _SENSITIVE_PHRASES
     ):
         return "sensitive_input_blocked"
-    boundary = evaluate_generation_boundary(text, product_model)
+    boundary = evaluate_generation_boundary(
+        text, product_model, task_type=task_type
+    )
     if boundary is not None:
         return boundary.reason
     if any(term in lowered for term in _OUT_OF_SCOPE_INTENTS):

@@ -11,6 +11,7 @@ export interface ApiDemoResult {
   note: string;
   actionSteps?: string[];
   handoff_reason?: string | null;
+  handoff_type?: string | null;
   provider_call_count?: number | null;
 }
 

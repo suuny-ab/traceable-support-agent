@@ -154,6 +154,7 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "handoff")
         self.assertEqual(result["provider_call_count"], 2)
         self.assertEqual(result["handoff_reason"], "completeness_gate_failed")
+        self.assertEqual(result["handoff_type"], "generation_failure")
 
     def test_http_observability_rolls_up_without_request_content(self) -> None:
         service = self._service(live_enabled=False)
@@ -264,6 +265,7 @@ class PublicRunServiceTests(unittest.TestCase):
             value = service.get_run(submission.run_id)
             self.assertEqual(value["status"], "handoff")
             self.assertEqual(value["result"]["handoff_reason"], reason)
+            self.assertIsNotNone(value["result"]["handoff_type"])
             self.assertEqual(value["result"]["provider_call_count"], 0)
         self.assertEqual(calls, 0)
         with closing(sqlite3.connect(self.database)) as connection:
@@ -273,6 +275,47 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertEqual(len(rows), len(cases))
         self.assertTrue(all(row[0] is None for row in rows))
         self.assertNotIn("13800138000", self.database.read_bytes().decode("latin1"))
+
+    def test_public_after_sales_commitment_is_typed_and_blocked_before_runner(self) -> None:
+        suite = json.loads(
+            (Path(__file__).resolve().parents[2] / "evals" / "public-regression-v1.json")
+            .read_text(encoding="utf-8")
+        )
+        case = next(
+            item for item in suite["cases"] if item["case_id"] == "GEN-DEV-MH-003"
+        )
+        calls = 0
+
+        def runner(_row: dict[str, object], _stage: object) -> tuple[dict[str, object], int]:
+            nonlocal calls
+            calls += 1
+            return _candidate_package("ticket"), 2
+
+        service = self._service(
+            live_enabled=True,
+            product_runner=_product_runner(runner),
+        )
+        submission = service.submit(
+            _payload(
+                case["input"],
+                task_type=case["task_type"],
+                product_model=case["product_model"],
+            ),
+            browser_token=None,
+        )
+        value = service.get_run(submission.run_id)
+        self.assertEqual(value["status"], "handoff")
+        self.assertEqual(value["result"]["handoff_type"], "human_authority")
+        self.assertEqual(
+            value["result"]["handoff_reason"], case["expected"]["handoff_reason"]
+        )
+        self.assertEqual(value["result"]["provider_call_count"], 0)
+        self.assertEqual(calls, 0)
+        with closing(sqlite3.connect(self.database)) as connection:
+            stored = connection.execute(
+                "SELECT input_text FROM runs WHERE run_id=?", (submission.run_id,)
+            ).fetchone()[0]
+        self.assertIsNone(stored)
 
     def test_preflight_allows_explicit_model_capability_questions_to_runner(self) -> None:
         calls = 0
@@ -376,6 +419,7 @@ class PublicRunServiceTests(unittest.TestCase):
                 "gates",
                 "note",
                 "handoff_reason",
+                "handoff_type",
                 "provider_call_count",
             },
         )

@@ -116,3 +116,11 @@ R4 / R5 已在后续切片用 host-owned obligation / claim / evidence 账本分
 `required_obligation_missing`；24 题通过数保持 6，其余根因逐题不变。结果见
 [`stage12-obligation-source-contracts/result.md`](../stage12-obligation-source-contracts/result.md)。
 这不修改生成或历史 package，也不是新的 Stage 12 / 模型质量观测。
+
+## R2 后续回执
+
+用户已选择 B 路线：证据不足或只能半答时 typed handoff，不产 safe candidate。R2 六个预登记
+案例已由生成前确定性边界覆盖为 `model_scope` / `evidence_gap` / `human_authority`，全部
+transport factory 调用 0、Provider 调用 0；公开 `GEN-DEV-MH-003` 产品差距同步关闭。结果见
+[`stage12-typed-handoff-boundaries/result.md`](../stage12-typed-handoff-boundaries/result.md)。这只
+证明已消费六例与公开等价回归的边界 outcome，不是新的 Stage 12 或回答质量观测。

@@ -10,22 +10,32 @@ def blocked_result(code: str) -> dict[str, Any]:
         answer = "检测到可能包含敏感信息，系统已在模型调用前停止，并且不保存这段原文。"
         title = "敏感输入已拦截"
         obligations = ["不调用模型", "不保存敏感原文", "提示改用合成或脱敏信息"]
+        handoff_type = "input_policy"
     elif code == "out_of_scope_blocked":
         answer = "当前体验只支持 CZ-R1 / CZ-R2 合成客服资料范围内的问题，本次未调用模型。"
         title = "问题超出体验范围"
         obligations = ["限定产品范围", "不生成无来源回答", "失败时诚实停止"]
+        handoff_type = "scope"
     elif code == "unsupported_claim":
         answer = "批准资料未覆盖该问题涉及的产品能力，系统已在模型调用前停止并转人工核实，不会猜测或补写结论。"
         title = "证据不足 · 转人工"
         obligations = ["不猜测未覆盖的产品能力", "模型调用前停止", "由人工核对批准规格"]
+        handoff_type = "evidence_gap"
     elif code == "model_scope_conflict":
         answer = "请求涉及当前型号不具备的专属能力，系统已在模型调用前转人工，避免混用另一型号的操作步骤。"
         title = "型号边界已转人工"
         obligations = ["不混用型号步骤", "停止模型生成", "由人工确认产品型号与能力"]
+        handoff_type = "model_scope"
+    elif code == "after_sales_commitment":
+        answer = "该请求需要人工审核并执行售后动作，系统已在模型调用前转人工，不会声称已经退款、换新或安排维修。"
+        title = "售后动作待人工"
+        obligations = ["不代替人工批准", "不执行外部业务动作", "不生成虚假完成态"]
+        handoff_type = "human_authority"
     else:
         answer = "检测到潜在安全风险，系统已在模型调用前转人工。请停止继续操作设备并联系人工支持。"
         title = "安全风险已转人工"
         obligations = ["停止模型生成", "避免继续操作设备", "由人工确认后续处理"]
+        handoff_type = "safety"
     return {
         "mode": "handoff",
         "outcome": "handoff",
@@ -40,6 +50,7 @@ def blocked_result(code: str) -> dict[str, Any]:
         ],
         "note": "该结果由确定性前置规则产生，不是模型输出，也不会触发外部业务动作。",
         "handoff_reason": code,
+        "handoff_type": handoff_type,
         "provider_call_count": 0,
     }
 
@@ -58,6 +69,7 @@ def execution_failure_result() -> dict[str, Any]:
         ],
         "note": "系统不会展示未通过合同或来源校验的 Provider 内容。",
         "handoff_reason": "background_execution_error",
+        "handoff_type": "execution_failure",
         "provider_call_count": None,
     }
 
@@ -158,6 +170,11 @@ def project_package(
         "gates": gates,
         "note": "候选只等待人工批准、编辑或拒绝；系统不会发送回复或改变外部工单。",
         "handoff_reason": package.get("handoff_reason"),
+        "handoff_type": (
+            None
+            if candidate
+            else package.get("handoff_type") or "generation_failure"
+        ),
         "provider_call_count": provider_call_count,
     }
     if type(action_steps) is list and all(type(item) is str for item in action_steps):

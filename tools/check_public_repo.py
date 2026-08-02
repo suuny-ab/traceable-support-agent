@@ -1122,6 +1122,12 @@ def _structural_errors(entries: list[Entry], scope: str) -> list[str]:
         ids = [case.get("case_id") for case in suite.get("cases", [])]
         if len(ids) != 8 or set(ids) != PUBLIC_CASE_IDS or len(set(ids)) != len(ids):
             errors.append("public_regression_case_set_invalid")
+        if any(
+            "GEN-DEV-MH-003" in gap
+            for gap in suite.get("known_product_gaps", [])
+            if type(gap) is str
+        ):
+            errors.append("public_false_completion_gap_still_open")
     except (UnicodeDecodeError, ValueError, json.JSONDecodeError):
         errors.append("public_regression_suite_invalid")
     try:

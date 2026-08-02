@@ -14,6 +14,7 @@ export type DemoResult = {
   gates: Array<{ label: string; pass: boolean }>;
   note: string;
   handoff_reason?: string;
+  handoff_type?: string | null;
   provider_call_count?: number;
 };
 

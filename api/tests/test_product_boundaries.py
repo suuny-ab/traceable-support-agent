@@ -274,6 +274,46 @@ def test_public_unsupported_claim_expectation_is_enforced_with_zero_calls():
     assert execution.provider_call_count == expected["provider_call_count"]
 
 
+def test_public_after_sales_commitment_gap_is_closed_with_typed_zero_call_handoff():
+    suite = json.loads(
+        (REPOSITORY / "evals" / "public-regression-v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    case = next(
+        item for item in suite["cases"] if item["case_id"] == "GEN-DEV-MH-003"
+    )
+    expected = case["expected"]
+    runner = DefaultProductRunner(
+        transport_factory=lambda: (_ for _ in ()).throw(
+            AssertionError("transport factory must not be called")
+        ),
+        transport_mode="offline_injected",
+        dependencies_ready=True,
+    )
+    execution = runner.execute(
+        RunInput(
+            case["case_id"],
+            case["task_type"],
+            case["input"],
+            case["product_model"],
+            1,
+        ),
+        lambda _stage, _status: None,
+    )
+    package = execution.package
+    assert package["outcome"] == expected["outcome"]
+    assert package["handoff_type"] == "human_authority"
+    assert package["handoff_reason"] == expected["handoff_reason"]
+    assert package["category"] == expected["category"]
+    assert package["priority"] == expected["priority"]
+    assert package["boundary_sources"] == expected["source_sections"]
+    assert package["usage"] == []
+    assert package["worst_cost_cny_nanos"] == 0
+    assert execution.provider_call_count == expected["provider_call_count"]
+    assert not any("GEN-DEV-MH-003" in gap for gap in suite["known_product_gaps"])
+
+
 def test_unsupported_capability_rule_does_not_catch_approved_topics():
     allowed = (
         ("CZ-R1 怎么开始局部清扫？", "CZ-R1"),
@@ -294,3 +334,119 @@ def test_unsupported_capability_rule_does_not_catch_approved_topics():
         decision = evaluate_generation_boundary(text, model)
         assert decision is not None
         assert decision.reason == "unsupported_claim"
+
+
+def test_r2_outcome_decision_table_compiles_to_typed_handoffs():
+    cases = (
+        (
+            "CZ-R1 清扫长毛地毯时会自动抬升拖布吗，还要设置禁区吗？",
+            "CZ-R1",
+            "qa",
+            "model_scope",
+            "model_scope_conflict",
+            "cz_r2_wet_cleaning_not_available_on_cz_r1",
+        ),
+        (
+            "CZ-R2 低电回充以后会自动续扫吗，还是要再次开始清扫？",
+            "CZ-R2",
+            "qa",
+            "evidence_gap",
+            "unsupported_claim",
+            "cz_r2_auto_resume_not_covered",
+        ),
+        (
+            "CZ-R2 能通过手机应用接入语音助手控制吗？",
+            "CZ-R2",
+            "qa",
+            "evidence_gap",
+            "unsupported_claim",
+            "voice_control_not_covered",
+        ),
+        (
+            "R1签收五天后确认故障，请直接同意换新并完成退款。",
+            "CZ-R1",
+            "ticket",
+            "human_authority",
+            "after_sales_commitment",
+            "after_sales_replacement_requires_human",
+        ),
+        (
+            "R2 已超过退换期，请直接帮我安排上门维修并确认已经报修。",
+            "CZ-R2",
+            "ticket",
+            "human_authority",
+            "after_sales_commitment",
+            "after_sales_repair_requires_human",
+        ),
+        (
+            "R1 维修后仍有故障，请马上原路退款并回复已经完成。",
+            "CZ-R1",
+            "ticket",
+            "human_authority",
+            "after_sales_commitment",
+            "after_sales_refund_requires_human",
+        ),
+    )
+
+    for text, model, task_type, handoff_type, reason, rule_id in cases:
+        decision = evaluate_generation_boundary(text, model, task_type=task_type)
+        assert decision is not None
+        assert decision.handoff_type == handoff_type
+        assert decision.reason == reason
+        assert decision.rule_id == rule_id
+        assert decision.guidance
+
+
+def test_r2_typed_handoffs_stop_before_transport_and_never_form_candidates():
+    calls = 0
+
+    def forbidden_factory():
+        nonlocal calls
+        calls += 1
+        raise AssertionError("transport factory must not be called")
+
+    runner = DefaultProductRunner(
+        transport_factory=forbidden_factory,
+        transport_mode="offline_injected",
+        dependencies_ready=True,
+    )
+    cases = (
+        ("qa", "CZ-R1", "CZ-R1 用长毛地毯模式时会自动抬升拖布吗？"),
+        ("qa", "CZ-R2", "CZ-R2 回充后能自动续扫吗？"),
+        ("qa", "CZ-R2", "CZ-R2 支持接入语音音箱控制吗？"),
+        ("ticket", "CZ-R1", "请直接同意换新并完成退款。"),
+        ("ticket", "CZ-R2", "请马上安排上门维修并确认报修完成。"),
+        ("ticket", "CZ-R1", "请立即执行退款并回复已经完成。"),
+    )
+    for index, (task_type, model, text) in enumerate(cases):
+        stages = []
+        execution = runner.execute(
+            RunInput(f"typed-handoff-{index}", task_type, text, model, 1),
+            lambda stage, status: stages.append((stage, status)),
+        )
+        assert execution.package["outcome"] == "handoff"
+        assert execution.package["handoff_type"] in {
+            "model_scope",
+            "evidence_gap",
+            "human_authority",
+        }
+        assert execution.package["handoff_reason"]
+        assert execution.package["handoff_guidance"]
+        assert execution.package.get("answer") is None
+        assert execution.package.get("proposal") is None
+        assert execution.provider_call_count == 0
+        assert stages == [("preflight", "failed")]
+    assert calls == 0
+
+
+def test_typed_handoff_rules_leave_answerable_neighbors_unclassified():
+    allowed = (
+        ("qa", "CZ-R1", "CZ-R1 只支持干式清扫吗？"),
+        ("qa", "CZ-R2", "CZ-R2 低电时应该怎样放回基站？"),
+        ("qa", "CZ-R2", "CZ-R2 的扫拖模式怎样安装拖布？"),
+        ("ticket", "CZ-R1", "请整理退换审核需要的资料，结果交人工决定。"),
+        ("ticket", "CZ-R2", "请给人工审核用的维修检查建议，不要安排维修。"),
+        ("ticket", "CZ-R2", "帮我整理一份维修检查建议，只作为人工审核草稿。"),
+    )
+    for task_type, model, text in allowed:
+        assert evaluate_generation_boundary(text, model, task_type=task_type) is None

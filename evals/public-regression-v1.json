@@ -108,7 +108,6 @@
     }
   ],
   "known_product_gaps": [
-    "GEN-DEV-TK-001 classification differs from the current inherited classifier.",
-    "GEN-DEV-MH-003 is not yet enforced by the inherited live chain."
+    "GEN-DEV-TK-001 classification differs from the current inherited classifier."
   ]
 }

@@ -585,7 +585,7 @@ class PublicRunService:
         run_id = secrets.token_urlsafe(24)
         now_value = self.now().astimezone(timezone.utc)
         created_at = _iso(now_value)
-        preflight_code = preflight(normalized, product_model)
+        preflight_code = preflight(normalized, product_model, task_type)
 
         if preflight_code is not None:
             self._insert_blocked_run(

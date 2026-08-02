@@ -47,7 +47,9 @@ class DefaultProductRunner:
         if run_input.task_type not in {"qa", "ticket"}:
             raise ValueError("product_task_type_invalid")
         boundary = evaluate_generation_boundary(
-            run_input.text, run_input.product_model
+            run_input.text,
+            run_input.product_model,
+            task_type=run_input.task_type,
         )
         if boundary is not None:
             on_stage("preflight", "failed")
