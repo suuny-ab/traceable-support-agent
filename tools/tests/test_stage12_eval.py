@@ -892,6 +892,71 @@ class Stage12PublishedAggregateTest(unittest.TestCase):
         walk(aggregate)
         walk(receipt)
 
+    def test_r6_semantic_audit_receipt_is_bounded_and_frozen(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-r6-semantic-audit-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "80b01635b527c0ba5d64fda2fe746628d84b19379283cc1dd7642085c0522132",
+        )
+        self.assertEqual(
+            payload["mode"], "bounded_human_semantic_audit_existing_packages"
+        )
+        self.assertEqual(payload["identity"]["raw_records_sha256"], (
+            "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850"
+        ))
+        source_path = REPO_ROOT / payload["identity"]["source_aggregate"]
+        self.assertEqual(
+            hashlib.sha256(source_path.read_bytes()).hexdigest(),
+            payload["identity"]["source_aggregate_sha256"],
+        )
+        aggregate = json.loads(source_path.read_text(encoding="utf-8"))
+        expected_ids = {
+            case["case_id"]
+            for case in aggregate["cases"]
+            if "required_fact_missing" in case["failure_codes"]
+        }
+        self.assertEqual({case["case_id"] for case in payload["cases"]}, expected_ids)
+        self.assertEqual(payload["scope"]["cases_audited"], 6)
+        self.assertEqual(payload["scope"]["propositions_audited"], 11)
+        self.assertEqual(payload["scope"]["provider_calls"], 0)
+        self.assertFalse(payload["scope"]["new_stage12_run"])
+        self.assertFalse(payload["scope"]["new_model_output"])
+        self.assertFalse(payload["scope"]["scorer_changed"])
+        self.assertEqual(
+            payload["decision_counts"],
+            {
+                "true_semantic_omission_cases": 0,
+                "literal_false_negative_cases": 6,
+                "true_semantic_omission_propositions": 0,
+                "semantically_covered_propositions": 11,
+            },
+        )
+        self.assertEqual(
+            sum(len(case["propositions"]) for case in payload["cases"]), 11
+        )
+        self.assertTrue(
+            all(case["decision"] == "literal_false_negative" for case in payload["cases"])
+        )
+        self.assertEqual(
+            payload["fix_candidate"]["status"], "proposal_only_not_implemented"
+        )
+        forbidden_keys = {
+            "input", "required_facts", "source_sections", "answer", "proposal",
+            "request_headers", "provider_response",
+        }
+
+        def walk(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertTrue(forbidden_keys.isdisjoint(value))
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+
+        walk(payload)
+
     def test_handoff_contract_rescore_receipt_is_bounded(self) -> None:
         path = REPO_ROOT / "evals" / "stage12-handoff-contract-rescore-v1.json"
         payload = self._load(path.name)

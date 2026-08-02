@@ -1,0 +1,224 @@
+{
+  "schema_version": "stage12-r6-semantic-audit-v1",
+  "mode": "bounded_human_semantic_audit_existing_packages",
+  "identity": {
+    "candidate_git_sha": "fc766709f48bf2989c6589a56db3cec7593ed6cb",
+    "unseen_set_sha256": "7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0",
+    "raw_records_sha256": "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850",
+    "source_aggregate": "evals/stage12-night-fixes-revalidation-v1.json",
+    "source_aggregate_sha256": "b4de502835e5142c62efccbf52a331f844869239de6e7a83b397c4f6cd9367e8"
+  },
+  "scope": {
+    "cases_audited": 6,
+    "propositions_audited": 11,
+    "source_failure_code": "required_fact_missing",
+    "provider_calls": 0,
+    "automatic_retry_count": 0,
+    "new_stage12_run": false,
+    "new_model_output": false,
+    "scorer_changed": false
+  },
+  "procedure": {
+    "judge": "bounded_proposition_obligation_receipt",
+    "unbounded_llm_judge": false,
+    "receipt_path": [
+      "frozen_proposition",
+      "approved_clause",
+      "obligation",
+      "claim",
+      "customer_visible_support"
+    ],
+    "plaintext_published": false
+  },
+  "decision_counts": {
+    "true_semantic_omission_cases": 0,
+    "literal_false_negative_cases": 6,
+    "true_semantic_omission_propositions": 0,
+    "semantically_covered_propositions": 11
+  },
+  "cases": [
+    {
+      "case_id": "STG12-01-MSQ-001",
+      "task_type": "qa",
+      "decision": "literal_false_negative",
+      "visible_output_sha256": "05ed1bda9ea56e5b5c516006d79ddd7010cedc2bcf43c3396a1a9fa71576a541",
+      "propositions": [
+        {
+          "proposition_id": "P1",
+          "proposition_fact_sha256": "01149b077e1614f54d7dcaaadea335a7bafa3f28acc6afd4ef68ce5c9b41154d",
+          "obligation_ids": ["o1"],
+          "approved_clause_ids": ["c003", "c004", "c005", "c006", "c041"],
+          "claim_ids": ["c1", "c2"],
+          "customer_visible_support_sha256": [
+            "b9d21b1133403ee9edf0c25c665cfe1dc402f2c9ec57f65a5ccf0c92dbb70300",
+            "06b7de47af9bb9972a897cbe994813234a62c57a13cf90dd7130a6a317614c4c"
+          ],
+          "rationale_code": "guarded_action_and_prohibition_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        },
+        {
+          "proposition_id": "P2",
+          "proposition_fact_sha256": "c1ddc64b251a9cad06d3503e0b382b633546bbd07ed64a577553f829880e0fc8",
+          "obligation_ids": ["o5"],
+          "approved_clause_ids": ["c019", "c020"],
+          "claim_ids": ["c6"],
+          "customer_visible_support_sha256": ["87a3211e07e2f1892f87fce6bcb97110ec0537d95ed8264b58d25244606637d8"],
+          "rationale_code": "state_effect_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        }
+      ]
+    },
+    {
+      "case_id": "STG12-01-SCQ-001",
+      "task_type": "qa",
+      "decision": "literal_false_negative",
+      "visible_output_sha256": "ece6e5e5a27944b7c54cb4ecfe09ddb9b53062a37b59ba5bc318a8ebf084a976",
+      "propositions": [
+        {
+          "proposition_id": "P1",
+          "proposition_fact_sha256": "a5d0ecc6bae45ab196b6148bcdcb5a55abd42c38e1f894f310b8a64b3eae73be",
+          "obligation_ids": ["o1"],
+          "approved_clause_ids": ["c004", "c005"],
+          "claim_ids": ["c3", "c4"],
+          "customer_visible_support_sha256": [
+            "ae7727d2a2aa8537e47f778d1c878d21aa8aa9aaf4b95c096ba379070237ba80",
+            "d1499595b46cbb65a0ac8f94b3e41e6335f1a8bd7d047ec9d5bfcbc80772a4af"
+          ],
+          "rationale_code": "action_sequence_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        },
+        {
+          "proposition_id": "P2",
+          "proposition_fact_sha256": "3e4e5214ccbe6b92e25bef14231567bc83eeee8a1455e0c58209f6d1ce62ad00",
+          "obligation_ids": ["o1"],
+          "approved_clause_ids": ["c006", "c007", "c008", "c009"],
+          "claim_ids": ["c5"],
+          "customer_visible_support_sha256": ["09bb2f667917479e6745bcac03ac2df311b6ed105b2678b608cf567c87d266bd"],
+          "rationale_code": "stop_condition_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        }
+      ]
+    },
+    {
+      "case_id": "STG12-01-SCQ-002",
+      "task_type": "qa",
+      "decision": "literal_false_negative",
+      "visible_output_sha256": "486784cf71f4d32441966bffe74096591524be7235e1829b4c13daebc5d60566",
+      "propositions": [
+        {
+          "proposition_id": "P1",
+          "proposition_fact_sha256": "ddbcfd13a54a859fe90c1ca3a09eda0a3a74a4d646b7636008f7970c3e009eb9",
+          "obligation_ids": ["o2"],
+          "approved_clause_ids": ["c002", "c003", "c004"],
+          "claim_ids": ["c2"],
+          "customer_visible_support_sha256": ["ae22387b78b85b08fdd7bf998a85142486968708c5ccb63a2cf347360d9847e8"],
+          "rationale_code": "action_bundle_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        },
+        {
+          "proposition_id": "P2",
+          "proposition_fact_sha256": "3325857e250ef521ce9185523cdca1c0ded2d50cbbf2e3c036b66beb71acc886",
+          "obligation_ids": ["o4", "o5"],
+          "approved_clause_ids": ["c006", "c067", "c068", "c069"],
+          "claim_ids": ["c4", "c5"],
+          "customer_visible_support_sha256": [
+            "36051cdca322a2555f58e1cf606bdf7aa00fb495df71b4e4069c47a6672e07d1",
+            "9aea2791761b256beafb3aed28530c474afcc47fc8e87b32f8782b68c5233682"
+          ],
+          "rationale_code": "cross_claim_contextual_guard",
+          "decision": "semantic_coverage_confirmed"
+        }
+      ]
+    },
+    {
+      "case_id": "STG12-01-ATK-003",
+      "task_type": "ticket",
+      "decision": "literal_false_negative",
+      "visible_output_sha256": "649684b70f9c9cbc93ee507ee9e3455fef238005e3b9f4463bbc762218724a84",
+      "propositions": [
+        {
+          "proposition_id": "P1",
+          "proposition_fact_sha256": "70767ae25df95582ad511bf740ac710db1f73558d2ae15e54884dad1ec0d39e8",
+          "obligation_ids": ["o1"],
+          "approved_clause_ids": ["c001", "c002", "c003"],
+          "claim_ids": ["c1"],
+          "customer_visible_support_sha256": ["92f067dd1a6348b34df299e97fae06321fdebe3df2b07ae45d83de67f4ff26a0"],
+          "rationale_code": "action_bundle_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        },
+        {
+          "proposition_id": "P2",
+          "proposition_fact_sha256": "2a548d535ba2a333640292d758f987afe5a85f3e37c27e779a1aeb1e7d1cbf8c",
+          "obligation_ids": ["o1"],
+          "approved_clause_ids": ["c004", "c005"],
+          "claim_ids": ["c1"],
+          "customer_visible_support_sha256": ["92f067dd1a6348b34df299e97fae06321fdebe3df2b07ae45d83de67f4ff26a0"],
+          "rationale_code": "maintenance_interval_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        }
+      ]
+    },
+    {
+      "case_id": "STG12-01-SO-002",
+      "task_type": "qa",
+      "decision": "literal_false_negative",
+      "visible_output_sha256": "c46b5de15b4ba7e1c85a175568e284ae51e3517c179b714d773a2789d660c00c",
+      "propositions": [
+        {
+          "proposition_id": "P1",
+          "proposition_fact_sha256": "f5b34363878d99fd5a097533381b9c44b9f5e87ceefed125d813832f5526bc48",
+          "obligation_ids": ["o1"],
+          "approved_clause_ids": ["c006", "c007"],
+          "claim_ids": ["c1"],
+          "customer_visible_support_sha256": ["612dec804ea6ee6528333c02e4cdc695415485dc9f416cebb368ba570299ea76"],
+          "rationale_code": "behavior_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        },
+        {
+          "proposition_id": "P2",
+          "proposition_fact_sha256": "324b9d0b589b4f3a6b1fdf62b5e2c796999d55a26d9f1eeb43180e18e67a1431",
+          "obligation_ids": ["o2"],
+          "approved_clause_ids": ["c008"],
+          "claim_ids": ["c2"],
+          "customer_visible_support_sha256": ["dae68735f98ba0e013c4aef911dd4ba460d1ea071df3b3c7dbdf8bd064ebaaa6"],
+          "rationale_code": "prohibition_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        }
+      ]
+    },
+    {
+      "case_id": "STG12-01-SO-003",
+      "task_type": "qa",
+      "decision": "literal_false_negative",
+      "visible_output_sha256": "f733631ae009aaa0429168a6d11b6216056ef351ec9ba28cac603fc8ec2f1a61",
+      "propositions": [
+        {
+          "proposition_id": "P1",
+          "proposition_fact_sha256": "c684683983254c866454063f9861950919fa7b3a888c35d63cd40d32ac0c9a44",
+          "obligation_ids": ["o2"],
+          "approved_clause_ids": ["c002", "c003", "c004"],
+          "claim_ids": ["c2"],
+          "customer_visible_support_sha256": ["e56b35a0593cd34ffc1707efb57a09881bbf5a6953af84cc6bdbc0153c413345"],
+          "rationale_code": "action_sequence_paraphrase",
+          "decision": "semantic_coverage_confirmed"
+        }
+      ]
+    }
+  ],
+  "fix_candidate": {
+    "status": "proposal_only_not_implemented",
+    "replace": "customer_visible_required_fact_substring",
+    "with": "host_verified_proposition_obligation_claim_receipt",
+    "missing_obligation_failure": "required_obligation_missing",
+    "missing_claim_receipt_failure_candidate": "required_proposition_binding_missing",
+    "semantic_truth_boundary": "model_declares_mapping_host_verifies_identity_scope_and_completeness_human_reviews_semantics"
+  },
+  "boundary": {
+    "historical_aggregate_modified": false,
+    "score_recomputed": false,
+    "new_quality_claim": false,
+    "product_generation_changed": false,
+    "product_outcome_changed": false,
+    "use": "consumed_set_audit_and_design_only"
+  }
+}
