@@ -1,6 +1,6 @@
 # 结果
 
-> 状态：`candidate_local_green`
+> 状态：`candidate_ci_green`
 
 ## 判据变化
 
@@ -43,3 +43,11 @@
 - Provider 调用 0、自动重试 0、费用 0；未修改产品、生成、outcome 或历史评测资产。
 
 本地候选已绿；待提交推送及 Draft PR #62 最终 head required Checks。
+
+## Draft PR 实现回执
+
+判据实现 head `44fdf33364f346d727e4c9a275269787894a6d30` 已推送到既有 Draft PR #62；
+`ci-release` run `30767423207` 的 governance、web、api、containers 四项 required jobs 全部
+成功，publish 因 Draft 跳过。PR 保持 Open / Draft / MERGEABLE，未转 Ready、未合并、未部署。
+
+本状态回执提交将形成最终 head；只确认该 head required Checks，全绿后停止。
