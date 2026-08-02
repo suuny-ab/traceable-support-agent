@@ -54,6 +54,10 @@
   handoff 案例移除六个候选专属字段码，其余 20 题逐题不变。历史 `24/24、2 通过`聚合不改；
   脱敏回执见 [`stage12-handoff-contract-rescore-v1.json`](../../evals/stage12-handoff-contract-rescore-v1.json)，
   因而这些数字不是新评测、模型改善或发布结论。
+- **generation_shape 离线诊断**：公开等价夹具把旧粗码的四个机械分支 4/4 复现并细分为四个
+  隐私安全子码，产品链 4/4 仍转 handoff；这是合成合同覆盖数，不是历史案例被修复或 Stage 12
+  通过数。机器回执见
+  [`generation-shape-diagnostics-v1.json`](../../evals/generation-shape-diagnostics-v1.json)。
 - **单次 / 可复跑**：原始是全新未见正式观测；`2026-08-02` 使用已经消费的同一集，只是
   修复后首次回归观测。该集今后只能回归，任何新的正式结论都要全新未见集、验证卡和授权。
 - **边界 / 不是什么**：两次数字都不是线上成功率、“Stage 12 通过”或上线门。候选、prompt

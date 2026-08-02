@@ -57,3 +57,9 @@ Stage 12 评分按 outcome profile 分离：只有 expected 与 observed 都是 
 检查 outcome、明确登记的 handoff reason 与预算，并保留 boundary sources 供审计；来源精确
 集合、客户可见必需事实及工单 category / priority 属于候选合同，不对 matched handoff 计分。
 任一 outcome 不匹配仍执行完整候选合同，不能借 handoff profile 隐藏生成失败或边界策略分歧。
+
+Stage 12 历史 `top10_v6_content_invalid` 只保留了失败码，没有 Provider 响应正文。公开合成
+夹具 `evals/fixtures/generation-shape-equivalent-v1.json` 覆盖这个旧码的四个机械分支；当前
+合同把它细分为 content 外形、content identity、answer 外形和 claims 数量四个隐私安全码，
+全部仍归 `generation_contract / generation_shape` 并失败关闭。该夹具只能验证合同诊断，
+不能恢复历史响应、判断历史案例命中的精确分支或形成新的 Stage 12 / 模型质量结论。

@@ -1,0 +1,57 @@
+{
+  "schema_version": "generation-shape-diagnostics-v1",
+  "baseline": {
+    "commit": "cd1de058c16ca4be7492ba7f0574b70bb1393e16",
+    "legacy_code": "top10_v6_content_invalid",
+    "fixture": "evals/fixtures/generation-shape-equivalent-v1.json",
+    "fixture_sha256": "fbd2ef93b2a0069a6ae51bb904803ba441414bd60da997422462eb46104e5e21"
+  },
+  "historical_localization": {
+    "phase": "generation_contract",
+    "family": "generation_shape",
+    "second_provider_call_succeeded": true,
+    "checklist_passed": true,
+    "failed_before_claim_and_obligation_binding": true,
+    "provider_response_retained": false,
+    "exact_historical_subcondition_known": false
+  },
+  "offline_replay": {
+    "provider_calls": 0,
+    "legacy_cases_reproduced": 4,
+    "refined_cases_passed": 4,
+    "cases": [
+      {
+        "case_id": "GEN-SHAPE-PUBLIC-001",
+        "legacy_result": "top10_v6_content_invalid",
+        "refined_result": "top10_v6_content_shape_invalid",
+        "outcome": "handoff"
+      },
+      {
+        "case_id": "GEN-SHAPE-PUBLIC-002",
+        "legacy_result": "top10_v6_content_invalid",
+        "refined_result": "top10_v6_content_identity_invalid",
+        "outcome": "handoff"
+      },
+      {
+        "case_id": "GEN-SHAPE-PUBLIC-003",
+        "legacy_result": "top10_v6_content_invalid",
+        "refined_result": "top10_v6_answer_shape_invalid",
+        "outcome": "handoff"
+      },
+      {
+        "case_id": "GEN-SHAPE-PUBLIC-004",
+        "legacy_result": "top10_v6_content_invalid",
+        "refined_result": "top10_v6_claim_count_invalid",
+        "outcome": "handoff"
+      }
+    ]
+  },
+  "boundary": {
+    "contains_private_stage12_content": false,
+    "contains_provider_response": false,
+    "contract_loosened": false,
+    "stage12_rerun": false,
+    "provider_calls": 0,
+    "valid_candidate_produced": false
+  }
+}
