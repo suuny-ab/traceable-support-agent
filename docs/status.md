@@ -6,26 +6,26 @@
 | --- | --- |
 | `state` | `candidate` |
 | 更新时间 | `2026-08-02` |
-| 当前产品目标 | 治理重构第二刀：把根规则收成启动 / 红线 / 指针索引，统一授权正文，并消除状态字段误触发四文件门；不改变产品行为 |
-| 项目基线 | `origin/main@1be50a899fbeeae2203cc8dee12125d3811c186a` |
-| 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近成功公网回执为 `status=ok`、`live_experience=available`、`release_sha=1be50a899fbeeae2203cc8dee12125d3811c186a` |
-| 当前治理结果 | 两层状态结构已交付；本候选将 `AGENTS.md` 收至 67 行，授权唯一正文迁至 `docs/engineering/review.md`，并为三类历史误拦截增加回归 |
-| 当前产品候选 | 无；`codex/governance-rule-slimming` 只修改治理规则、机器检查、测试和状态文档，Draft PR / Checks 以 GitHub 实时状态为准 |
-| 活动工作 | 无；本标准治理切片由派发任务书与 `docs/work/governance-audit-20260802.md` 定界，不机械创建四文件目录 |
+| 当前产品目标 | 治理第三刀：交付只读文档园丁，对照稳定事实识别活动文档中的确定腐坏与待人工判断项；不改变产品行为 |
+| 项目基线 | `origin/main@3c981c6d2c1aa711048b8638e78041ff4cd7ae50` |
+| 运行产品 | 公开 Beta；`product/0.1.0` 未发布；公网 `status=ok`、`live_experience=available`、`release_sha=3c981c6d2c1aa711048b8638e78041ff4cd7ae50` |
+| 当前治理结果 | PR [#57](https://github.com/suuny-ab/traceable-support-agent/pull/57) 已从精确 head `bddb35b754325194c25e5b30739004e26f263520` squash merge 为 `3c981c6d…`，main CI、实际部署与公网完整 SHA 均核验成功 |
+| 当前产品候选 | 无；`codex/doc-gardener` 只修改治理工具、测试、活动文档、检查入口和两层状态，Draft PR / Checks 以 GitHub 实时状态为准 |
+| 活动工作 | 无；本标准治理切片由 Git 外派发任务书定界，首次报告保存于 `docs/work/`，不机械创建四文件目录 |
 | 风险 / 授权 | 用户已批准本分支一次推送与创建 Draft PR；未授权转 Ready、合并或部署，PR 建成后写 Git 外授权请求并等待 |
 | Provider | `provider_enabled=true`；凭据仍仅在服务器 `/opt/traceable-support/provider.env`（0600）；预算日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0；本任务 Provider 调用 0 |
-| 阻碍 | 无 Draft 交付阻碍；本轮公网直连在 TLS 握手前失败，已停止重试且不据此改写产品健康结论 |
-| 当前证据 | 治理工具 109 passed / 8 skipped；API 138 passed / 2 skipped、24 subtests；Web lint / typecheck / build 与 36 tests 通过；工作树公开扫描通过 |
+| 阻碍 | 无；确定腐坏可按 canonical 事实修复，语境相对但无法机器判定的措辞只进入 review 清单 |
+| 当前证据 | 首扫 18 个活动文档为 stale 2 / review 1，修复后为 stale 0 / review 1；治理工具 113 passed / 8 skipped，API 138 passed / 2 skipped、24 subtests，Web lint / typecheck / build 与 36 tests 通过 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
-| `governance-rule-slimming` | `candidate` | 提交并推送一次，创建 Draft PR、确认 Checks 启动，然后写授权请求；不合并 |
-| `retrieval-badcase-loop` | `delivered` | PR #55 已合并为 `1be50a8…`；main CI 与部署 run 成功，完整回执见月度日志 |
-| `status-two-layer` | `delivered` | PR #56 merge / main CI / deploy / 公网完整 SHA 均已核验 |
+| `doc-gardener` | `candidate` | 2 个确定腐坏已修、1 个 review 项显式保留，首次报告与全量检查已完成；随后只推送一次并创建 Draft PR |
+| `governance-rule-slimming` | `delivered` | PR #57 merge / main CI / deploy / 公网完整 SHA 均已核验 |
+| `retrieval-badcase-loop` | `delivered` | PR #55 merge / main CI / deploy / 公网完整 SHA 均已核验；不继续针对同一开发集调优 |
 | `ISSUE-14-RELEASE-DECISION` | `deferred` | 不在本切片内；不得从开发集结果推导发布结论 |
 
 ## 下一检查点
 
-固定治理候选并创建 Draft PR；确认该 head 的 Checks 已启动后停止，等待用户对精确 head 的合并与既有自动部署链作新裁决。
+固定当前治理候选，推送一次并创建 Draft PR；确认 Checks 启动后写精确 head 授权请求并停止，不合并、不部署。

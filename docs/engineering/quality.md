@@ -18,9 +18,14 @@ HOLDOUT、付费校准和旧审计默认均不进入 Fast/Product。
 ```powershell
 python tools/check_public_repo.py --scope worktree
 python -m unittest discover -s tools/tests -p "test_*.py"
+python tools/doc_gardener.py --format markdown
 $env:PYTHONPATH = "api/src"
 python -m pytest api/tests/test_package_boundaries.py api/tests/test_public_api.py api/tests/test_provider_usage.py
 ```
+
+文档园丁读取 `PROJECT.md` 与 `docs/status.md` 的当前事实并扫描活动文档族；默认只报告确定
+腐坏和待人工判断项，退出成功，不阻断本地或 CI 构建。需要治理专项失败门时才显式传入
+`--fail-on stale` 或 `--fail-on any`；扫描本身不修改文档。
 
 Candidate API 检查需要经过字节验证的 BGE 模型。下载器应在干净环境中使用；也可以在本机指定已有且验证通过的模型根目录，但不得把模型复制进仓库：
 

@@ -84,6 +84,9 @@ jobs:
             --category product \
             --proof "$RUNNER_TEMP/ci-proof.jsonl" -- \
             python -m unittest discover -s tools/tests -p "test_*.py"
+      - name: Run advisory document gardener
+        continue-on-error: true
+        run: python tools/doc_gardener.py --format markdown
       - name: Scan current tree and full history
         run: |
           python3 tools/ci_proof.py run \
