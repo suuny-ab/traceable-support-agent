@@ -1,0 +1,795 @@
+{
+  "cases": [
+    {
+      "case_id": "RET-HOLDOUT-R1-001",
+      "product_model": "CZ-R1",
+      "required_source_sections": [
+        "HOLDOUT-R1-GUIDE/quiet-window"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-GUIDE/quiet-window": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CARE/filter-life"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-GUIDE/quiet-window": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CARE/transport-latch"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-GUIDE/quiet-window": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CARE/filter-life"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-002",
+      "product_model": "CZ-R1",
+      "required_source_sections": [
+        "HOLDOUT-R1-GUIDE/panel-lock",
+        "HOLDOUT-R1-CONNECT/app-rebind"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CONNECT/app-rebind": 1,
+            "HOLDOUT-R1-GUIDE/panel-lock": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CONNECT/app-rebind": 1,
+            "HOLDOUT-R1-GUIDE/panel-lock": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-MAP/room-exclusion"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CONNECT/app-rebind": 1,
+            "HOLDOUT-R1-GUIDE/panel-lock": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-003",
+      "product_model": "CZ-R1",
+      "required_source_sections": [
+        "HOLDOUT-R1-CLEAN/edge-pass"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CLEAN/edge-pass": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CLEAN/edge-pass": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CARE/transport-latch"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CLEAN/edge-pass": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-MAP/room-exclusion"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-004",
+      "product_model": "CZ-R1",
+      "required_source_sections": [
+        "HOLDOUT-R1-CARE/transport-latch",
+        "HOLDOUT-R1-CARE/filter-life"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CARE/filter-life": 1,
+            "HOLDOUT-R1-CARE/transport-latch": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CARE/filter-life": 1,
+            "HOLDOUT-R1-CARE/transport-latch": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-GUIDE/panel-lock"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-CARE/filter-life": 1,
+            "HOLDOUT-R1-CARE/transport-latch": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R1-005",
+      "product_model": "CZ-R1",
+      "required_source_sections": [
+        "HOLDOUT-R1-MAP/room-exclusion",
+        "HOLDOUT-R1-GUIDE/speaker-level"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-GUIDE/speaker-level": 2,
+            "HOLDOUT-R1-MAP/room-exclusion": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CARE/filter-life"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-GUIDE/speaker-level": 1,
+            "HOLDOUT-R1-MAP/room-exclusion": 2
+          },
+          "top10": [
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CARE/filter-life",
+            "HOLDOUT-R1-CARE/transport-latch"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R1-GUIDE/speaker-level": 2,
+            "HOLDOUT-R1-MAP/room-exclusion": 1
+          },
+          "top10": [
+            "HOLDOUT-R1-MAP/room-exclusion",
+            "HOLDOUT-R1-GUIDE/speaker-level",
+            "HOLDOUT-R1-GUIDE/quiet-window",
+            "HOLDOUT-R1-GUIDE/panel-lock",
+            "HOLDOUT-R1-CLEAN/edge-pass",
+            "HOLDOUT-R1-CONNECT/app-rebind",
+            "HOLDOUT-R1-CARE/transport-latch",
+            "HOLDOUT-R1-CARE/filter-life"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-001",
+      "product_model": "CZ-R2",
+      "required_source_sections": [
+        "HOLDOUT-R2-STATION/drying-cycle",
+        "HOLDOUT-R2-STATION/detergent-dose"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-STATION/detergent-dose": 1,
+            "HOLDOUT-R2-STATION/drying-cycle": 2
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-SYSTEM/offline-update"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-STATION/detergent-dose": 1,
+            "HOLDOUT-R2-STATION/drying-cycle": 3
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-STATION/base-light"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-STATION/detergent-dose": 1,
+            "HOLDOUT-R2-STATION/drying-cycle": 2
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/base-light"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-002",
+      "product_model": "CZ-R2",
+      "required_source_sections": [
+        "HOLDOUT-R2-STATION/tank-float",
+        "HOLDOUT-R2-MOP/lift-calibration"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-MOP/lift-calibration": 2,
+            "HOLDOUT-R2-STATION/tank-float": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-CLEAN/carpet-boost"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-MOP/lift-calibration": 1,
+            "HOLDOUT-R2-STATION/tank-float": 2
+          },
+          "top10": [
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-CLEAN/carpet-boost"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-MOP/lift-calibration": 2,
+            "HOLDOUT-R2-STATION/tank-float": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-CLEAN/carpet-boost"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-003",
+      "product_model": "CZ-R2",
+      "required_source_sections": [
+        "HOLDOUT-R2-CLEAN/carpet-boost"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-CLEAN/carpet-boost": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/detergent-dose"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-CLEAN/carpet-boost": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-SYSTEM/offline-update"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-CLEAN/carpet-boost": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-SYSTEM/offline-update"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-004",
+      "product_model": "CZ-R2",
+      "required_source_sections": [
+        "HOLDOUT-R2-STATION/bag-odor",
+        "HOLDOUT-R2-STATION/base-light"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-STATION/bag-odor": 1,
+            "HOLDOUT-R2-STATION/base-light": 3
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-SYSTEM/offline-update"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-STATION/bag-odor": 2,
+            "HOLDOUT-R2-STATION/base-light": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-MOP/lift-calibration"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-STATION/bag-odor": 1,
+            "HOLDOUT-R2-STATION/base-light": 2
+          },
+          "top10": [
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-CLEAN/carpet-boost"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    },
+    {
+      "case_id": "RET-HOLDOUT-R2-005",
+      "product_model": "CZ-R2",
+      "required_source_sections": [
+        "HOLDOUT-R2-SYSTEM/offline-update"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-SYSTEM/offline-update": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-CLEAN/carpet-boost"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-SYSTEM/offline-update": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-CLEAN/carpet-boost",
+            "HOLDOUT-R2-STATION/bag-odor"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "HOLDOUT-R2-SYSTEM/offline-update": 1
+          },
+          "top10": [
+            "HOLDOUT-R2-SYSTEM/offline-update",
+            "HOLDOUT-R2-STATION/base-light",
+            "HOLDOUT-R2-MOP/lift-calibration",
+            "HOLDOUT-R2-STATION/drying-cycle",
+            "HOLDOUT-R2-STATION/detergent-dose",
+            "HOLDOUT-R2-STATION/tank-float",
+            "HOLDOUT-R2-STATION/bag-odor",
+            "HOLDOUT-R2-CLEAN/carpet-boost"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      }
+    }
+  ],
+  "dataset": {
+    "case_count": 10,
+    "development_knowledge_text_duplicates": 0,
+    "development_query_duplicates": 0,
+    "development_source_ref_duplicates": 0,
+    "freeze_commit": "6e57c5e229af01f4949df9c99d6ec6bdf03af74a",
+    "model_split": {
+      "CZ-R1": 5,
+      "CZ-R2": 5
+    },
+    "path": "evals/retrieval-holdout-v1.json",
+    "sha256": "7e3163b26062615440a49825d2d10d0409890d026fc82b8387b7a6f4c247afb6",
+    "source_unit_count": 16
+  },
+  "limitations": [
+    "This is one retrieval-only observation over 10 public synthetic questions and evaluation-only knowledge, not answer correctness, generation quality, online success rate or a release claim.",
+    "The suite was frozen before ranking. After this reveal it is regression-only and must not be used to tune retrieval or edit labels and knowledge against the result.",
+    "Model filtering occurs before ranking, so wrong-model hits test that boundary within the evaluation inventory.",
+    "No Provider, credential, private data, generation or external business system was used."
+  ],
+  "retrievers": [
+    {
+      "full_coverage_at_10": {
+        "passed_cases": 10,
+        "total_cases": 10
+      },
+      "full_coverage_at_5": {
+        "passed_cases": 10,
+        "total_cases": 10
+      },
+      "label": "BM25",
+      "retriever_id": "bm25",
+      "wrong_model_hits_at_10": 0
+    },
+    {
+      "full_coverage_at_10": {
+        "passed_cases": 10,
+        "total_cases": 10
+      },
+      "full_coverage_at_5": {
+        "passed_cases": 10,
+        "total_cases": 10
+      },
+      "label": "BGE",
+      "retriever_id": "bge",
+      "wrong_model_hits_at_10": 0
+    },
+    {
+      "full_coverage_at_10": {
+        "passed_cases": 10,
+        "total_cases": 10
+      },
+      "full_coverage_at_5": {
+        "passed_cases": 10,
+        "total_cases": 10
+      },
+      "label": "BM25 + BGE + RRF",
+      "retriever_id": "rrf",
+      "wrong_model_hits_at_10": 0
+    }
+  ],
+  "runtime_identity": {
+    "embedding_model_manifest_sha256": "c25626d58149bd63c8081f11ca7876f18a2b4a8b3d13ee278cc5ac9ea1d5326e",
+    "generation_calls": 0,
+    "knowledge_scope": "evaluation_only_holdout_units_not_product_corpus",
+    "model_filter_stage": "before_ranking",
+    "provider_calls": 0,
+    "retriever_contracts": {
+      "bge": "fastembed_bge_small_zh_v1.5",
+      "bm25": "okapi_bm25_k1_1.5_b_0.75_domain_equivalence_v1",
+      "rrf": "rrf_bm25_domain_equivalence_v1_bge_k60_depth20"
+    },
+    "top_k": 10,
+    "unit_inventory_sha256": "67065fa9eb1176bb294c4b1a1d635192fcb0af9d116d729fd49e9871f794f259"
+  },
+  "schema_version": "retrieval-holdout-observation-v1",
+  "status": "first_retrieval_only_observation_revealed_regression_only"
+}
