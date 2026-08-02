@@ -1,0 +1,1448 @@
+{
+  "cases": [
+    {
+      "case_id": "RET-DEV-R1-001",
+      "product_model": "CZ-R1",
+      "query": "R1 今天走得七扭八歪，刚才家里人把它拎到另一个房间了。先查什么？实在要恢复，R1 具体按哪两个键、按多久？",
+      "required_source_sections": [
+        "COMMON-FAQ/map-recovery",
+        "CZ-R1-MANUAL/reset"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/map-recovery": 1,
+            "CZ-R1-MANUAL/reset": 2
+          },
+          "top10": [
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/reset",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "COMMON-FAQ/before-cleaning",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e101-wheel-blocked",
+            "AFTER-SALES-POLICY/replacement",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/repair",
+            "FAULT-CODES/e102-cliff-sensor"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/map-recovery": 2,
+            "CZ-R1-MANUAL/reset": 5
+          },
+          "top10": [
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/charging",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "CZ-R1-MANUAL/reset",
+            "CZ-R1-MANUAL/setup",
+            "AFTER-SALES-POLICY/warranty",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "COMMON-FAQ/wet-environment",
+            "FAULT-CODES/r1-e210-dock"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/map-recovery": 1,
+            "CZ-R1-MANUAL/reset": 2
+          },
+          "top10": [
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/reset",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "AFTER-SALES-POLICY/exclusions",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R1-MANUAL/setup",
+            "AFTER-SALES-POLICY/replacement"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-002",
+      "product_model": "CZ-R1",
+      "query": "R1 新买回来，充电座周围到底要留多少空位？清扫前地上的电线要不要收，传感器表面应保持什么状态？",
+      "required_source_sections": [
+        "CZ-R1-MANUAL/setup",
+        "COMMON-FAQ/before-cleaning"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/before-cleaning": 1,
+            "CZ-R1-MANUAL/setup": 2
+          },
+          "top10": [
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R1-MANUAL/setup",
+            "FAULT-CODES/r1-e210-dock",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "COMMON-FAQ/model-difference",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/maintenance",
+            "COMMON-FAQ/charging",
+            "AFTER-SALES-POLICY/warranty",
+            "AFTER-SALES-POLICY/exclusions"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/before-cleaning": 1,
+            "CZ-R1-MANUAL/setup": 2
+          },
+          "top10": [
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R1-MANUAL/setup",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/reset",
+            "FAULT-CODES/e102-cliff-sensor",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "CZ-R1-MANUAL/maintenance",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/warranty",
+            "FAULT-CODES/r1-e210-dock"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/before-cleaning": 1,
+            "CZ-R1-MANUAL/setup": 2
+          },
+          "top10": [
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R1-MANUAL/setup",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "FAULT-CODES/r1-e210-dock",
+            "COMMON-FAQ/model-difference",
+            "CZ-R1-MANUAL/maintenance",
+            "CZ-R1-MANUAL/reset",
+            "FAULT-CODES/e102-cliff-sensor",
+            "AFTER-SALES-POLICY/warranty"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-003",
+      "product_model": "CZ-R1",
+      "query": "R1 报 E101，缠轮子的线清掉后轮子还是不回弹，我已经重启两遍了。还要继续试吗？客服最少登记哪些内容，能不能要我的电话和地址？",
+      "required_source_sections": [
+        "FAULT-CODES/e101-wheel-blocked",
+        "CUSTOMER-SERVICE-SOP/intake-fields"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": false,
+          "missing_at_10": [],
+          "missing_at_5": [
+            "CUSTOMER-SERVICE-SOP/intake-fields"
+          ],
+          "required_source_ranks": {
+            "CUSTOMER-SERVICE-SOP/intake-fields": 7,
+            "FAULT-CODES/e101-wheel-blocked": 1
+          },
+          "top10": [
+            "FAULT-CODES/e101-wheel-blocked",
+            "AFTER-SALES-POLICY/repair",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/replacement",
+            "CZ-R1-MANUAL/reset",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/priority"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CUSTOMER-SERVICE-SOP/intake-fields": 2,
+            "FAULT-CODES/e101-wheel-blocked": 1
+          },
+          "top10": [
+            "FAULT-CODES/e101-wheel-blocked",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "COMMON-FAQ/before-cleaning",
+            "AFTER-SALES-POLICY/repair",
+            "FAULT-CODES/r1-e210-dock",
+            "COMMON-FAQ/wet-environment",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "COMMON-FAQ/model-difference"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CUSTOMER-SERVICE-SOP/intake-fields": 3,
+            "FAULT-CODES/e101-wheel-blocked": 1
+          },
+          "top10": [
+            "FAULT-CODES/e101-wheel-blocked",
+            "AFTER-SALES-POLICY/repair",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "COMMON-FAQ/map-recovery",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/replacement",
+            "CZ-R1-MANUAL/maintenance",
+            "FAULT-CODES/r1-e210-dock",
+            "CZ-R1-MANUAL/reset",
+            "COMMON-FAQ/before-cleaning"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-004",
+      "product_model": "CZ-R1",
+      "query": "R1 报 E210，充电座已通电、前方清空、触点也擦了，试了三次还是回不去，下一步怎么办？",
+      "required_source_sections": [
+        "FAULT-CODES/r1-e210-dock"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/r1-e210-dock": 1
+          },
+          "top10": [
+            "FAULT-CODES/r1-e210-dock",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/maintenance",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "CZ-R1-MANUAL/setup",
+            "COMMON-FAQ/charging",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/model-difference",
+            "CZ-R1-MANUAL/reset",
+            "FAULT-CODES/e101-wheel-blocked"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/r1-e210-dock": 1
+          },
+          "top10": [
+            "FAULT-CODES/r1-e210-dock",
+            "CZ-R1-MANUAL/setup",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "CZ-R1-MANUAL/maintenance",
+            "COMMON-FAQ/model-difference",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/map-recovery",
+            "AFTER-SALES-POLICY/warranty",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e101-wheel-blocked"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/r1-e210-dock": 1
+          },
+          "top10": [
+            "FAULT-CODES/r1-e210-dock",
+            "CZ-R1-MANUAL/setup",
+            "CZ-R1-MANUAL/maintenance",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/warranty",
+            "FAULT-CODES/e101-wheel-blocked"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "single_source"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-005",
+      "product_model": "CZ-R1",
+      "query": "出差三个月前想把 R1 收起来：关机前充到多少、放在哪里、多久补一次电？收起来前主刷、边刷和传感器通常多久维护一次？",
+      "required_source_sections": [
+        "COMMON-FAQ/charging",
+        "CZ-R1-MANUAL/maintenance"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/charging": 2,
+            "CZ-R1-MANUAL/maintenance": 3
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/charging",
+            "CZ-R1-MANUAL/maintenance",
+            "FAULT-CODES/r1-e210-dock",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/setup",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "AFTER-SALES-POLICY/exclusions",
+            "CZ-R1-MANUAL/dust-bin",
+            "CZ-R1-MANUAL/reset"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/charging": 1,
+            "CZ-R1-MANUAL/maintenance": 2
+          },
+          "top10": [
+            "COMMON-FAQ/charging",
+            "CZ-R1-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R1-MANUAL/setup",
+            "FAULT-CODES/r1-e210-dock",
+            "COMMON-FAQ/map-recovery",
+            "FAULT-CODES/e102-cliff-sensor",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "CUSTOMER-SERVICE-SOP/evidence-check"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/charging": 1,
+            "CZ-R1-MANUAL/maintenance": 3
+          },
+          "top10": [
+            "COMMON-FAQ/charging",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R1-MANUAL/maintenance",
+            "FAULT-CODES/r1-e210-dock",
+            "CZ-R1-MANUAL/setup",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "COMMON-FAQ/before-cleaning",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e102-cliff-sensor"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-006",
+      "product_model": "CZ-R1",
+      "query": "R1 低电自己回座以后，充够了会不会自动接着扫？我趁充电把尘盒滤网洗了，摸着还有点潮，能装回去吗？",
+      "required_source_sections": [
+        "CZ-R1-MANUAL/cleaning-modes",
+        "CZ-R1-MANUAL/dust-bin"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R1-MANUAL/cleaning-modes": 3,
+            "CZ-R1-MANUAL/dust-bin": 1
+          },
+          "top10": [
+            "CZ-R1-MANUAL/dust-bin",
+            "COMMON-FAQ/model-difference",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R1-MANUAL/setup",
+            "COMMON-FAQ/charging",
+            "FAULT-CODES/r1-e210-dock",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/reset"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R1-MANUAL/cleaning-modes": 2,
+            "CZ-R1-MANUAL/dust-bin": 1
+          },
+          "top10": [
+            "CZ-R1-MANUAL/dust-bin",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R1-MANUAL/reset",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/setup",
+            "FAULT-CODES/r1-e210-dock",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/replacement"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R1-MANUAL/cleaning-modes": 3,
+            "CZ-R1-MANUAL/dust-bin": 1
+          },
+          "top10": [
+            "CZ-R1-MANUAL/dust-bin",
+            "COMMON-FAQ/model-difference",
+            "CZ-R1-MANUAL/cleaning-modes",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R1-MANUAL/setup",
+            "CZ-R1-MANUAL/reset",
+            "COMMON-FAQ/map-recovery",
+            "FAULT-CODES/r1-e210-dock",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/charging"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-007",
+      "product_model": "CZ-R1",
+      "query": "R1 签收第 5 天，固定诊断确认是非人为硬件故障。客服能直接答应换新并说退款完成了吗？",
+      "required_source_sections": [
+        "AFTER-SALES-POLICY/replacement",
+        "CUSTOMER-SERVICE-SOP/manual-escalation"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/replacement": 1,
+            "CUSTOMER-SERVICE-SOP/manual-escalation": 3
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/replacement",
+            "AFTER-SALES-POLICY/repair",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/priority",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e101-wheel-blocked",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R1-MANUAL/reset"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/replacement": 1,
+            "CUSTOMER-SERVICE-SOP/manual-escalation": 2
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/replacement",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/repair",
+            "FAULT-CODES/e101-wheel-blocked",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/before-cleaning",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "COMMON-FAQ/wet-environment",
+            "AFTER-SALES-POLICY/exclusions"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/replacement": 1,
+            "CUSTOMER-SERVICE-SOP/manual-escalation": 2
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/replacement",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/repair",
+            "FAULT-CODES/e101-wheel-blocked",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "COMMON-FAQ/map-recovery",
+            "AFTER-SALES-POLICY/exclusions",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "AFTER-SALES-POLICY/priority",
+            "COMMON-FAQ/before-cleaning"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R1-008",
+      "product_model": "CZ-R1",
+      "query": "R1 用了 9 个月才出故障，已经超过七天了。准备维修建议前要记录什么、核对资料的哪些信息，能不能回复‘已经寄修’？",
+      "required_source_sections": [
+        "AFTER-SALES-POLICY/warranty",
+        "AFTER-SALES-POLICY/repair",
+        "CUSTOMER-SERVICE-SOP/evidence-check"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": false,
+          "missing_at_10": [],
+          "missing_at_5": [
+            "CUSTOMER-SERVICE-SOP/evidence-check"
+          ],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/repair": 1,
+            "AFTER-SALES-POLICY/warranty": 4,
+            "CUSTOMER-SERVICE-SOP/evidence-check": 8
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/repair",
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/replacement",
+            "AFTER-SALES-POLICY/warranty",
+            "FAULT-CODES/e101-wheel-blocked",
+            "AFTER-SALES-POLICY/priority",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "COMMON-FAQ/charging"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": false,
+          "missing_at_10": [],
+          "missing_at_5": [
+            "AFTER-SALES-POLICY/warranty"
+          ],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/repair": 1,
+            "AFTER-SALES-POLICY/warranty": 6,
+            "CUSTOMER-SERVICE-SOP/evidence-check": 2
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/repair",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "AFTER-SALES-POLICY/replacement",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/warranty",
+            "AFTER-SALES-POLICY/priority",
+            "FAULT-CODES/r1-e210-dock",
+            "CZ-R1-MANUAL/maintenance",
+            "COMMON-FAQ/wet-environment"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/repair": 1,
+            "AFTER-SALES-POLICY/warranty": 4,
+            "CUSTOMER-SERVICE-SOP/evidence-check": 3
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/repair",
+            "AFTER-SALES-POLICY/replacement",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "AFTER-SALES-POLICY/warranty",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "AFTER-SALES-POLICY/priority",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e101-wheel-blocked",
+            "CZ-R1-MANUAL/maintenance"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-001",
+      "product_model": "CZ-R2",
+      "query": "我家 R2 老是反复离开基站。基站周围要留多少空间、先擦哪里？另外任务结束那阵突然很大声，是不是故障？",
+      "required_source_sections": [
+        "CZ-R2-MANUAL/station-setup",
+        "CZ-R2-MANUAL/auto-empty"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R2-MANUAL/auto-empty": 4,
+            "CZ-R2-MANUAL/station-setup": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/reset",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CZ-R2-MANUAL/auto-empty",
+            "COMMON-FAQ/map-recovery",
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R2-MANUAL/maintenance",
+            "FAULT-CODES/e102-cliff-sensor",
+            "FAULT-CODES/e101-wheel-blocked"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R2-MANUAL/auto-empty": 2,
+            "CZ-R2-MANUAL/station-setup": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/auto-empty",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "COMMON-FAQ/map-recovery",
+            "FAULT-CODES/e102-cliff-sensor",
+            "CZ-R2-MANUAL/maintenance",
+            "CZ-R2-MANUAL/reset",
+            "FAULT-CODES/e101-wheel-blocked",
+            "AFTER-SALES-POLICY/repair",
+            "AFTER-SALES-POLICY/exclusions"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R2-MANUAL/auto-empty": 2,
+            "CZ-R2-MANUAL/station-setup": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/auto-empty",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CZ-R2-MANUAL/reset",
+            "COMMON-FAQ/map-recovery",
+            "FAULT-CODES/e102-cliff-sensor",
+            "CZ-R2-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e101-wheel-blocked",
+            "AFTER-SALES-POLICY/warranty"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-002",
+      "product_model": "CZ-R2",
+      "query": "R2 基站报 E310，断电后具体检查哪三处？恢复供电后能连续试集尘吗，橙灯还亮怎么办？",
+      "required_source_sections": [
+        "FAULT-CODES/r2-e310-dust-bag"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/r2-e310-dust-bag": 1
+          },
+          "top10": [
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CZ-R2-MANUAL/reset",
+            "CZ-R2-MANUAL/auto-empty",
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/warranty",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/repair",
+            "COMMON-FAQ/charging"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/r2-e310-dust-bag": 1
+          },
+          "top10": [
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CZ-R2-MANUAL/reset",
+            "CZ-R2-MANUAL/auto-empty",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/wet-environment",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "CUSTOMER-SERVICE-SOP/evidence-check"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/r2-e310-dust-bag": 1
+          },
+          "top10": [
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CZ-R2-MANUAL/reset",
+            "CZ-R2-MANUAL/auto-empty",
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/maintenance",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/warranty",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/charging"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "single_source"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-003",
+      "product_model": "CZ-R2",
+      "query": "厨房有一小滩水，R2 不是能拖地吗，我直接让它进去把水吸干行不行？家里的长毛地毯又该怎么处理？",
+      "required_source_sections": [
+        "COMMON-FAQ/wet-environment",
+        "CZ-R2-MANUAL/vacuum-and-mop"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/wet-environment": 1,
+            "CZ-R2-MANUAL/vacuum-and-mop": 2
+          },
+          "top10": [
+            "COMMON-FAQ/wet-environment",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/maintenance",
+            "COMMON-FAQ/model-difference",
+            "COMMON-FAQ/before-cleaning",
+            "COMMON-FAQ/charging",
+            "FAULT-CODES/e102-cliff-sensor",
+            "AFTER-SALES-POLICY/exclusions",
+            "CZ-R2-MANUAL/station-setup",
+            "AFTER-SALES-POLICY/warranty"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/wet-environment": 2,
+            "CZ-R2-MANUAL/vacuum-and-mop": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "COMMON-FAQ/wet-environment",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/model-difference",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/replacement",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "COMMON-FAQ/charging",
+            "CZ-R2-MANUAL/maintenance",
+            "CUSTOMER-SERVICE-SOP/evidence-check"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/wet-environment": 1,
+            "CZ-R2-MANUAL/vacuum-and-mop": 2
+          },
+          "top10": [
+            "COMMON-FAQ/wet-environment",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/maintenance",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/before-cleaning",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/exclusions"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-004",
+      "product_model": "CZ-R2",
+      "query": "R2 卡住后想复位。复位孔按多久、看到什么灯时松手？复位完集尘袋会自动清空吗？",
+      "required_source_sections": [
+        "CZ-R2-MANUAL/reset"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R2-MANUAL/reset": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/reset",
+            "CZ-R2-MANUAL/auto-empty",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/warranty",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/maintenance",
+            "CZ-R2-MANUAL/station-setup",
+            "COMMON-FAQ/map-recovery"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R2-MANUAL/reset": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/reset",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/auto-empty",
+            "COMMON-FAQ/map-recovery",
+            "FAULT-CODES/e101-wheel-blocked",
+            "CZ-R2-MANUAL/station-setup",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "AFTER-SALES-POLICY/warranty",
+            "AFTER-SALES-POLICY/priority"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "CZ-R2-MANUAL/reset": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/reset",
+            "CZ-R2-MANUAL/auto-empty",
+            "COMMON-FAQ/model-difference",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e101-wheel-blocked"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "single_source"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-005",
+      "product_model": "CZ-R2",
+      "query": "R2 老在深色地垫旁报 E102，应该挪到什么样的地面，用什么擦哪个部位？",
+      "required_source_sections": [
+        "FAULT-CODES/e102-cliff-sensor"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/e102-cliff-sensor": 2
+          },
+          "top10": [
+            "CZ-R2-MANUAL/maintenance",
+            "FAULT-CODES/e102-cliff-sensor",
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/station-setup",
+            "COMMON-FAQ/wet-environment",
+            "CZ-R2-MANUAL/reset",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/warranty"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/e102-cliff-sensor": 1
+          },
+          "top10": [
+            "FAULT-CODES/e102-cliff-sensor",
+            "CZ-R2-MANUAL/station-setup",
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/map-recovery",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "CZ-R2-MANUAL/reset",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/maintenance"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "FAULT-CODES/e102-cliff-sensor": 1
+          },
+          "top10": [
+            "FAULT-CODES/e102-cliff-sensor",
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/maintenance",
+            "CZ-R2-MANUAL/reset",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/wet-environment",
+            "COMMON-FAQ/model-difference",
+            "AFTER-SALES-POLICY/warranty"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-006",
+      "product_model": "CZ-R2",
+      "query": "R2 要放柜子里三个月：关机前充到多少、多久补电？拖布、主刷和传感器在收起来前怎么维护？",
+      "required_source_sections": [
+        "COMMON-FAQ/charging",
+        "CZ-R2-MANUAL/maintenance"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/charging": 2,
+            "CZ-R2-MANUAL/maintenance": 3
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/charging",
+            "CZ-R2-MANUAL/maintenance",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/station-setup",
+            "COMMON-FAQ/before-cleaning",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/exclusions",
+            "COMMON-FAQ/model-difference"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/charging": 4,
+            "CZ-R2-MANUAL/maintenance": 1
+          },
+          "top10": [
+            "CZ-R2-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/before-cleaning",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/map-recovery",
+            "FAULT-CODES/e102-cliff-sensor",
+            "AFTER-SALES-POLICY/exclusions",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "CZ-R2-MANUAL/station-setup"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/charging": 3,
+            "CZ-R2-MANUAL/maintenance": 2
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R2-MANUAL/maintenance",
+            "COMMON-FAQ/charging",
+            "COMMON-FAQ/map-recovery",
+            "COMMON-FAQ/before-cleaning",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/station-setup",
+            "AFTER-SALES-POLICY/exclusions",
+            "FAULT-CODES/e102-cliff-sensor",
+            "COMMON-FAQ/model-difference"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-007",
+      "product_model": "CZ-R2",
+      "query": "我买 R2 主要想扫拖和自动集尘，R1 能不能装水箱凑合用？两款机器的复位方法是不是一样？",
+      "required_source_sections": [
+        "COMMON-FAQ/model-difference"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/model-difference": 2
+          },
+          "top10": [
+            "COMMON-FAQ/wet-environment",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/reset",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R2-MANUAL/auto-empty",
+            "CZ-R2-MANUAL/station-setup",
+            "CZ-R2-MANUAL/maintenance",
+            "AFTER-SALES-POLICY/exclusions"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/model-difference": 1
+          },
+          "top10": [
+            "COMMON-FAQ/model-difference",
+            "COMMON-FAQ/wet-environment",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/reset",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R2-MANUAL/auto-empty",
+            "AFTER-SALES-POLICY/warranty",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "CZ-R2-MANUAL/station-setup"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "COMMON-FAQ/model-difference": 2
+          },
+          "top10": [
+            "COMMON-FAQ/wet-environment",
+            "COMMON-FAQ/model-difference",
+            "CZ-R2-MANUAL/vacuum-and-mop",
+            "CZ-R2-MANUAL/reset",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R2-MANUAL/auto-empty",
+            "COMMON-FAQ/map-recovery",
+            "CZ-R2-MANUAL/station-setup",
+            "AFTER-SALES-POLICY/exclusions"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "single_source"
+      ]
+    },
+    {
+      "case_id": "RET-DEV-R2-008",
+      "product_model": "CZ-R2",
+      "query": "R2 吸进水后坏了，我想申请保修。手册和售后规则说法不一致时哪个优先？客服能不能先答应，还是必须转人工？",
+      "required_source_sections": [
+        "COMMON-FAQ/wet-environment",
+        "AFTER-SALES-POLICY/exclusions",
+        "AFTER-SALES-POLICY/priority",
+        "CUSTOMER-SERVICE-SOP/manual-escalation"
+      ],
+      "retrievals": {
+        "bge": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/exclusions": 1,
+            "AFTER-SALES-POLICY/priority": 2,
+            "COMMON-FAQ/wet-environment": 5,
+            "CUSTOMER-SERVICE-SOP/manual-escalation": 3
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/priority",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "AFTER-SALES-POLICY/warranty",
+            "COMMON-FAQ/wet-environment",
+            "AFTER-SALES-POLICY/repair",
+            "AFTER-SALES-POLICY/replacement",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "COMMON-FAQ/charging"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "bm25": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/exclusions": 1,
+            "AFTER-SALES-POLICY/priority": 3,
+            "COMMON-FAQ/wet-environment": 5,
+            "CUSTOMER-SERVICE-SOP/manual-escalation": 4
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/exclusions",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "AFTER-SALES-POLICY/priority",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "COMMON-FAQ/wet-environment",
+            "AFTER-SALES-POLICY/repair",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/warranty",
+            "CZ-R2-MANUAL/vacuum-and-mop"
+          ],
+          "wrong_model_hits_at_10": []
+        },
+        "rrf": {
+          "full_coverage_at_10": true,
+          "full_coverage_at_5": true,
+          "missing_at_10": [],
+          "missing_at_5": [],
+          "required_source_ranks": {
+            "AFTER-SALES-POLICY/exclusions": 1,
+            "AFTER-SALES-POLICY/priority": 2,
+            "COMMON-FAQ/wet-environment": 4,
+            "CUSTOMER-SERVICE-SOP/manual-escalation": 3
+          },
+          "top10": [
+            "AFTER-SALES-POLICY/exclusions",
+            "AFTER-SALES-POLICY/priority",
+            "CUSTOMER-SERVICE-SOP/manual-escalation",
+            "COMMON-FAQ/wet-environment",
+            "AFTER-SALES-POLICY/repair",
+            "AFTER-SALES-POLICY/warranty",
+            "CUSTOMER-SERVICE-SOP/evidence-check",
+            "CUSTOMER-SERVICE-SOP/intake-fields",
+            "FAULT-CODES/r2-e310-dust-bag",
+            "AFTER-SALES-POLICY/replacement"
+          ],
+          "wrong_model_hits_at_10": []
+        }
+      },
+      "traits": [
+        "multi_source",
+        "cross_document",
+        "robust_expression"
+      ]
+    }
+  ],
+  "dataset": {
+    "case_count": 16,
+    "document_count": 6,
+    "model_split": {
+      "CZ-R1": 8,
+      "CZ-R2": 8
+    },
+    "multi_source_case_count": 11,
+    "path": "evals/retrieval-checkup-v1.json",
+    "robust_expression_case_count": 10,
+    "section_count": 27,
+    "sha256": "cec2a70ef6a354b2cc4ae910a7bc9a84a12e066a9ec5e0fefb2d5faa8252c044"
+  },
+  "limitations": [
+    "This local candidate was tuned against the same public development set; its change from the frozen baseline is not unseen evidence.",
+    "This is a 16-case public synthetic development set, not an unseen HOLDOUT or a product success-rate claim.",
+    "It measures whether all labeled source sections appear in Top 5 or Top 10; it does not measure answer correctness or generation quality.",
+    "All rankings are model-filtered before retrieval, so wrong-model hits test that boundary rather than unrestricted cross-model search.",
+    "No Provider, credential, private data or external business system is used."
+  ],
+  "public_examples": [
+    {
+      "case_id": "RET-DEV-R1-001",
+      "missing_at_5": [],
+      "retriever_id": "rrf",
+      "role": "success"
+    },
+    {
+      "case_id": "RET-DEV-R1-008",
+      "missing_at_5": [
+        "AFTER-SALES-POLICY/warranty"
+      ],
+      "retriever_id": "bm25",
+      "role": "failure"
+    },
+    {
+      "case_id": "RET-DEV-R1-003",
+      "missing_at_5": [
+        "CUSTOMER-SERVICE-SOP/intake-fields"
+      ],
+      "retriever_id": "bge",
+      "role": "failure"
+    }
+  ],
+  "retrievers": [
+    {
+      "full_coverage_at_10": {
+        "passed_cases": 16,
+        "total_cases": 16
+      },
+      "full_coverage_at_5": {
+        "passed_cases": 15,
+        "total_cases": 16
+      },
+      "label": "BM25",
+      "retriever_id": "bm25",
+      "wrong_model_hits_at_10": 0
+    },
+    {
+      "full_coverage_at_10": {
+        "passed_cases": 16,
+        "total_cases": 16
+      },
+      "full_coverage_at_5": {
+        "passed_cases": 14,
+        "total_cases": 16
+      },
+      "label": "BGE",
+      "retriever_id": "bge",
+      "wrong_model_hits_at_10": 0
+    },
+    {
+      "full_coverage_at_10": {
+        "passed_cases": 16,
+        "total_cases": 16
+      },
+      "full_coverage_at_5": {
+        "passed_cases": 16,
+        "total_cases": 16
+      },
+      "label": "BM25 + BGE + RRF",
+      "retriever_id": "rrf",
+      "wrong_model_hits_at_10": 0
+    }
+  ],
+  "runtime_identity": {
+    "embedding_model_manifest_sha256": "c25626d58149bd63c8081f11ca7876f18a2b4a8b3d13ee278cc5ac9ea1d5326e",
+    "model_filter_stage": "before_ranking",
+    "provider_calls": 0,
+    "retriever_contracts": {
+      "bge": "fastembed_bge_small_zh_v1.5",
+      "bm25": "okapi_bm25_k1_1.5_b_0.75_domain_equivalence_v1",
+      "rrf": "rrf_bm25_domain_equivalence_v1_bge_k60_depth20"
+    },
+    "top_k": 10,
+    "unit_inventory_sha256": "714538ce5b649f3acf566ac53f93dc9201f6a80d13430c7e3e293436d7e55161",
+    "unit_strategy": "native_section"
+  },
+  "schema_version": "retrieval-checkup-result-v1",
+  "status": "local_candidate_public_development_result_not_product_release_claim"
+}
