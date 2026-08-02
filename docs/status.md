@@ -6,21 +6,22 @@
 | --- | --- |
 | `state` | `candidate` |
 | 更新时间 | `2026-08-02` |
-| 当前产品目标 | 在不改变生产语料、检索、生成、Provider 或部署的前提下，冻结并首次观测 10 题独立合成检索未见集；揭示后只作回归记录 |
+| 当前产品目标 | 不新增或重算数字，为当前公开量化结果与运行约束建立统一口径卡，使定义、方法、数据集、复跑属性、证据与否定边界可回查 |
 | 项目基线 | `origin/main@8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 运行产品 | 公开 Beta；`product/0.1.0` 未发布；最近核验公网 `status=ok`、`live_experience=available`、`release_sha=8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24` |
 | 当前治理结果 | PR [#61](https://github.com/suuny-ab/traceable-support-agent/pull/61) 已从精确 head `074bab2bb00268957321da40348a58fca1b82797` squash merge 为 `8ca825d58d2b42fdaecfb59e0ca6a0ade45d6f24`；main CI、部署与公网完整 SHA 已核验 |
-| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）已含最小观测面与冻结未见集首次观察；观察实现 head `a21afb20bd7bd7e6a4c777dc96ffd478e31fc3b0` 的 CI run `30752922314` 成功，回执提交后的最终 head Checks 以 GitHub 实时状态为准 |
-| 活动工作 | [`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）：冻结、首次观测与回执；[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选仍在同一 Draft PR #62 |
-| 风险 / 授权 | HOLDOUT 已揭示，只可回归，不得用于检索调参；用户授权推送 `night-20260802` 和更新 Draft PR #62，不授权 Ready、合并、部署、Provider、费用或生产状态修改 |
+| 当前产品候选 | Draft PR [#62](https://github.com/suuny-ab/traceable-support-agent/pull/62)（`night-20260802`）已含最小观测面与冻结未见集首次观察；本切片新增 8 张公开数字口径卡，本地治理全绿，待推送与最终 head Checks |
+| 活动工作 | [`public-metrics-card`](work/active/public-metrics-card/spec.md)（`docs/work/active/public-metrics-card/`）：数字口径统一；[`retrieval-unseen-holdout`](work/active/retrieval-unseen-holdout/spec.md)（`docs/work/active/retrieval-unseen-holdout/`）：冻结观察；[`minimal-observability`](work/active/minimal-observability/spec.md)（`docs/work/active/minimal-observability/`）：既有候选 |
+| 风险 / 授权 | 本切片只复述已有公开数字，不形成新测量；HOLDOUT 继续只可回归。用户授权推送 `night-20260802` 和更新 Draft PR #62，不授权 Ready、合并、部署、Provider、费用或生产修改 |
 | Provider | `provider_enabled=true`；凭据仍仅在服务器 `/opt/traceable-support/provider.env`（0600）；预算日 ¥20 / 月 ¥100 / 次 ¥1、自动重试 0；本任务 Provider 调用 0 |
-| 阻碍 | 无；本切片在状态回执提交推送、最终 head required Checks 启动后停止，PR 保持 Draft |
-| 当前证据 | 冻结提交 `6e57c5e229af01f4949df9c99d6ec6bdf03af74a`；三类重复均 0；三检索 Top-5 / Top-10 均 10/10、错误型号均 0；API 149 passed / 4 skipped / 24 subtests；治理 114 passed / 8 skipped；公开仓通过；CI run `30752922314` 四个 required jobs 全绿；Provider / generation 0 |
+| 阻碍 | 无当前事实冲突；本地治理已全绿，待提交、推送和 Draft PR #62 最终 head Checks |
+| 当前证据 | 8 张卡 / 22 个仓库链接逐项一致；治理 114 tests / 8 skipped；公开仓 246 files / 8 public cases；园丁 stale 0 / review 1；差异仅 docs；正式评测、Provider、generation、产品运行均为 0 |
 
 ## 当前队列
 
 | Task | 状态 | 候选 / 下一动作 |
 | --- | --- | --- |
+| `public-metrics-card` | `local_candidate` | 8 张数字口径卡、只读一致性和本地治理已完成；待推送和 Draft PR #62 最终 head Checks |
 | `retrieval-unseen-holdout` | `observed_frozen` | 首次检索观察已落盘；只作回归，不改检索 / 题 / 标签 / 知识；待全集、治理和 Draft PR #62 最终 head Checks |
 | `minimal-observability` | `candidate` | Draft PR #62；等待最终 head 的 required Checks，不自动转 Ready、合并或部署 |
 | `pgvector-production-integration` | `delivered` | PR #61 merge / main CI / deploy / 公网完整 SHA 均已核验；工作记录已归档到 `docs/work/completed/` |
@@ -29,5 +30,5 @@
 
 ## 下一检查点
 
-本切片停止点：状态回执提交形成最终 head 后，确认 Draft PR #62 的 required Checks 已启动；
+提交并推送 `night-20260802`，确认 Draft PR #62 最终 head 的 required Checks 全绿后停止；
 不转 Ready、不合并、不部署。
