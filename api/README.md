@@ -1,8 +1,13 @@
 # API
 
-`traceable_support` 是公开 HTTP 控制面与产品运行链的 Python 包。四个公共路由定义在
-[`contracts/public-api-v1.json`](contracts/public-api-v1.json)；服务默认且当前始终为
-`replay_only`。
+`traceable_support` 是公开 HTTP 控制面与产品运行链的 Python 包。五个公共路由定义在
+[`contracts/public-api-v1.json`](contracts/public-api-v1.json)；本地默认以 `replay_only`
+启动，生产是否为 live 以部署配置与 `/api/v1/health` 为准。
+
+`GET /api/v1/observability` 返回进程当前 SQLite 生命周期内的请求总量、平均 / 最大延迟、
+错误率和 `client_error` / `server_error` / `transport_error` 聚合。记录只使用规范化路由 ID，
+不保存原始路径、查询串、请求体、Cookie、IP 或异常文本；观测写入失败只产生脱敏 warning，
+不会改变原请求响应。观测端点自身不计数，连续读取不会污染被观察值。
 
 本地检查：
 

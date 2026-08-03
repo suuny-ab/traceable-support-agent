@@ -250,7 +250,7 @@ def run_qa(
     validate_qa_input(question, product_model)
     if mode not in {MODE_OFFLINE, MODE_AUTHORIZED_REAL}:
         _fail("product_qa_mode_invalid")
-    boundary = evaluate_generation_boundary(question, product_model)
+    boundary = evaluate_generation_boundary(question, product_model, task_type="qa")
     if boundary is not None:
         if callable(on_stage):
             on_stage("preflight", "failed")

@@ -108,7 +108,9 @@ def run_ticket(
     if mode not in {MODE_OFFLINE, MODE_AUTHORIZED_REAL}:
         _fail("product_qa_mode_invalid")
     question = ticket["issue_description"]
-    boundary = evaluate_generation_boundary(question, ticket["product_model"])
+    boundary = evaluate_generation_boundary(
+        question, ticket["product_model"], task_type="ticket"
+    )
     if boundary is not None:
         if callable(on_stage):
             on_stage("preflight", "failed")

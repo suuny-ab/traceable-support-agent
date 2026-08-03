@@ -1,0 +1,88 @@
+{
+  "schema_version": "stage12-obligation-source-rescore-v1",
+  "mode": "offline_rescore_existing_packages",
+  "source": {
+    "historical_aggregate": "evals/stage12-post-fix-revalidation-v1.json",
+    "historical_aggregate_sha256": "2de8d63be45974bcb58fdbc2d43d75d470854ae4268a7a30d229989a136b57b9",
+    "previous_rescore": "evals/stage12-handoff-contract-rescore-v1.json",
+    "previous_rescore_sha256": "d1356190bde6632b92f8482637a8abab35a5c2db8675cca47e51b97e91f3c88e",
+    "generation_shape_receipt": "evals/generation-shape-diagnostics-v1.json",
+    "generation_shape_receipt_sha256": "82bfa164c3da96439cd9004c2b461cc70b8d7a09c6c2d27602676daf9b3c1832",
+    "public_fixture": "evals/fixtures/stage12-obligation-source-equivalent-v1.json",
+    "public_fixture_sha256": "4e64791c4be6a80ab0e01688cf6229fc252c11da42b12e20e848644c44651326",
+    "private_raw_records_sha256": "6eab96586c03abb15366c6e8c11ef7c1dd8617c8a8aa82fa7127c1e5913368af",
+    "private_unseen_set_sha256": "7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0"
+  },
+  "provider_calls": 0,
+  "automatic_retry_count": 0,
+  "cases_rescored": 24,
+  "changed_case_count": 6,
+  "unchanged_case_count": 18,
+  "before": {
+    "passed_cases": 6,
+    "failure_occurrences": 31,
+    "failure_counts": {
+      "outcome_mismatch": 8,
+      "required_fact_missing": 12,
+      "source_sections_mismatch": 11
+    }
+  },
+  "after": {
+    "passed_cases": 6,
+    "failure_occurrences": 28,
+    "failure_counts": {
+      "outcome_mismatch": 8,
+      "required_fact_missing": 8,
+      "required_obligation_missing": 4,
+      "source_sections_mismatch": 8
+    }
+  },
+  "changes": [
+    {
+      "case_id": "STG12-01-MSQ-002",
+      "root_cause": "obligation_planning",
+      "removed_failure_codes": ["required_fact_missing"],
+      "added_failure_codes": ["required_obligation_missing"]
+    },
+    {
+      "case_id": "STG12-01-MSQ-003",
+      "root_cause": "bound_extra_source",
+      "removed_failure_codes": ["source_sections_mismatch"],
+      "added_failure_codes": []
+    },
+    {
+      "case_id": "STG12-01-ATK-002",
+      "root_cause": "obligation_planning",
+      "removed_failure_codes": ["required_fact_missing"],
+      "added_failure_codes": ["required_obligation_missing"]
+    },
+    {
+      "case_id": "STG12-01-ATK-003",
+      "root_cause": "obligation_planning",
+      "removed_failure_codes": ["required_fact_missing"],
+      "added_failure_codes": ["required_obligation_missing"]
+    },
+    {
+      "case_id": "STG12-01-SO-001",
+      "root_cause": "obligation_planning_and_bound_extra_source",
+      "removed_failure_codes": ["required_fact_missing", "source_sections_mismatch"],
+      "added_failure_codes": ["required_obligation_missing"]
+    },
+    {
+      "case_id": "STG12-01-SO-003",
+      "root_cause": "bound_extra_source",
+      "removed_failure_codes": ["source_sections_mismatch"],
+      "added_failure_codes": []
+    }
+  ],
+  "boundary": {
+    "historical_aggregate_modified": false,
+    "previous_rescore_modified": false,
+    "generation_shape_receipt_modified": false,
+    "new_model_output": false,
+    "new_stage12_run": false,
+    "product_generation_changed": false,
+    "product_outcome_changed": false,
+    "use": "regression_only"
+  }
+}

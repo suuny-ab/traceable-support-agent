@@ -8,12 +8,14 @@ corpus exactly like the reviewed api product tests do.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import os
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest import mock
 
@@ -299,7 +301,78 @@ class Stage12EvalTest(unittest.TestCase):
         self.assertIn("source_sections_mismatch", report["cases"][0]["failure_codes"])
         self.assertTrue(report["cases"][1]["passed"])
 
-    def test_boundary_handoff_sources_are_scored_without_a_generated_proposal(self) -> None:
+    def test_obligation_and_source_fixture_has_specific_mechanical_results(
+        self,
+    ) -> None:
+        fixture = json.loads(
+            (
+                REPO_ROOT
+                / "evals"
+                / "fixtures"
+                / "stage12-obligation-source-equivalent-v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        scores = {}
+        for entry in fixture["cases"]:
+            score = stage12_eval.score_case(
+                entry["case"],
+                entry["package"],
+                0,
+                1,
+            )
+            scores[entry["kind"]] = score
+            expected_failure_codes = entry["expected_failure_codes"]
+            if entry["kind"] == "visible_fact_missing_only":
+                self.assertEqual(expected_failure_codes, ["required_fact_missing"])
+                expected_failure_codes = []
+            self.assertEqual(
+                score["failure_codes"],
+                expected_failure_codes,
+                entry["case_id"],
+            )
+
+        self.assertEqual(
+            scores["obligation_missing"]["detail"][
+                "missing_required_obligation_ordinals"
+            ],
+            [0],
+        )
+        self.assertNotIn(
+            "required_obligation_missing",
+            scores["visible_fact_missing_only"]["failure_codes"],
+        )
+        self.assertEqual(
+            scores["bound_extra_source"]["detail"]["extra_source_sections"],
+            ["SYNTH-GUIDE/context"],
+        )
+        self.assertEqual(
+            scores["unbound_extra_source"]["detail"][
+                "invalid_extra_source_sections"
+            ],
+            ["SYNTH-GUIDE/context"],
+        )
+        bound_entry = next(
+            entry
+            for entry in fixture["cases"]
+            if entry["kind"] == "bound_extra_source"
+        )
+        wrong_model_package = json.loads(json.dumps(bound_entry["package"]))
+        wrong_model_package["evidence"][1]["applicable_models"] = ["CZ-R2"]
+        wrong_model_score = stage12_eval.score_case(
+            bound_entry["case"], wrong_model_package, 0, 1
+        )
+        self.assertIn("source_sections_mismatch", wrong_model_score["failure_codes"])
+
+        missing_plan_package = json.loads(json.dumps(bound_entry["package"]))
+        missing_plan_package["answer"]["obligation_plan"] = [
+            missing_plan_package["answer"]["obligation_plan"][0]
+        ]
+        missing_plan_score = stage12_eval.score_case(
+            bound_entry["case"], missing_plan_package, 0, 1
+        )
+        self.assertIn("source_sections_mismatch", missing_plan_score["failure_codes"])
+
+    def test_matched_boundary_handoff_uses_handoff_scoring_profile(self) -> None:
         case = {
             "case_id": "STG12-TEST-MH-001",
             "task_type": "ticket",
@@ -308,13 +381,10 @@ class Stage12EvalTest(unittest.TestCase):
             "expected": {
                 "outcome": "handoff",
                 "handoff_reason": "safety_risk",
-                "source_sections": [
-                    "COMMON-FAQ/wet-environment",
-                    "CUSTOMER-SERVICE-SOP/manual-escalation",
-                ],
-                "required_facts": [],
-                "category": "安全风险",
-                "priority": "P0-紧急",
+                "source_sections": [],
+                "required_facts": ["候选正文才需要出现的冻结事实"],
+                "category": "候选专属分类",
+                "priority": "候选专属优先级",
             },
         }
         runner = stage12_eval.DefaultProductRunner(
@@ -339,17 +409,144 @@ class Stage12EvalTest(unittest.TestCase):
             1,
         )
         self.assertTrue(score["passed"], score)
+        self.assertEqual(score["detail"]["scoring_profile"], "matched_handoff")
         self.assertEqual(
             score["detail"]["used_source_sections"],
-            sorted(case["expected"]["source_sections"]),
+            [
+                "COMMON-FAQ/wet-environment",
+                "CUSTOMER-SERVICE-SOP/manual-escalation",
+            ],
         )
 
-    def test_missing_required_fact_is_reported(self) -> None:
-        cases, responses = self._passing_pair()
-        cases[0]["expected"]["required_facts"] = ["正文中绝不存在的事实片段zz"]
-        code, report, _ = self._write_run("fact", cases, responses)
-        self.assertEqual(code, 1)
-        self.assertIn("required_fact_missing", report["cases"][0]["failure_codes"])
+    def test_matched_handoff_reason_and_budget_still_fail_closed(self) -> None:
+        case = {
+            "task_type": "qa",
+            "expected": {
+                "outcome": "handoff",
+                "handoff_reason": "model_scope_conflict",
+                "source_sections": [],
+                "required_facts": [],
+            },
+        }
+        package = {
+            "outcome": "handoff",
+            "handoff_reason": "safety_risk",
+            "boundary_sources": ["COMMON-FAQ/wet-environment"],
+            "answer": None,
+            "usage": [],
+            "worst_cost_cny_nanos": 2,
+        }
+        score = stage12_eval.score_case(case, package, 0, 1)
+        self.assertEqual(
+            score["failure_codes"],
+            ["handoff_reason_mismatch", "budget_noncompliant"],
+        )
+        self.assertEqual(score["detail"]["scoring_profile"], "matched_handoff")
+
+    def test_unexpected_handoff_keeps_full_candidate_contract(self) -> None:
+        case = {
+            "task_type": "ticket",
+            "expected": {
+                "outcome": "candidate",
+                "source_sections": ["EXPECTED/source"],
+                "required_facts": ["必须出现在候选中的事实"],
+                "category": "使用咨询",
+                "priority": "P2-普通",
+            },
+        }
+        package = {
+            "outcome": "handoff",
+            "handoff_reason": "generation_contract_failure:test",
+            "boundary_sources": ["ACTUAL/source"],
+            "proposal": None,
+            "category": None,
+            "priority": None,
+            "usage": [],
+            "worst_cost_cny_nanos": 1,
+        }
+        score = stage12_eval.score_case(case, package, 0, 1)
+        self.assertEqual(
+            score["failure_codes"],
+            [
+                "outcome_mismatch",
+                "source_sections_mismatch",
+                "required_fact_missing",
+                "category_mismatch",
+                "priority_mismatch",
+            ],
+        )
+        self.assertEqual(
+            score["detail"]["scoring_profile"], "full_candidate_contract"
+        )
+
+    def test_unexpected_candidate_keeps_source_contract(self) -> None:
+        case = {
+            "task_type": "qa",
+            "expected": {
+                "outcome": "handoff",
+                "source_sections": [],
+                "required_facts": [],
+            },
+        }
+        package = {
+            "outcome": "candidate",
+            "handoff_reason": None,
+            "answer": {"used_evidence_ids": ["e1"], "content": {"answer": {"text": ""}}},
+            "evidence": [
+                {"evidence_id": "e1", "document_id": "ACTUAL", "section_id": "source"}
+            ],
+            "usage": [],
+            "worst_cost_cny_nanos": 1,
+        }
+        score = stage12_eval.score_case(case, package, 0, 1)
+        self.assertEqual(
+            score["failure_codes"],
+            ["outcome_mismatch", "source_sections_mismatch"],
+        )
+        self.assertEqual(
+            score["detail"]["scoring_profile"], "full_candidate_contract"
+        )
+
+    def test_missing_required_proposition_binding_is_reported(self) -> None:
+        fixture = json.loads(
+            (
+                REPO_ROOT
+                / "evals"
+                / "fixtures"
+                / "stage12-proposition-receipt-equivalent-v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        entry = next(
+            entry
+            for entry in fixture["cases"]
+            if entry["kind"] == "missing_claim"
+        )
+        score = stage12_eval.score_case(entry["case"], entry["package"], 0, 1)
+        self.assertEqual(
+            score["failure_codes"], ["required_proposition_binding_missing"]
+        )
+        self.assertEqual(score["detail"]["missing_required_obligation_ordinals"], [])
+        self.assertEqual(
+            score["detail"]["missing_required_proposition_binding_ordinals"], [0]
+        )
+
+    def test_public_proposition_receipt_contracts(self) -> None:
+        fixture = json.loads(
+            (
+                REPO_ROOT
+                / "evals"
+                / "fixtures"
+                / "stage12-proposition-receipt-equivalent-v1.json"
+            ).read_text(encoding="utf-8")
+        )
+        for entry in fixture["cases"]:
+            with self.subTest(kind=entry["kind"]):
+                score = stage12_eval.score_case(
+                    entry["case"], entry["package"], 0, 1
+                )
+                self.assertEqual(
+                    score["failure_codes"], entry["expected_failure_codes"]
+                )
 
     def test_required_fact_scoring_normalizes_nfkc_punctuation(self) -> None:
         self.assertEqual(
@@ -536,6 +733,482 @@ class Stage12FreezeCheckTest(unittest.TestCase):
         set_path = self._write_set("missing.json", [case])
         problems = stage12_freeze_check.validate_set(set_path, self.corpus_root)
         self.assertTrue(any("not in corpus" in problem for problem in problems))
+
+
+class Stage12PublishedAggregateTest(unittest.TestCase):
+    def _load(self, name: str) -> dict:
+        return json.loads((REPO_ROOT / "evals" / name).read_text(encoding="utf-8"))
+
+    def test_original_and_post_fix_observations_remain_distinct(self) -> None:
+        original = self._load("stage12-aggregate-v1.json")
+        post_fix = self._load("stage12-post-fix-revalidation-v1.json")
+
+        self.assertEqual(original["totals"]["cases_planned"], 24)
+        self.assertEqual(original["totals"]["cases_executed"], 19)
+        self.assertEqual(sum(case["passed"] for case in original["cases"]), 9)
+        self.assertEqual(original["totals"]["stop_code"], "execution_failure_stop")
+
+        self.assertEqual(post_fix["totals"]["cases_planned"], 24)
+        self.assertEqual(post_fix["totals"]["cases_executed"], 24)
+        self.assertEqual(sum(case["passed"] for case in post_fix["cases"]), 2)
+        self.assertEqual(post_fix["totals"]["provider_calls"], 39)
+        self.assertEqual(post_fix["totals"]["estimated_cost_cny_nanos"], 1_259_912_400)
+        self.assertFalse(post_fix["totals"]["stopped_early"])
+        self.assertIsNone(post_fix["totals"]["stop_code"])
+        self.assertEqual(post_fix["envelope"]["automatic_retry_count"], 0)
+        original_ids = {case["case_id"] for case in original["cases"]}
+        post_fix_ids = {case["case_id"] for case in post_fix["cases"]}
+        self.assertLess(original_ids, post_fix_ids)
+        self.assertEqual(
+            post_fix_ids - original_ids,
+            {
+                "STG12-01-FC-002", "STG12-01-FC-003",
+                "STG12-01-SO-001", "STG12-01-SO-002", "STG12-01-SO-003",
+            },
+        )
+        self.assertEqual(
+            post_fix["identity"]["unseen_set_sha256"],
+            original["identity"]["unseen_set_sha256"],
+        )
+
+    def test_post_fix_identity_and_public_projection_are_frozen(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-post-fix-revalidation-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "2de8d63be45974bcb58fdbc2d43d75d470854ae4268a7a30d229989a136b57b9",
+        )
+        self.assertEqual(
+            payload["identity"],
+            {
+                "git_sha": "df01968c56350626544ca4acc4ed88cf13dfd337",
+                "image_digest": (
+                    "sha256:95d6a0b5dad4d4a9a9e070525fccdef78cf2301a4e98ae6682678ba423fd48a1"
+                ),
+                "model": "deepseek-v4-pro",
+                "prompt_sha256": (
+                    "108ab9aae60eb86806383cc2fea4511d358955f50503531e0da2e82be1ba8584"
+                ),
+                "unseen_set_sha256": (
+                    "7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0"
+                ),
+            },
+        )
+        forbidden_keys = {
+            "input", "required_facts", "source_sections", "answer", "proposal",
+            "request_headers", "provider_response",
+        }
+
+        def walk(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertTrue(forbidden_keys.isdisjoint(value))
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+
+        walk(payload)
+
+    def test_night_fixes_revalidation_and_receipt_are_frozen(self) -> None:
+        aggregate_path = (
+            REPO_ROOT / "evals" / "stage12-night-fixes-revalidation-v1.json"
+        )
+        receipt_path = (
+            REPO_ROOT
+            / "evals"
+            / "stage12-night-fixes-revalidation-receipt-v1.json"
+        )
+        aggregate = self._load(aggregate_path.name)
+        receipt = self._load(receipt_path.name)
+        self.assertEqual(
+            hashlib.sha256(aggregate_path.read_bytes()).hexdigest(),
+            "b4de502835e5142c62efccbf52a331f844869239de6e7a83b397c4f6cd9367e8",
+        )
+        self.assertEqual(
+            hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+            "8c80b7713aa1d8c9995e8855ae4c404b3c9500ba4acfcdfee2f1abf0584a80fd",
+        )
+        self.assertEqual(receipt["source"]["aggregate_sha256"], hashlib.sha256(
+            aggregate_path.read_bytes()
+        ).hexdigest())
+        self.assertEqual(aggregate["totals"]["cases_planned"], 24)
+        self.assertEqual(aggregate["totals"]["cases_executed"], 24)
+        self.assertEqual(sum(case["passed"] for case in aggregate["cases"]), 11)
+        self.assertEqual(aggregate["totals"]["provider_calls"], 28)
+        self.assertEqual(
+            aggregate["totals"]["estimated_cost_cny_nanos"], 716_934_200
+        )
+        self.assertFalse(aggregate["totals"]["stopped_early"])
+        self.assertIsNone(aggregate["totals"]["stop_code"])
+        self.assertEqual(aggregate["envelope"]["automatic_retry_count"], 0)
+        failure_counts = Counter(
+            code
+            for case in aggregate["cases"]
+            for code in case["failure_codes"]
+        )
+        self.assertEqual(
+            dict(failure_counts),
+            {
+                "required_fact_missing": 6,
+                "required_obligation_missing": 6,
+                "outcome_mismatch": 1,
+                "source_sections_mismatch": 1,
+            },
+        )
+        self.assertEqual(receipt["failure_counts"], dict(failure_counts))
+        self.assertEqual(receipt["failure_occurrences"], 14)
+        self.assertEqual(receipt["usage"]["calls_with_valid_usage"], 27)
+        self.assertEqual(receipt["usage"]["calls_without_valid_usage"], 1)
+        self.assertEqual(receipt["usage"]["total_tokens"], 215_176)
+        self.assertFalse(receipt["usage"]["is_billing_confirmation"])
+        self.assertEqual(receipt["typed_handoff"]["registered_cases"], 6)
+        self.assertEqual(receipt["typed_handoff"]["matched_cases"], 6)
+        self.assertEqual(receipt["typed_handoff"]["provider_calls"], 0)
+        typed_ids = {
+            "STG12-01-MBD-001",
+            "STG12-01-MBD-002",
+            "STG12-01-IE-001",
+            "STG12-01-FC-001",
+            "STG12-01-FC-002",
+            "STG12-01-FC-003",
+        }
+        by_id = {case["case_id"]: case for case in aggregate["cases"]}
+        self.assertTrue(
+            all(
+                by_id[case_id]["passed"]
+                and by_id[case_id]["observed_outcome"] == "handoff"
+                for case_id in typed_ids
+            )
+        )
+        self.assertEqual(
+            {case["case_id"] for case in receipt["typed_handoff"]["cases"]},
+            typed_ids,
+        )
+        self.assertTrue(
+            all(
+                case["passed"] and case["provider_calls"] == 0
+                for case in receipt["typed_handoff"]["cases"]
+            )
+        )
+        self.assertEqual(receipt["zero_call"]["total_cases"], 10)
+        self.assertEqual(
+            receipt["comparison"]["against_first_real_revalidation"],
+            {
+                "passed_cases_delta": 9,
+                "failure_occurrences_delta": -23,
+                "provider_calls_delta": -11,
+                "estimated_cost_cny_nanos_delta": -542_978_200,
+                "generation_failures_delta": -3,
+            },
+        )
+        forbidden_keys = {
+            "input", "required_facts", "source_sections", "answer", "proposal",
+            "request_headers", "provider_response",
+        }
+
+        def walk(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertTrue(forbidden_keys.isdisjoint(value))
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+
+        walk(aggregate)
+        walk(receipt)
+
+    def test_r6_semantic_audit_receipt_is_bounded_and_frozen(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-r6-semantic-audit-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "80b01635b527c0ba5d64fda2fe746628d84b19379283cc1dd7642085c0522132",
+        )
+        self.assertEqual(
+            payload["mode"], "bounded_human_semantic_audit_existing_packages"
+        )
+        self.assertEqual(payload["identity"]["raw_records_sha256"], (
+            "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850"
+        ))
+        source_path = REPO_ROOT / payload["identity"]["source_aggregate"]
+        self.assertEqual(
+            hashlib.sha256(source_path.read_bytes()).hexdigest(),
+            payload["identity"]["source_aggregate_sha256"],
+        )
+        aggregate = json.loads(source_path.read_text(encoding="utf-8"))
+        expected_ids = {
+            case["case_id"]
+            for case in aggregate["cases"]
+            if "required_fact_missing" in case["failure_codes"]
+        }
+        self.assertEqual({case["case_id"] for case in payload["cases"]}, expected_ids)
+        self.assertEqual(payload["scope"]["cases_audited"], 6)
+        self.assertEqual(payload["scope"]["propositions_audited"], 11)
+        self.assertEqual(payload["scope"]["provider_calls"], 0)
+        self.assertFalse(payload["scope"]["new_stage12_run"])
+        self.assertFalse(payload["scope"]["new_model_output"])
+        self.assertFalse(payload["scope"]["scorer_changed"])
+        self.assertEqual(
+            payload["decision_counts"],
+            {
+                "true_semantic_omission_cases": 0,
+                "literal_false_negative_cases": 6,
+                "true_semantic_omission_propositions": 0,
+                "semantically_covered_propositions": 11,
+            },
+        )
+        self.assertEqual(
+            sum(len(case["propositions"]) for case in payload["cases"]), 11
+        )
+        self.assertTrue(
+            all(case["decision"] == "literal_false_negative" for case in payload["cases"])
+        )
+        self.assertEqual(
+            payload["fix_candidate"]["status"], "proposal_only_not_implemented"
+        )
+        forbidden_keys = {
+            "input", "required_facts", "source_sections", "answer", "proposal",
+            "request_headers", "provider_response",
+        }
+
+        def walk(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertTrue(forbidden_keys.isdisjoint(value))
+                for child in value.values():
+                    walk(child)
+            elif isinstance(value, list):
+                for child in value:
+                    walk(child)
+
+        walk(payload)
+
+    def test_r6_proposition_receipt_rescore_is_bounded_and_frozen(self) -> None:
+        path = (
+            REPO_ROOT
+            / "evals"
+            / "stage12-r6-proposition-receipt-rescore-v1.json"
+        )
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "1c8fc3db786114665c48ef475ad3956f6b9011db67912c08c82ffa40ab47c273",
+        )
+        self.assertEqual(payload["mode"], "offline_rescore_existing_packages")
+        self.assertEqual(payload["provider_calls"], 0)
+        self.assertEqual(payload["automatic_retry_count"], 0)
+        self.assertEqual(payload["cases_rescored"], 24)
+        self.assertEqual(payload["changed_case_count"], 6)
+        self.assertEqual(payload["unchanged_case_count"], 18)
+        self.assertEqual(payload["before"]["passed_cases"], 11)
+        self.assertEqual(payload["before"]["failure_occurrences"], 14)
+        self.assertEqual(
+            payload["before"]["failure_counts"],
+            {
+                "outcome_mismatch": 1,
+                "required_fact_missing": 6,
+                "required_obligation_missing": 6,
+                "source_sections_mismatch": 1,
+            },
+        )
+        self.assertEqual(payload["after_regression_view"]["passed_cases"], 17)
+        self.assertEqual(
+            payload["after_regression_view"]["failure_occurrences"], 8
+        )
+        self.assertEqual(
+            payload["after_regression_view"]["failure_counts"],
+            {
+                "outcome_mismatch": 1,
+                "required_obligation_missing": 6,
+                "source_sections_mismatch": 1,
+            },
+        )
+        expected_ids = {
+            "STG12-01-MSQ-001",
+            "STG12-01-SCQ-001",
+            "STG12-01-SCQ-002",
+            "STG12-01-ATK-003",
+            "STG12-01-SO-002",
+            "STG12-01-SO-003",
+        }
+        self.assertEqual(payload["r6"]["registered_cases"], 6)
+        self.assertEqual(payload["r6"]["passing_under_candidate_scorer"], 6)
+        self.assertEqual(
+            {case["case_id"] for case in payload["r6"]["cases"]},
+            expected_ids,
+        )
+        self.assertTrue(
+            all(
+                case["removed_failure_codes"] == ["required_fact_missing"]
+                and case["added_failure_codes"] == []
+                for case in payload["r6"]["cases"]
+            )
+        )
+        for hash_key, path_key in (
+            ("historical_aggregate_sha256", "historical_aggregate"),
+            ("semantic_audit_sha256", "semantic_audit"),
+            ("public_fixture_sha256", "public_fixture"),
+            ("scorer_sha256", "scorer"),
+        ):
+            source_path = REPO_ROOT / payload["source"][path_key]
+            self.assertEqual(
+                hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                payload["source"][hash_key],
+            )
+        self.assertEqual(
+            payload["source"]["raw_records_sha256"],
+            "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850",
+        )
+        self.assertEqual(
+            payload["boundary"],
+            {
+                "historical_aggregate_modified": False,
+                "new_stage12_run": False,
+                "new_model_output": False,
+                "new_quality_claim": False,
+                "product_generation_changed": False,
+                "product_outcome_changed": False,
+                "use": "consumed_set_scorer_regression_only",
+            },
+        )
+
+    def test_handoff_contract_rescore_receipt_is_bounded(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-handoff-contract-rescore-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "d1356190bde6632b92f8482637a8abab35a5c2db8675cca47e51b97e91f3c88e",
+        )
+        self.assertEqual(payload["mode"], "offline_rescore_existing_packages")
+        self.assertEqual(payload["provider_calls"], 0)
+        self.assertEqual(payload["cases_rescored"], 24)
+        self.assertEqual(payload["matched_handoff_profile_cases"], 6)
+        self.assertEqual(payload["changed_case_count"], 4)
+        self.assertEqual(payload["unchanged_case_count"], 20)
+        self.assertEqual(payload["before"]["passed_cases"], 2)
+        self.assertEqual(payload["before"]["failure_occurrences"], 37)
+        self.assertEqual(payload["after"]["passed_cases"], 6)
+        self.assertEqual(payload["after"]["failure_occurrences"], 31)
+        self.assertEqual(
+            payload["after"]["failure_counts"],
+            {
+                "outcome_mismatch": 8,
+                "required_fact_missing": 12,
+                "source_sections_mismatch": 11,
+            },
+        )
+        self.assertEqual(
+            [change["case_id"] for change in payload["changes"]],
+            [
+                "STG12-01-MBD-003",
+                "STG12-01-SAF-001",
+                "STG12-01-SAF-002",
+                "STG12-01-SAF-003",
+            ],
+        )
+        removed_count = sum(
+            len(change["removed_failure_codes"]) for change in payload["changes"]
+        )
+        self.assertEqual(removed_count, 6)
+        self.assertTrue(
+            all(not change["added_failure_codes"] for change in payload["changes"])
+        )
+        self.assertEqual(
+            payload["source"]["historical_aggregate_sha256"],
+            "2de8d63be45974bcb58fdbc2d43d75d470854ae4268a7a30d229989a136b57b9",
+        )
+        self.assertEqual(
+            payload["boundary"],
+            {
+                "historical_aggregate_modified": False,
+                "new_model_output": False,
+                "new_stage12_run": False,
+                "use": "regression_only",
+            },
+        )
+
+    def test_obligation_source_rescore_receipt_is_bounded(self) -> None:
+        path = REPO_ROOT / "evals" / "stage12-obligation-source-rescore-v1.json"
+        payload = self._load(path.name)
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "93a3a0b9b2efa45abf7e141b76754c4fbf40a39559541bcb90f3429f950897fb",
+        )
+        self.assertEqual(payload["mode"], "offline_rescore_existing_packages")
+        self.assertEqual(payload["provider_calls"], 0)
+        self.assertEqual(payload["automatic_retry_count"], 0)
+        self.assertEqual(payload["cases_rescored"], 24)
+        self.assertEqual(payload["changed_case_count"], 6)
+        self.assertEqual(payload["unchanged_case_count"], 18)
+        self.assertEqual(payload["before"]["passed_cases"], 6)
+        self.assertEqual(payload["before"]["failure_occurrences"], 31)
+        self.assertEqual(payload["after"]["passed_cases"], 6)
+        self.assertEqual(payload["after"]["failure_occurrences"], 28)
+        self.assertEqual(
+            payload["after"]["failure_counts"],
+            {
+                "outcome_mismatch": 8,
+                "required_fact_missing": 8,
+                "required_obligation_missing": 4,
+                "source_sections_mismatch": 8,
+            },
+        )
+        self.assertEqual(
+            [change["case_id"] for change in payload["changes"]],
+            [
+                "STG12-01-MSQ-002",
+                "STG12-01-MSQ-003",
+                "STG12-01-ATK-002",
+                "STG12-01-ATK-003",
+                "STG12-01-SO-001",
+                "STG12-01-SO-003",
+            ],
+        )
+        self.assertEqual(
+            sum(
+                change["root_cause"] in {
+                    "obligation_planning",
+                    "obligation_planning_and_bound_extra_source",
+                }
+                for change in payload["changes"]
+            ),
+            4,
+        )
+        self.assertEqual(
+            sum(
+                change["root_cause"] in {
+                    "bound_extra_source",
+                    "obligation_planning_and_bound_extra_source",
+                }
+                for change in payload["changes"]
+            ),
+            3,
+        )
+        for source_key, path_key in (
+            ("historical_aggregate_sha256", "historical_aggregate"),
+            ("previous_rescore_sha256", "previous_rescore"),
+            ("generation_shape_receipt_sha256", "generation_shape_receipt"),
+            ("public_fixture_sha256", "public_fixture"),
+        ):
+            source_path = REPO_ROOT / payload["source"][path_key]
+            self.assertEqual(
+                hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                payload["source"][source_key],
+            )
+        self.assertEqual(
+            payload["boundary"],
+            {
+                "historical_aggregate_modified": False,
+                "previous_rescore_modified": False,
+                "generation_shape_receipt_modified": False,
+                "new_model_output": False,
+                "new_stage12_run": False,
+                "product_generation_changed": False,
+                "product_outcome_changed": False,
+                "use": "regression_only",
+            },
+        )
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -153,6 +154,56 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "handoff")
         self.assertEqual(result["provider_call_count"], 2)
         self.assertEqual(result["handoff_reason"], "completeness_gate_failed")
+        self.assertEqual(result["handoff_type"], "generation_failure")
+
+    def test_http_observability_rolls_up_without_request_content(self) -> None:
+        service = self._service(live_enabled=False)
+        service.record_http_observation(
+            route_id="health", method="GET", status_code=200, duration_ns=1_500_000
+        )
+        service.record_http_observation(
+            route_id="runs", method="POST", status_code=403, duration_ns=2_500_000
+        )
+        service.record_http_observation(
+            route_id="other", method="GET", status_code=None, duration_ns=500_000
+        )
+        service.record_http_observation(
+            route_id="run", method="GET", status_code=503, duration_ns=3_500_000
+        )
+
+        value = service.observability()
+
+        self.assertEqual(value["schema_version"], "http-observability-v1")
+        self.assertEqual(value["request_count"], 4)
+        self.assertEqual(value["error_count"], 3)
+        self.assertEqual(value["error_rate"], 0.75)
+        self.assertEqual(
+            value["errors"],
+            {"client_error": 1, "server_error": 1, "transport_error": 1},
+        )
+        self.assertEqual(value["latency_ms"], {"average": 2.0, "max": 3.5})
+        self.assertEqual(
+            [(item["route"], item["method"]) for item in value["routes"]],
+            [("health", "GET"), ("other", "GET"), ("run", "GET"), ("runs", "POST")],
+        )
+        with closing(sqlite3.connect(self.database)) as connection:
+            columns = {
+                row[1]
+                for row in connection.execute(
+                    "PRAGMA table_info(http_request_metrics)"
+                ).fetchall()
+            }
+        self.assertEqual(
+            columns,
+            {
+                "route_id",
+                "method",
+                "error_class",
+                "request_count",
+                "latency_total_ns",
+                "latency_max_ns",
+            },
+        )
 
     def test_preflight_blocks_sensitive_scope_and_safety_without_runner(self) -> None:
         calls = 0
@@ -214,6 +265,7 @@ class PublicRunServiceTests(unittest.TestCase):
             value = service.get_run(submission.run_id)
             self.assertEqual(value["status"], "handoff")
             self.assertEqual(value["result"]["handoff_reason"], reason)
+            self.assertIsNotNone(value["result"]["handoff_type"])
             self.assertEqual(value["result"]["provider_call_count"], 0)
         self.assertEqual(calls, 0)
         with closing(sqlite3.connect(self.database)) as connection:
@@ -223,6 +275,47 @@ class PublicRunServiceTests(unittest.TestCase):
         self.assertEqual(len(rows), len(cases))
         self.assertTrue(all(row[0] is None for row in rows))
         self.assertNotIn("13800138000", self.database.read_bytes().decode("latin1"))
+
+    def test_public_after_sales_commitment_is_typed_and_blocked_before_runner(self) -> None:
+        suite = json.loads(
+            (Path(__file__).resolve().parents[2] / "evals" / "public-regression-v1.json")
+            .read_text(encoding="utf-8")
+        )
+        case = next(
+            item for item in suite["cases"] if item["case_id"] == "GEN-DEV-MH-003"
+        )
+        calls = 0
+
+        def runner(_row: dict[str, object], _stage: object) -> tuple[dict[str, object], int]:
+            nonlocal calls
+            calls += 1
+            return _candidate_package("ticket"), 2
+
+        service = self._service(
+            live_enabled=True,
+            product_runner=_product_runner(runner),
+        )
+        submission = service.submit(
+            _payload(
+                case["input"],
+                task_type=case["task_type"],
+                product_model=case["product_model"],
+            ),
+            browser_token=None,
+        )
+        value = service.get_run(submission.run_id)
+        self.assertEqual(value["status"], "handoff")
+        self.assertEqual(value["result"]["handoff_type"], "human_authority")
+        self.assertEqual(
+            value["result"]["handoff_reason"], case["expected"]["handoff_reason"]
+        )
+        self.assertEqual(value["result"]["provider_call_count"], 0)
+        self.assertEqual(calls, 0)
+        with closing(sqlite3.connect(self.database)) as connection:
+            stored = connection.execute(
+                "SELECT input_text FROM runs WHERE run_id=?", (submission.run_id,)
+            ).fetchone()[0]
+        self.assertIsNone(stored)
 
     def test_preflight_allows_explicit_model_capability_questions_to_runner(self) -> None:
         calls = 0
@@ -326,6 +419,7 @@ class PublicRunServiceTests(unittest.TestCase):
                 "gates",
                 "note",
                 "handoff_reason",
+                "handoff_type",
                 "provider_call_count",
             },
         )
@@ -631,6 +725,44 @@ class PublicApiHttpTests(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         self.assertEqual(recorded, {"status": "recorded", "decision": "reject"})
+
+    def test_observability_endpoint_reports_requests_errors_and_latency(self) -> None:
+        status, _, _ = self._request("GET", "/api/v1/health")
+        self.assertEqual(status, 200)
+        status, _, error = self._request("GET", "/not-a-public-route")
+        self.assertEqual(status, 404)
+        self.assertEqual(error["error"]["code"], "route_not_found")
+
+        status, headers, value = self._request("GET", "/api/v1/observability")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["cache-control"], "no-store")
+        self.assertEqual(value["schema_version"], "http-observability-v1")
+        self.assertEqual(value["request_count"], 2)
+        self.assertEqual(value["error_count"], 1)
+        self.assertEqual(value["error_rate"], 0.5)
+        self.assertEqual(value["errors"]["client_error"], 1)
+        self.assertGreaterEqual(value["latency_ms"]["average"], 0)
+        self.assertGreaterEqual(value["latency_ms"]["max"], 0)
+        self.assertEqual(
+            [(item["route"], item["method"]) for item in value["routes"]],
+            [("health", "GET"), ("other", "GET")],
+        )
+        status, _, unchanged = self._request("GET", "/api/v1/observability")
+        self.assertEqual(status, 200)
+        self.assertEqual(unchanged["request_count"], 2)
+
+    def test_observation_write_failure_does_not_change_main_response(self) -> None:
+        with mock.patch.object(
+            self.service,
+            "record_http_observation",
+            side_effect=sqlite3.OperationalError("synthetic write failure"),
+        ):
+            status, _, health = self._request("GET", "/api/v1/health")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(health["status"], "ok")
+        self.assertEqual(health["release_sha"], "a" * 40)
 
     def test_release_sha_rejects_unknown_or_malformed_identity(self) -> None:
         for release_sha in ("unknown", "ABCDEF", "a" * 39, "a" * 41):

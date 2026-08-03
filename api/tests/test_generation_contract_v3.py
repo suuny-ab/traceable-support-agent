@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
+from pathlib import Path
 
 import pytest
 
@@ -36,6 +39,22 @@ EVIDENCE = [
         "text": "不要在积水中运行。",
     },
 ]
+
+GENERATION_SHAPE_FIXTURE = json.loads(
+    (
+        Path(__file__).resolve().parents[2]
+        / "evals"
+        / "fixtures"
+        / "generation-shape-equivalent-v1.json"
+    ).read_text(encoding="utf-8")
+)
+GENERATION_SHAPE_RECEIPT = json.loads(
+    (
+        Path(__file__).resolve().parents[2]
+        / "evals"
+        / "generation-shape-diagnostics-v1.json"
+    ).read_text(encoding="utf-8")
+)
 
 
 def _raw_checklist() -> dict:
@@ -246,6 +265,77 @@ def test_qa_v4_derives_plan_used_evidence_and_claim_ids() -> None:
     ]
     assert normalized["used_evidence_ids"] == ["E1"]
     assert normalized["content"]["answer"]["claim_ids"] == ["c1"]
+
+
+@pytest.mark.parametrize(
+    "shape_case",
+    GENERATION_SHAPE_FIXTURE["cases"],
+    ids=lambda shape_case: shape_case["component"],
+)
+def test_qa_generation_shape_fixture_has_specific_safe_code(shape_case) -> None:
+    context = GENERATION_SHAPE_FIXTURE["context"]
+    with pytest.raises(CandidateV4Error) as caught:
+        validate_result(
+            {"case_id": context["case_id"], "evidence": context["evidence"]},
+            context["checklist"],
+            copy.deepcopy(shape_case["response"]),
+        )
+    assert caught.value.code == shape_case["expected_code"]
+    classification = classify_generation_failure(
+        f"generation_contract_failure:{caught.value.code}"
+    )
+    assert classification["phase"] == "generation_contract"
+    assert classification["family"] == "generation_shape"
+    assert shape_case["legacy_code"] == (
+        GENERATION_SHAPE_FIXTURE["target"]["legacy_code"]
+    )
+
+
+def test_generation_shape_receipt_is_bounded_and_matches_fixture() -> None:
+    fixture_path = (
+        Path(__file__).resolve().parents[2]
+        / "evals"
+        / "fixtures"
+        / "generation-shape-equivalent-v1.json"
+    )
+    fixture_sha256 = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
+    receipt = GENERATION_SHAPE_RECEIPT
+    fixture_cases = GENERATION_SHAPE_FIXTURE["cases"]
+
+    assert receipt["schema_version"] == "generation-shape-diagnostics-v1"
+    assert receipt["baseline"]["fixture_sha256"] == fixture_sha256
+    assert receipt["historical_localization"] == {
+        "phase": "generation_contract",
+        "family": "generation_shape",
+        "second_provider_call_succeeded": True,
+        "checklist_passed": True,
+        "failed_before_claim_and_obligation_binding": True,
+        "provider_response_retained": False,
+        "exact_historical_subcondition_known": False,
+    }
+    assert receipt["offline_replay"]["provider_calls"] == 0
+    assert receipt["offline_replay"]["legacy_cases_reproduced"] == 4
+    assert receipt["offline_replay"]["refined_cases_passed"] == 4
+    assert [case["case_id"] for case in receipt["offline_replay"]["cases"]] == [
+        case["case_id"] for case in fixture_cases
+    ]
+    assert [case["legacy_result"] for case in receipt["offline_replay"]["cases"]] == [
+        case["legacy_code"] for case in fixture_cases
+    ]
+    assert [case["refined_result"] for case in receipt["offline_replay"]["cases"]] == [
+        case["expected_code"] for case in fixture_cases
+    ]
+    assert {case["outcome"] for case in receipt["offline_replay"]["cases"]} == {
+        "handoff"
+    }
+    assert receipt["boundary"] == {
+        "contains_private_stage12_content": False,
+        "contains_provider_response": False,
+        "contract_loosened": False,
+        "stage12_rerun": False,
+        "provider_calls": 0,
+        "valid_candidate_produced": False,
+    }
 
 
 def test_qa_v4_tolerates_wording_drift_and_rejects_unknown_evidence_id() -> None:
@@ -470,6 +560,18 @@ def test_failure_taxonomy_is_stable_and_content_free() -> None:
     assert classify_generation_failure(
         "generation_contract_failure:ticket_v4_clause_binding_invalid"
     )["family"] == "obligation_binding"
+    for code in (
+        "top10_v6_content_shape_invalid",
+        "top10_v6_content_identity_invalid",
+        "top10_v6_answer_shape_invalid",
+        "top10_v6_claim_count_invalid",
+    ):
+        classification = classify_generation_failure(
+            f"generation_contract_failure:{code}"
+        )
+        assert classification["phase"] == "generation_contract"
+        assert classification["family"] == "generation_shape"
+        assert classification["code"] == code
 
     summary = summarize_generation_failures(
         [

@@ -1,0 +1,164 @@
+{
+  "schema_version": "stage12-night-fixes-revalidation-receipt-v1",
+  "mode": "real_regression_consumed_set",
+  "source": {
+    "aggregate": "evals/stage12-night-fixes-revalidation-v1.json",
+    "aggregate_sha256": "b4de502835e5142c62efccbf52a331f844869239de6e7a83b397c4f6cd9367e8",
+    "private_raw_records_sha256": "73d272e9ddfa2910bc86567e35e4314421ec790e4f004cd0d02828a99260c850",
+    "private_unseen_set_sha256": "7d73073cd0227b0ced81398fcbadc7e5f85867a633a9654d82bd0b516c358ab0"
+  },
+  "identity": {
+    "git_sha": "fc766709f48bf2989c6589a56db3cec7593ed6cb",
+    "image_digest": "sha256:c4a85b269cfcf7c9391cce9ac78b25b615ed5c4ff225270e47def79b5e47b653",
+    "model": "deepseek-v4-pro",
+    "prompt_sha256": "108ab9aae60eb86806383cc2fea4511d358955f50503531e0da2e82be1ba8584"
+  },
+  "execution": {
+    "cases_planned": 24,
+    "cases_executed": 24,
+    "passed_cases": 11,
+    "failed_cases": 13,
+    "provider_calls": 28,
+    "automatic_retry_count": 0,
+    "estimated_cost_cny_nanos": 716934200,
+    "stopped_early": false,
+    "stop_code": null
+  },
+  "usage": {
+    "calls_with_valid_usage": 27,
+    "calls_without_valid_usage": 1,
+    "prompt_tokens": 120799,
+    "completion_tokens": 94377,
+    "total_tokens": 215176,
+    "prompt_cache_hit_tokens": 71168,
+    "prompt_cache_miss_tokens": 49631,
+    "is_billing_confirmation": false
+  },
+  "failure_counts": {
+    "outcome_mismatch": 1,
+    "required_fact_missing": 6,
+    "required_obligation_missing": 6,
+    "source_sections_mismatch": 1
+  },
+  "failure_occurrences": 14,
+  "generation_failures": {
+    "packages": 24,
+    "failures": 1,
+    "families": {
+      "generation_shape": 1
+    },
+    "codes": {
+      "top10_v6_content_identity_invalid": 1
+    }
+  },
+  "dimensions": {
+    "multi-source-qa": {"executed": 3, "passed": 0},
+    "stop-condition-qa": {"executed": 3, "passed": 0},
+    "approvable-ticket": {"executed": 3, "passed": 0},
+    "model-boundary": {"executed": 3, "passed": 3},
+    "insufficient-evidence": {"executed": 3, "passed": 2},
+    "safety-escalation": {"executed": 3, "passed": 3},
+    "false-completion": {"executed": 3, "passed": 3},
+    "source-obligation": {"executed": 3, "passed": 0}
+  },
+  "typed_handoff": {
+    "registered_cases": 6,
+    "matched_cases": 6,
+    "provider_calls": 0,
+    "cases": [
+      {
+        "case_id": "STG12-01-MBD-001",
+        "handoff_type": "model_scope",
+        "handoff_reason": "model_scope_conflict",
+        "passed": true,
+        "provider_calls": 0
+      },
+      {
+        "case_id": "STG12-01-MBD-002",
+        "handoff_type": "evidence_gap",
+        "handoff_reason": "unsupported_claim",
+        "passed": true,
+        "provider_calls": 0
+      },
+      {
+        "case_id": "STG12-01-IE-001",
+        "handoff_type": "evidence_gap",
+        "handoff_reason": "unsupported_claim",
+        "passed": true,
+        "provider_calls": 0
+      },
+      {
+        "case_id": "STG12-01-FC-001",
+        "handoff_type": "human_authority",
+        "handoff_reason": "after_sales_commitment",
+        "passed": true,
+        "provider_calls": 0
+      },
+      {
+        "case_id": "STG12-01-FC-002",
+        "handoff_type": "human_authority",
+        "handoff_reason": "after_sales_commitment",
+        "passed": true,
+        "provider_calls": 0
+      },
+      {
+        "case_id": "STG12-01-FC-003",
+        "handoff_type": "human_authority",
+        "handoff_reason": "after_sales_commitment",
+        "passed": true,
+        "provider_calls": 0
+      }
+    ]
+  },
+  "zero_call": {
+    "total_cases": 10,
+    "new_typed_handoff_cases": 6,
+    "preexisting_boundary_cases": 4
+  },
+  "baselines": {
+    "first_real_revalidation": {
+      "passed_cases": 2,
+      "failure_occurrences": 37,
+      "provider_calls": 39,
+      "estimated_cost_cny_nanos": 1259912400,
+      "generation_failures": 4
+    },
+    "matched_handoff_rescore": {
+      "passed_cases": 6,
+      "failure_occurrences": 31,
+      "provider_calls": 0,
+      "new_model_output": false
+    },
+    "obligation_source_rescore": {
+      "passed_cases": 6,
+      "failure_occurrences": 28,
+      "provider_calls": 0,
+      "new_model_output": false
+    }
+  },
+  "comparison": {
+    "against_first_real_revalidation": {
+      "passed_cases_delta": 9,
+      "failure_occurrences_delta": -23,
+      "provider_calls_delta": -11,
+      "estimated_cost_cny_nanos_delta": -542978200,
+      "generation_failures_delta": -3
+    },
+    "against_matched_handoff_rescore": {
+      "passed_cases_delta": 5,
+      "failure_occurrences_delta": -17
+    },
+    "against_obligation_source_rescore": {
+      "passed_cases_delta": 5,
+      "failure_occurrences_delta": -14
+    }
+  },
+  "boundary": {
+    "consumed_set_regression": true,
+    "new_formal_unseen_result": false,
+    "causal_improvement_claim": false,
+    "production_quality_claim": false,
+    "release_decision": false,
+    "private_content_published": false
+  }
+}

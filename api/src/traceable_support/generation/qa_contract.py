@@ -328,18 +328,15 @@ def validate_result(
         "claims",
         "insufficient_evidence",
     }:
-        _fail("top10_v6_content_invalid")
+        _fail("top10_v6_content_shape_invalid")
     if content["kind"] != "qa_answer" or content["insufficient_evidence"] is not False:
-        _fail("top10_v6_content_invalid")
+        _fail("top10_v6_content_identity_invalid")
     answer = content["answer"]
     claims = content["claims"]
-    if (
-        type(answer) is not dict
-        or set(answer) != {"text"}
-        or type(claims) is not list
-        or not 1 <= len(claims) <= 8
-    ):
-        _fail("top10_v6_content_invalid")
+    if type(answer) is not dict or set(answer) != {"text"}:
+        _fail("top10_v6_answer_shape_invalid")
+    if type(claims) is not list or not 1 <= len(claims) <= 8:
+        _fail("top10_v6_claim_count_invalid")
     referenced: dict[str, list[str]] = {
         obligation_id: [] for obligation_id in plan_by_id
     }

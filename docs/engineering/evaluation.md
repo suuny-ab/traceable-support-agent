@@ -33,6 +33,13 @@
 
 私有正式输入保存在仓库外。已经揭示或消费的 HOLDOUT 只能用于回归，既不能用于调优，也不能支持新的正式结果主张。
 
+### 公开合成检索未见集
+
+`evals/retrieval-holdout-v1.json` 是与公开开发题及生产知识单元零全文重复的独立合成检索集。
+它必须先提交冻结，再执行一次 BM25 / Local BGE / RRF 来源覆盖观测；观察文件必须绑定冻结
+提交与题集 SHA-256。揭示后该版本只作回归记录：不得对着结果修改检索、问题、标签或知识，
+不得把评测知识并入生产语料，也不得从来源覆盖推导回答质量、线上成功率或发布结论。
+
 ## Stage 12
 
 Stage 12 不属于本次仓库治理迁移。在任何 Provider 执行之前，它必须绑定网站所用的同一候选版本、全新未见集、最大调用数、精确最坏费用、评分方式、重复次数、硬停条件和发布权限。
@@ -41,3 +48,37 @@ Stage 12 是描述性测量，不设任意数值阈值、不做"通过/阻止发
 费用和失败关闭作为不变量核查（任一失败记为产品缺陷），质量维度如实报告观测值。
 `product/0.1.0` 是否发布由用户依据 Stage 12 证据单独判断；在 Stage 12 执行并形成
 正式回执之前，`product/0.1.0` 继续保持未发布。
+
+`2026-08-02` 的修复后复验复用了原 24 题已消费私有集，因此只是一条回归观测，不是一轮
+新的正式未见评测。它必须与原始结果并列、绑定新的候选 / prompt / 镜像身份，并禁止从
+前后差异推导单一改动的因果效果；未来正式结果仍需全新未见集与独立授权。
+
+`2026-08-03` 在今夜机械合同与 typed handoff 候选上执行的唯一复跑继续使用同一已消费集，
+同样只是一条回归观测：24/24 执行、11 通过、28 次 Provider 调用、自动重试 0，未提前停止。
+六个预登记 typed handoff 全部在生成前形成类型与原因并保持 0 调用；这只证明固定案例的
+机械结果，不把规则覆盖推广到开放表达，也不产生因果、线上质量或发布结论。
+
+Stage 12 评分按 outcome profile 分离：只有 expected 与 observed 都是 `handoff` 时，评分器
+检查 outcome、明确登记的 handoff reason 与预算，并保留 boundary sources 供审计；来源精确
+集合、客户可见必需事实及工单 category / priority 属于候选合同，不对 matched handoff 计分。
+任一 outcome 不匹配仍执行完整候选合同，不能借 handoff profile 隐藏生成失败或边界策略分歧。
+
+Stage 12 历史 `top10_v6_content_invalid` 只保留了失败码，没有 Provider 响应正文。公开合成
+夹具 `evals/fixtures/generation-shape-equivalent-v1.json` 覆盖这个旧码的四个机械分支；当前
+合同把它细分为 content 外形、content identity、answer 外形和 claims 数量四个隐私安全码，
+全部仍归 `generation_contract / generation_shape` 并失败关闭。该夹具只能验证合同诊断，
+不能恢复历史响应、判断历史案例命中的精确分支或形成新的 Stage 12 / 模型质量结论。
+
+Stage 12 candidate 评分还分离两个 host-owned 账本。冻结必需事实必须由同一 obligation 的
+有序 approved source spans 完整承接，否则报 `required_obligation_missing`；承接 obligation
+存在时，scorer 不再搜索客户可见正文的字面子串，而是核对 checklist / obligation plan、used
+evidence 与 claim 的真实 ID、范围及完整性。没有覆盖 proposition 所需 evidence 的合法绑定
+收据时报 `required_proposition_binding_missing`。host 只证明绑定存在、身份和范围，不证明
+claim 开放域语义真实；人工最终决定不变。来源评分要求全部冻结必需来源出现；额外来源只有在
+产品型号适用、进入 host-derived used evidence、由 claim 使用且被绑定 obligation 批准时才不
+误扣。缺必需来源、无绑定 extra 或 outcome 不匹配继续失败。这是已消费 package 的离线评分
+合同，不修改生成或产品 outcome，也不形成新 Stage 12 质量观测。
+
+公开合成正反例固定自然改写通过、缺 obligation / claim、越源与伪造 ID 失败关闭。已消费六个
+R6 案例只读重评分均移除旧 `required_fact_missing`，其余 18 例分类不变；17/24 只作候选 scorer
+回归视图，历史 24/24、11 通过和 14 个失败码保持原样。

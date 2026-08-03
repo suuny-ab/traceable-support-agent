@@ -1,0 +1,126 @@
+{
+  "schema_version": "generation-shape-equivalent-v1",
+  "target": {
+    "legacy_code": "top10_v6_content_invalid",
+    "phase": "generation_contract",
+    "family": "generation_shape"
+  },
+  "context": {
+    "case_id": "GEN-SHAPE-PUBLIC-BASE",
+    "evidence": [
+      {
+        "evidence_id": "E1",
+        "text": "先按局部清扫键。完成后检查尘盒。"
+      },
+      {
+        "evidence_id": "E2",
+        "text": "不要在积水中运行。"
+      }
+    ],
+    "checklist": {
+      "schema_version": "obligation-checklist-v4",
+      "obligations": [
+        {
+          "obligation_id": "o1",
+          "description": "说明怎样启动指定区域的清洁",
+          "clause_ids": ["c001"],
+          "evidence_ids": ["E1"],
+          "approved_source_spans": [
+            {
+              "clause_id": "c001",
+              "evidence_id": "E1",
+              "exact_span_text": "先按局部清扫键。"
+            }
+          ]
+        }
+      ],
+      "ignored_clause_ids": ["c002", "c003"],
+      "acknowledged_context": [
+        "完成后检查尘盒。",
+        "不要在积水中运行。"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "case_id": "GEN-SHAPE-PUBLIC-001",
+      "component": "content_shape",
+      "legacy_code": "top10_v6_content_invalid",
+      "expected_code": "top10_v6_content_shape_invalid",
+      "response": {
+        "schema_version": "retrieved-top10-qa-result-v4",
+        "task_type": "qa",
+        "content": []
+      }
+    },
+    {
+      "case_id": "GEN-SHAPE-PUBLIC-002",
+      "component": "content_identity",
+      "legacy_code": "top10_v6_content_invalid",
+      "expected_code": "top10_v6_content_identity_invalid",
+      "response": {
+        "schema_version": "retrieved-top10-qa-result-v4",
+        "task_type": "qa",
+        "content": {
+          "kind": "not_qa_answer",
+          "answer": {"text": "请先按局部清扫键。"},
+          "claims": [
+            {
+              "claim_id": "c1",
+              "exact_span_text": "先按局部清扫键。",
+              "customer_visible_span_text": "请先按局部清扫键",
+              "evidence_ids": ["E1"],
+              "obligation_ids": ["o1"]
+            }
+          ],
+          "insufficient_evidence": false
+        }
+      }
+    },
+    {
+      "case_id": "GEN-SHAPE-PUBLIC-003",
+      "component": "answer_shape",
+      "legacy_code": "top10_v6_content_invalid",
+      "expected_code": "top10_v6_answer_shape_invalid",
+      "response": {
+        "schema_version": "retrieved-top10-qa-result-v4",
+        "task_type": "qa",
+        "content": {
+          "kind": "qa_answer",
+          "answer": "请先按局部清扫键。",
+          "claims": [
+            {
+              "claim_id": "c1",
+              "exact_span_text": "先按局部清扫键。",
+              "customer_visible_span_text": "请先按局部清扫键",
+              "evidence_ids": ["E1"],
+              "obligation_ids": ["o1"]
+            }
+          ],
+          "insufficient_evidence": false
+        }
+      }
+    },
+    {
+      "case_id": "GEN-SHAPE-PUBLIC-004",
+      "component": "claim_count",
+      "legacy_code": "top10_v6_content_invalid",
+      "expected_code": "top10_v6_claim_count_invalid",
+      "response": {
+        "schema_version": "retrieved-top10-qa-result-v4",
+        "task_type": "qa",
+        "content": {
+          "kind": "qa_answer",
+          "answer": {"text": "请先按局部清扫键。"},
+          "claims": [],
+          "insufficient_evidence": false
+        }
+      }
+    }
+  ],
+  "boundary": {
+    "contains_private_stage12_content": false,
+    "provider_calls": 0,
+    "valid_candidate_expected": false
+  }
+}

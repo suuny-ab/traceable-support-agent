@@ -1,5 +1,7 @@
+import copy
 import json
 import sqlite3
+from pathlib import Path
 
 import pytest
 
@@ -28,9 +30,19 @@ USAGE = {
     "prompt_cache_miss_tokens": 100,
 }
 
+GENERATION_SHAPE_FIXTURE = json.loads(
+    (
+        Path(__file__).resolve().parents[2]
+        / "evals"
+        / "fixtures"
+        / "generation-shape-equivalent-v1.json"
+    ).read_text(encoding="utf-8")
+)
+
 
 def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True,
-             unknown_evidence: bool = False) -> OfflineInjectedTransport:
+             unknown_evidence: bool = False,
+             step2_response: dict | None = None) -> OfflineInjectedTransport:
     from traceable_support.retrieval.hybrid import BusinessRetrievalRequest, ModelAwareRrfPipeline
     from traceable_support.generation.checklist import build_clause_inventory
 
@@ -76,6 +88,8 @@ def _fixture(question: str, *, valid: bool = True, gate_pass: bool = True,
                 "insufficient_evidence": False,
             },
         }
+        if step2_response is not None:
+            result_obj = copy.deepcopy(step2_response)
         return OfflineInjectedTransport([
             {"kind": "response", "status_code": 200,
              "body": json_response(checklist, usage=USAGE, response_id="fx-1")},
@@ -173,6 +187,38 @@ def test_run_qa_accepts_wording_drift_with_valid_binding():
     save_qa_run(connection, package)
     record_qa_decision(connection, run_id="test-run-2", decision="approve", decision_text=None)
     assert load_qa_run(connection, "test-run-2")["decision"] == "approve"
+
+
+@pytest.mark.parametrize(
+    "shape_case",
+    GENERATION_SHAPE_FIXTURE["cases"],
+    ids=lambda shape_case: shape_case["component"],
+)
+def test_run_qa_generation_shape_fixture_fails_closed(shape_case):
+    transport = _fixture(
+        "CZ-R1 怎么开始局部清扫？",
+        step2_response=shape_case["response"],
+    )
+    package = run_qa(
+        question="CZ-R1 怎么开始局部清扫？",
+        product_model="CZ-R1",
+        transport=transport,
+        mode="offline_injected",
+        run_id=f"shape-{shape_case['case_id']}",
+        worst_cost_limit_cny_nanos=500_000_000,
+    )
+    assert transport.call_count == 2
+    assert package["outcome"] == "handoff"
+    assert package["answer"] is None
+    assert package["handoff_reason"] == (
+        f"generation_contract_failure:{shape_case['expected_code']}"
+    )
+    assert package["failure_classification"] == {
+        "schema_version": "generation-failure-classification-v1",
+        "phase": "generation_contract",
+        "family": "generation_shape",
+        "code": shape_case["expected_code"],
+    }
 
 
 def test_run_qa_rejects_unknown_evidence_binding():
